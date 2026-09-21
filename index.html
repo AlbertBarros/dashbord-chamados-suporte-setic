@@ -637,7 +637,7 @@
         function renderizarG(id, tipo, dAgr, cor, horizontal, showLabels=false, onClickCallback=null) {
             const ctx = document.getElementById(id).getContext('2d'); if (graficos[id]) graficos[id].destroy();
             const options = { 
-                responsive: true, maintainAspectRatio: true,
+                responsive: true, maintainAspectRatio: false,
                 plugins: { legend: { display: false }, datalabels: { display: showLabels, color: '#fff', font: {weight: 'bold'}, anchor: 'end', align: 'start', offset: 4 } },
                 onClick: (e, act) => { if(onClickCallback && act.length>0) onClickCallback(dAgr.labels[act[0].index]); }
             };
@@ -652,7 +652,7 @@
             const ctx = document.getElementById(id).getContext('2d'); if (graficos[id]) graficos[id].destroy();
             graficos[id] = new Chart(ctx, {
                 type: tipo, data: { labels: dAgr.labels, datasets: [{ data: dAgr.values, backgroundColor: cores, borderRadius: 2 }] },
-                options: { indexAxis: horizontal ? 'y' : 'x', responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, datalabels: { display: false } } }
+                options: { indexAxis: horizontal ? 'y' : 'x', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, datalabels: { display: false } } }
             });
         }
 
@@ -661,7 +661,7 @@
             const bgC = dAgr.labels.map(l => mapCores[l] || '#9ca3af');
             graficos[id] = new Chart(ctx, {
                 type: tipo, data: { labels: dAgr.labels, datasets: [{ data: dAgr.values, backgroundColor: bgC, borderWidth: 1 }] },
-                options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'right' }, datalabels: { display: false } } }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' }, datalabels: { display: false } } }
             });
         }
 
@@ -672,12 +672,12 @@
                 data: {
                     labels: objDados.labels,
                     datasets: [
-                        { label: 'No Prazo', data: objDados.atendido, backgroundColor: '#22c55e', borderRadius: 2 },
-                        { label: 'Estourado', data: objDados.estourado, backgroundColor: '#ef4444', borderRadius: 2 }
+                        { label: 'SLA Cumprido', data: objDados.atendido, backgroundColor: '#22c55e', borderRadius: 2 },
+                        { label: 'SLA Violado', data: objDados.estourado, backgroundColor: '#ef4444', borderRadius: 2 }
                     ]
                 },
                 options: {
-                    responsive: true, maintainAspectRatio: true,
+                    responsive: true, maintainAspectRatio: false,
                     scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } },
                     plugins: { legend: { position: 'top', labels: { boxWidth: 12, font: {size: 10} } }, datalabels: { display: false } }
                 }
@@ -716,11 +716,11 @@
             document.getElementById('btn-tab-prev').disabled = tabelaPaginaAtual === 1; document.getElementById('btn-tab-next').disabled = tabelaPaginaAtual === totalP;
         }
 
-        // === RELATÓRIOS ===
+        // === RELATÓRIOS (PDF / EXCEL) COM DELAY CORRIGIDO ===
         document.getElementById('btn-gerar-excel').addEventListener('click', () => {
             const fM = document.getElementById('relatorio-mes').value; const fA = document.getElementById('relatorio-analista').value;
             const dadosExp = dadosGlobais.filter(d => (fM === "Todos" || obterMesAno(d['Data Abertura']) === fM) && (fA === "Todos" || d['Analista'] === fA));
-            if(dadosExp.length === 0) return alert("Nenhum dado encontrado.");
+            if(dadosExp.length === 0) return alert("Nenhum dado encontrado para exportar.");
             const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(dadosExp), "Relatorio");
             XLSX.writeFile(wb, `Base_Extraida_SETIC.xlsx`);
         });
@@ -730,58 +730,76 @@
 
         document.getElementById('btn-gerar-pdf').addEventListener('click', () => {
             const fM = document.getElementById('relatorio-mes').value; const fA = document.getElementById('relatorio-analista').value;
+            const btn = document.getElementById('btn-gerar-pdf');
+            
+            const conteudoOriginal = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xl"></i> <div><p class="text-sm">A processar...</p></div>';
+            btn.disabled = true;
             
             document.getElementById('filtro-mes').value = fM; document.getElementById('filtro-analista').value = fA;
             document.getElementById('filtro-prioridade').value = 'Todos'; document.getElementById('filtro-data-inicio').value = ''; document.getElementById('filtro-data-fim').value = '';
             atualizarDashboard(); 
 
-            const dadosExp = dadosFiltradosCache;
-            if(dadosExp.length === 0) return alert("Nenhum dado com os filtros selecionados.");
-            
-            const { jsPDF } = window.jspdf; const doc = new jsPDF('p', 'pt', 'a4'); const w = doc.internal.pageSize.width;
-            
-            doc.setFillColor(26, 25, 65); doc.rect(0, 0, w, 80, 'F');
-            doc.addImage(prfLogoBase64, 'PNG', 40, 20, 40, 40); 
-            doc.setTextColor(255, 255, 255); doc.setFontSize(16); doc.setFont("helvetica", "bold");
-            doc.text(`MINISTÉRIO DA JUSTIÇA E SEGURANÇA PÚBLICA`, 90, 35);
-            doc.setFontSize(11); doc.setFont("helvetica", "normal");
-            doc.text(`Polícia Rodoviária Federal - Diretoria de Tecnologia (SETIC)`, 90, 52);
-            doc.setFontSize(12); doc.setFont("helvetica", "bold");
-            doc.text(`Relatório Gerencial Analítico - ${localStorage.getItem('dashTitulo') || 'Painel de Suporte'}`, 90, 68);
+            // Atraso seguro para o Canvas desenhar
+            setTimeout(() => {
+                try {
+                    const dadosExp = dadosFiltradosCache;
+                    if(dadosExp.length === 0) {
+                        alert("Nenhum dado com os filtros selecionados.");
+                        btn.innerHTML = conteudoOriginal; btn.disabled = false; return;
+                    }
+                    
+                    const { jsPDF } = window.jspdf; const doc = new jsPDF('p', 'pt', 'a4'); const w = doc.internal.pageSize.width;
+                    
+                    doc.setFillColor(26, 25, 65); doc.rect(0, 0, w, 80, 'F');
+                    doc.addImage(prfLogoBase64, 'PNG', 40, 20, 40, 40); 
+                    doc.setTextColor(255, 255, 255); doc.setFontSize(16); doc.setFont("helvetica", "bold");
+                    doc.text(`MINISTÉRIO DA JUSTIÇA E SEGURANÇA PÚBLICA`, 90, 35);
+                    doc.setFontSize(11); doc.setFont("helvetica", "normal");
+                    doc.text(`Polícia Rodoviária Federal - Diretoria de Tecnologia (SETIC)`, 90, 52);
+                    doc.setFontSize(12); doc.setFont("helvetica", "bold");
+                    doc.text(`Relatório Gerencial Analítico - ${localStorage.getItem('dashTitulo') || 'Painel de Suporte'}`, 90, 68);
 
-            doc.setTextColor(26, 25, 65); doc.setFontSize(12); doc.text("Suma Executiva", 40, 110);
-            doc.setTextColor(60, 60, 60); doc.setFontSize(10); doc.setFont("helvetica", "normal");
-            
-            const txtIA = `Documento gerado em ${new Date().toLocaleDateString('pt-BR')} (Filtro Aplicado: Mês ${fM} | Analista: ${fA}). O período de extração processou um total de ${dadosExp.length} tickets de suporte técnico. A eficiência operacional da equipe registrou um Tempo Médio de Atendimento (TMA) de ${tmaGlobalTexto}, garantindo que ${slaGlobalTexto} das demandas fossem solucionadas dentro dos Acordos de Nível de Serviço (SLA) estabelecidos. A taxa de indisponibilidade ou falhas ativas (Incidentes) correspondeu a ${incGlobalTexto} do volume operado.`;
-            doc.text(doc.splitTextToSize(txtIA, w - 80), 40, 130);
-            
-            doc.setFillColor(245, 247, 250); doc.rect(40, 180, 160, 50, 'F'); doc.rect(215, 180, 160, 50, 'F'); doc.rect(390, 180, 160, 50, 'F');
-            doc.setFontSize(9); doc.setTextColor(120, 120, 120); doc.setFont("helvetica", "bold");
-            doc.text("VOLUME PROCESSADO", 120, 200, {align: 'center'}); doc.text("TMA (MÉDIA GLOBAL)", 295, 200, {align: 'center'}); doc.text("EFICIÊNCIA DE SLA", 470, 200, {align: 'center'});
-            doc.setFontSize(16); doc.setTextColor(26, 25, 65);
-            doc.text(dadosExp.length.toString(), 120, 220, {align: 'center'}); doc.text(tmaGlobalTexto, 295, 220, {align: 'center'});
-            doc.setTextColor(22, 163, 74); doc.text(slaGlobalTexto, 470, 220, {align: 'center'});
+                    doc.setTextColor(26, 25, 65); doc.setFontSize(12); doc.text("Suma Executiva", 40, 110);
+                    doc.setTextColor(60, 60, 60); doc.setFontSize(10); doc.setFont("helvetica", "normal");
+                    
+                    const txtIA = `Documento gerado em ${new Date().toLocaleDateString('pt-BR')} (Filtro Aplicado: Mês ${fM} | Analista: ${fA}). O período de extração processou um total de ${dadosExp.length} tickets de suporte técnico. A eficiência operacional da equipe registrou um Tempo Médio de Atendimento (TMA) de ${tmaGlobalTexto}, garantindo que ${slaGlobalTexto} das demandas fossem solucionadas dentro dos Acordos de Nível de Serviço (SLA) estabelecidos. A taxa de indisponibilidade ou falhas ativas (Incidentes) correspondeu a ${incGlobalTexto} do volume operado.`;
+                    doc.text(doc.splitTextToSize(txtIA, w - 80), 40, 130);
+                    
+                    doc.setFillColor(245, 247, 250); doc.rect(40, 180, 160, 50, 'F'); doc.rect(215, 180, 160, 50, 'F'); doc.rect(390, 180, 160, 50, 'F');
+                    doc.setFontSize(9); doc.setTextColor(120, 120, 120); doc.setFont("helvetica", "bold");
+                    doc.text("VOLUME PROCESSADO", 120, 200, {align: 'center'}); doc.text("TMA (MÉDIA GLOBAL)", 295, 200, {align: 'center'}); doc.text("EFICIÊNCIA DE SLA", 470, 200, {align: 'center'});
+                    doc.setFontSize(16); doc.setTextColor(26, 25, 65);
+                    doc.text(dadosExp.length.toString(), 120, 220, {align: 'center'}); doc.text(tmaGlobalTexto, 295, 220, {align: 'center'});
+                    doc.setTextColor(22, 163, 74); doc.text(slaGlobalTexto, 470, 220, {align: 'center'});
 
-            doc.setFontSize(12); doc.setTextColor(26, 25, 65); doc.text("Caderno Visual (Diagnóstico)", 40, 260);
-            doc.setFontSize(9); doc.setTextColor(100, 100, 100);
-            
-            const getImg = (id) => document.getElementById(id).toDataURL('image/jpeg', 1.0);
-            doc.text("Evolução Histórica", 40, 280); doc.addImage(getImg('chart-meses'), 'JPEG', 40, 285, 240, 135);
-            doc.text("Desempenho por Agente/Analista", 305, 280); doc.addImage(getImg('chart-analistas'), 'JPEG', 305, 285, 240, 135);
-            doc.text("Categorização Temática (Top 15)", 40, 440); doc.addImage(getImg('chart-assuntos'), 'JPEG', 40, 445, 240, 135);
-            doc.text("Análise de Gargalos: Eficiência vs Criticidade", 305, 440); doc.addImage(getImg('chart-prioridade'), 'JPEG', 305, 445, 240, 135);
+                    doc.setFontSize(12); doc.setTextColor(26, 25, 65); doc.text("Caderno Visual (Diagnóstico)", 40, 260);
+                    doc.setFontSize(9); doc.setTextColor(100, 100, 100);
+                    
+                    const getImg = (id) => { const c = document.getElementById(id); return c ? c.toDataURL('image/jpeg', 1.0) : null; };
+                    
+                    doc.text("Evolução Histórica", 40, 280); const i1 = getImg('chart-meses'); if(i1) doc.addImage(i1, 'JPEG', 40, 285, 240, 135);
+                    doc.text("Desempenho por Agente/Analista", 305, 280); const i2 = getImg('chart-analistas'); if(i2) doc.addImage(i2, 'JPEG', 305, 285, 240, 135);
+                    doc.text("Categorização Temática (Top 15)", 40, 440); const i3 = getImg('chart-assuntos'); if(i3) doc.addImage(i3, 'JPEG', 40, 445, 240, 135);
+                    doc.text("Análise de Gargalos: Eficiência vs Criticidade", 305, 440); const i4 = getImg('chart-prioridade'); if(i4) doc.addImage(i4, 'JPEG', 305, 445, 240, 135);
 
-            doc.addPage();
-            doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.setTextColor(26, 25, 65); doc.text("Apêndice Operacional (Detalhamento)", 40, 40);
+                    doc.addPage();
+                    doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.setTextColor(26, 25, 65); doc.text("Apêndice Operacional (Detalhamento)", 40, 40);
 
-            const linhas = dadosExp.map(d => [ d['Ticket']||'-', (d['Data Abertura']||'').split(' ')[0], (d['Analista']||'-').split('.')[0], (d['Assunto']||'').substring(0, 35), d['Prioridade']||'-', d['Tempo Solução']||'-' ]);
-            doc.autoTable({
-                startY: 55, head: [["Ticket", "Data Registro", "Agente Resolutor", "Objeto (Resumo)", "Criticidade", "T. Solução"]], body: linhas,
-                theme: 'striped', headStyles: { fillColor: [26, 25, 65] }, styles: { fontSize: 8 }, alternateRowStyles: { fillColor: [247, 248, 250] },
-                margin: { top: 30, right: 40, bottom: 40, left: 40 },
-                didDrawPage: function (dt) { doc.setFontSize(8); doc.setTextColor(150, 150, 150); doc.text(`Documento Restrito | Pág ${doc.internal.getNumberOfPages()}`, w/2, doc.internal.pageSize.height - 20, {align:'center'}); }
-            });
-            doc.save(`Relatorio_Oficial_SETIC.pdf`);
+                    const linhas = dadosExp.map(d => [ d['Ticket']||'-', (d['Data Abertura']||'').split(' ')[0], (d['Analista']||'-').split('.')[0], (d['Assunto']||'').substring(0, 35), d['Prioridade']||'-', d['Tempo Solução']||'-' ]);
+                    doc.autoTable({
+                        startY: 55, head: [["Ticket Oficial", "Data Registro", "Agente Resolutor", "Objeto (Resumo)", "Criticidade", "T. Solução"]], body: linhas,
+                        theme: 'striped', headStyles: { fillColor: [26, 25, 65] }, styles: { fontSize: 8 }, alternateRowStyles: { fillColor: [247, 248, 250] },
+                        margin: { top: 30, right: 40, bottom: 40, left: 40 },
+                        didDrawPage: function (dt) { doc.setFontSize(8); doc.setTextColor(150, 150, 150); doc.text(`Documento Restrito | Pág ${doc.internal.getNumberOfPages()}`, w/2, doc.internal.pageSize.height - 20, {align:'center'}); }
+                    });
+                    doc.save(`Relatorio_Oficial_SETIC.pdf`);
+                } catch (err) {
+                    console.error("Erro na geração do PDF:", err); alert("Ocorreu um erro ao montar o arquivo PDF.");
+                } finally {
+                    btn.innerHTML = conteudoOriginal; btn.disabled = false;
+                }
+            }, 600); 
         });
 
         aplicarPersonalizacao();
