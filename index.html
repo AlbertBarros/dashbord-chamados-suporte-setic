@@ -7,6 +7,7 @@
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     
     <!-- Excel -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -23,19 +24,15 @@
         .card { background-color: #ffffff; border-radius: 0.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 1.25rem; }
         .loader { border: 3px solid #f3f3f3; border-top: 3px solid #ffffff; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: none; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
-        /* Abas do Modal */
         .tab-active { border-bottom: 2px solid; font-weight: bold; }
         .tab-inactive { border-color: transparent; color: #6b7280; }
         .tab-inactive:hover { color: #1f2937; }
-        
-        /* Ocultar input file original */
         input[type="file"] { display: none; }
     </style>
 </head>
 <body class="text-gray-800">
 
-    <!-- Cabeçalho Principal -->
+    <!-- Cabeçalho -->
     <header id="header-bg" class="bg-[#1a1941] text-white p-4 shadow-md flex justify-between items-center">
         <div class="flex items-center gap-3 ml-4">
             <i class="fa-solid fa-chart-line text-2xl"></i>
@@ -49,7 +46,6 @@
                 <div id="loader-upload" class="loader !border-t-[#1a1941]"></div>
             </label>
             <span id="txt-ficheiros" class="text-sm font-medium">Nenhum ficheiro...</span>
-            
             <button id="btn-config" class="bg-[#2c2a5e] hover:bg-[#3d3b73] px-3 py-2 rounded transition">
                 <i class="fa-solid fa-gear"></i>
             </button>
@@ -58,9 +54,9 @@
     
     <div id="status-mensagem" class="text-center text-sm font-bold p-2 hidden"></div>
 
-    <div class="max-w-[95%] mx-auto mt-6">
+    <div class="max-w-[98%] mx-auto mt-6">
         
-        <!-- Filtros Dinâmicos -->
+        <!-- Filtros -->
         <div class="card mb-6">
             <div class="flex justify-between items-center mb-4 border-b pb-2">
                 <div class="flex items-center gap-2 text-[#1a1941] font-bold text-lg">
@@ -72,164 +68,129 @@
                 </button>
             </div>
             
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-5 gap-4">
                 <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Mês de Abertura</label>
-                    <select id="filtro-mes" class="w-full border-gray-300 border rounded p-2 text-sm focus:ring-[#1a1941] focus:border-[#1a1941]"><option value="Todos">Todos os Meses</option></select>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Mês Rápido</label>
+                    <select id="filtro-mes" class="w-full border-gray-300 border rounded p-2 text-sm focus:ring-[#1a1941]"><option value="Todos">Todos os Meses</option></select>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Analista</label>
-                    <select id="filtro-analista" class="w-full border-gray-300 border rounded p-2 text-sm focus:ring-[#1a1941] focus:border-[#1a1941]"><option value="Todos">Todos os Analistas</option></select>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Data Inicial</label>
+                    <input type="date" id="filtro-data-inicio" class="w-full border-gray-300 border rounded p-2 text-sm focus:ring-[#1a1941]">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Criticidade / Prioridade</label>
-                    <select id="filtro-prioridade" class="w-full border-gray-300 border rounded p-2 text-sm focus:ring-[#1a1941] focus:border-[#1a1941]"><option value="Todos">Todas as Prioridades</option></select>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Data Final</label>
+                    <input type="date" id="filtro-data-fim" class="w-full border-gray-300 border rounded p-2 text-sm focus:ring-[#1a1941]">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Analista (Clique no Gráfico)</label>
+                    <select id="filtro-analista" class="w-full border-gray-300 border rounded p-2 text-sm focus:ring-[#1a1941]"><option value="Todos">Todos os Analistas</option></select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Criticidade</label>
+                    <select id="filtro-prioridade" class="w-full border-gray-300 border rounded p-2 text-sm focus:ring-[#1a1941]"><option value="Todos">Todas as Prioridades</option></select>
                 </div>
             </div>
         </div>
 
         <!-- KPIs Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
             <div class="card flex items-center gap-4">
-                <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-xl">
-                    <i class="fa-solid fa-ticket"></i>
-                </div>
-                <div>
-                    <p class="text-sm text-gray-500">Total de Chamados</p>
-                    <p id="kpi-total-global" class="text-2xl font-bold text-gray-800">0</p>
-                </div>
+                <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-xl"><i class="fa-solid fa-ticket"></i></div>
+                <div><p class="text-xs text-gray-500 uppercase font-bold">Total</p><p id="kpi-total" class="text-2xl font-bold text-gray-800">0</p></div>
             </div>
             <div class="card flex items-center gap-4">
-                <div class="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 text-xl">
-                    <i class="fa-solid fa-calendar-check"></i>
-                </div>
-                <div>
-                    <p class="text-sm text-gray-500">Filtrados Selecionados</p>
-                    <p id="kpi-total-filtrado" class="text-2xl font-bold text-gray-800">0</p>
-                </div>
+                <div class="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 text-xl"><i class="fa-solid fa-calendar-check"></i></div>
+                <div><p class="text-xs text-gray-500 uppercase font-bold">Filtrados</p><p id="kpi-filtrado" class="text-2xl font-bold text-gray-800">0</p></div>
             </div>
             <div class="card flex items-center gap-4">
-                <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-green-500 text-xl">
-                    <i class="fa-solid fa-stopwatch"></i>
-                </div>
-                <div>
-                    <p class="text-sm text-gray-500">SLA Atendido</p>
-                    <p id="kpi-sla" class="text-2xl font-bold text-gray-800">0%</p>
-                </div>
+                <div class="w-12 h-12 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600 text-xl"><i class="fa-regular fa-clock"></i></div>
+                <div><p class="text-xs text-gray-500 uppercase font-bold">TMA (Horas)</p><p id="kpi-tma" class="text-2xl font-bold text-gray-800">0.0h</p></div>
             </div>
             <div class="card flex items-center gap-4">
-                <div class="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 text-xl">
-                    <i class="fa-solid fa-triangle-exclamation"></i>
-                </div>
-                <div>
-                    <p class="text-sm text-gray-500">Índice de Incidentes</p>
-                    <p id="kpi-incidentes" class="text-2xl font-bold text-gray-800">0%</p>
-                </div>
+                <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-green-500 text-xl"><i class="fa-solid fa-stopwatch"></i></div>
+                <div><p class="text-xs text-gray-500 uppercase font-bold">SLA Atendido</p><p id="kpi-sla" class="text-2xl font-bold text-gray-800">0%</p></div>
+            </div>
+            <div class="card flex items-center gap-4">
+                <div class="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 text-xl"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                <div><p class="text-xs text-gray-500 uppercase font-bold">Incidentes</p><p id="kpi-incidentes" class="text-2xl font-bold text-gray-800">0%</p></div>
             </div>
         </div>
 
-        <!-- Linha de Gráficos 1 -->
+        <!-- Gráficos -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <div class="card">
-                <h3 class="font-bold text-gray-700 mb-4">Evolução de Chamados por Mês</h3>
-                <canvas id="chart-meses" height="120"></canvas>
-            </div>
-            <div class="card">
-                <h3 class="font-bold text-gray-700 mb-4">Volume por Analista (Equipe Foco)</h3>
-                <canvas id="chart-analistas" height="120"></canvas>
-            </div>
+            <div class="card"><h3 class="font-bold text-gray-700 mb-4">Evolução de Chamados</h3><canvas id="chart-meses" height="120"></canvas></div>
+            <div class="card"><h3 class="font-bold text-gray-700 mb-4">Volume por Analista Foco (Clique para Filtrar)</h3><canvas id="chart-analistas" height="120"></canvas></div>
         </div>
-
-        <!-- Linha de Gráficos 2 -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <div class="card">
-                <h3 class="font-bold text-gray-700 mb-4">Top 15 Assuntos (Categorias) Mais Solicitados</h3>
-                <canvas id="chart-assuntos" height="150"></canvas>
-            </div>
-            <div class="card">
-                <h3 class="font-bold text-gray-700 mb-4">Top Requerentes</h3>
-                <canvas id="chart-requerentes" height="150"></canvas>
-            </div>
+            <div class="card"><h3 class="font-bold text-gray-700 mb-4">Top 15 Assuntos (Categorias)</h3><canvas id="chart-assuntos" height="130"></canvas></div>
+            <div class="card"><h3 class="font-bold text-gray-700 mb-4">Top Requerentes</h3><canvas id="chart-requerentes" height="130"></canvas></div>
         </div>
-        
-        <!-- Linha de Gráficos 3 (Secundários) -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
-            <div class="card flex flex-col items-center">
-                <h3 class="font-bold text-gray-700 mb-4 w-full text-left">Distribuição por Prioridade</h3>
-                <div class="w-3/4 max-w-sm"><canvas id="chart-prioridade"></canvas></div>
-            </div>
-            <div class="card flex flex-col items-center">
-                <h3 class="font-bold text-gray-700 mb-4 w-full text-left">Tipo de Chamado (Requisição vs Incidente)</h3>
-                <div class="w-3/4 max-w-sm"><canvas id="chart-tipo"></canvas></div>
-            </div>
+            <div class="card flex flex-col items-center"><h3 class="font-bold text-gray-700 mb-4 w-full text-left">Distribuição de Criticidade (Risco Escalonado)</h3><div class="w-3/4 max-w-sm"><canvas id="chart-prioridade"></canvas></div></div>
+            <div class="card flex flex-col items-center"><h3 class="font-bold text-gray-700 mb-4 w-full text-left">Tipo de Chamado</h3><div class="w-3/4 max-w-sm"><canvas id="chart-tipo"></canvas></div></div>
         </div>
 
     </div>
 
-    <!-- Modal de Configurações e Relatórios -->
+    <!-- Modal -->
     <div id="modal-config" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
-        <div class="bg-white p-6 rounded-lg shadow-xl w-[32rem]">
+        <div class="bg-white p-6 rounded-lg shadow-xl w-[36rem]">
             <div class="flex justify-between items-center mb-4 border-b pb-2">
-                <h2 class="text-xl font-bold">Painel de Controlo</h2>
+                <h2 class="text-xl font-bold">Painel de Controlo Avançado</h2>
                 <button id="btn-fechar-config-icon" class="text-gray-400 hover:text-gray-700"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
             
             <div class="flex gap-4 mb-4 border-b">
-                <button id="aba-aparencia" class="pb-2 tab-active text-[#1a1941] border-[#1a1941] focus:outline-none">Aparência</button>
-                <button id="aba-relatorios" class="pb-2 tab-inactive focus:outline-none">Gerar Relatórios</button>
+                <button id="aba-aparencia" class="pb-2 tab-active text-[#1a1941] border-[#1a1941] focus:outline-none">Configurações Base</button>
+                <button id="aba-relatorios" class="pb-2 tab-inactive focus:outline-none">Exportação / PDF</button>
             </div>
 
             <div id="conteudo-aparencia" class="block">
-                <div class="mb-4">
+                <div class="mb-3">
                     <label class="block text-sm font-semibold mb-1">Título do Painel</label>
-                    <input type="text" id="input-titulo" class="w-full border rounded p-2" placeholder="Ex: Analytics Suporte SETIC">
+                    <input type="text" id="input-titulo" class="w-full border rounded p-2 text-sm">
                 </div>
-                <div class="mb-4">
-                    <label class="block text-sm font-semibold mb-1">Cor do Cabeçalho (Hex)</label>
-                    <input type="color" id="input-cor" class="w-full border rounded p-1 h-10 cursor-pointer" value="#1a1941">
+                <div class="mb-3">
+                    <label class="block text-sm font-semibold mb-1">Cor do Cabeçalho e Gráficos Principais (Hex)</label>
+                    <input type="color" id="input-cor" class="w-full border rounded p-0 h-10 cursor-pointer" value="#1a1941">
+                </div>
+                <div class="mb-3">
+                    <label class="block text-sm font-semibold mb-1">Equipe Foco (Analistas separados por vírgula)</label>
+                    <textarea id="input-equipe" class="w-full border rounded p-2 text-sm text-gray-600" rows="3" placeholder="fabio.palma.prestador, edison.neto.prestador..."></textarea>
                 </div>
             </div>
 
             <div id="conteudo-relatorios" class="hidden">
-                <p class="text-sm text-gray-600 mb-4">Selecione os filtros abaixo para extrair relatórios da base na nuvem.</p>
-                <div class="grid grid-cols-2 gap-4 mb-4">
-                    <div>
-                        <label class="block text-sm font-semibold mb-1">Mês</label>
-                        <select id="relatorio-mes" class="w-full border rounded p-2 text-sm"><option value="Todos">Geral (Todos)</option></select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold mb-1">Analista</label>
-                        <select id="relatorio-analista" class="w-full border rounded p-2 text-sm"><option value="Todos">Geral (Todos)</option></select>
-                    </div>
-                </div>
+                <p class="text-sm text-gray-600 mb-4">Gere um PDF executivo contendo o resumo textual automatizado e todos os gráficos em tela, ou extraia a tabela completa em Excel bruto.</p>
                 
                 <div class="flex gap-3 mt-4">
-                    <button id="btn-gerar-excel" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-3 rounded transition flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-file-excel"></i> Excel (Bruto)
+                    <button id="btn-gerar-excel" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-3 rounded transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-file-excel text-xl"></i> Exportar Dados Brutos
                     </button>
-                    <button id="btn-gerar-pdf" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-3 rounded transition flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-file-pdf"></i> PDF com Gráficos
+                    <button id="btn-gerar-pdf" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-3 rounded transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-file-pdf text-xl"></i> Emitir Relatório Gerencial
                     </button>
                 </div>
             </div>
 
             <div class="flex justify-end gap-2 mt-6 pt-4 border-t">
-                <button id="btn-fechar-config" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 font-semibold">Fechar</button>
-                <button id="btn-guardar-config" class="px-4 py-2 bg-[#1a1941] text-white rounded hover:bg-opacity-90 font-semibold">Guardar Alterações</button>
+                <button id="btn-fechar-config" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 font-semibold text-sm">Fechar</button>
+                <button id="btn-guardar-config" class="px-4 py-2 bg-[#1a1941] text-white rounded hover:bg-opacity-90 font-semibold text-sm">Guardar Preferências</button>
             </div>
         </div>
     </div>
 
-    <!-- Scripts da Lógica e Gráficos -->
+    <!-- Scripts -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
         import { getFirestore, collection, getDocs, doc, writeBatch } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
-        // Plugin Global para garantir fundo branco nos gráficos (Evita fundo preto no PDF)
+        // Plugin de Fundo Branco (PDF) e DataLabels
+        Chart.register(ChartDataLabels);
         const bgPlugin = {
             id: 'customCanvasBackgroundColor',
             beforeDraw: (chart, args, options) => {
-                const {ctx} = chart;
+                const ctx = chart.ctx;
                 ctx.save();
                 ctx.globalCompositeOperation = 'destination-over';
                 ctx.fillStyle = options.color || '#ffffff';
@@ -239,7 +200,6 @@
         };
         Chart.register(bgPlugin);
 
-        // Configuração Firebase da SETIC
         const firebaseConfig = {
             apiKey: "AIzaSyBmi5IQIl0WwwrGGqq8Q-lB2gcou8TDqaU",
             authDomain: "dashboard-chamado-setic.firebaseapp.com",
@@ -248,27 +208,19 @@
             messagingSenderId: "502847512745",
             appId: "1:502847512745:web:2941e763621ecc0af509b8"
         };
-
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
         let dadosGlobais = [];
         let corPrincipal = localStorage.getItem('dashCor') || '#1a1941';
+        let equipeFocoStr = localStorage.getItem('equipeFoco') || 'fabio.palma.prestador, edison.neto.prestador, antonio.muniz.prestador, jose.andrade.prestador';
         let graficos = {};
 
         const paletaAssuntos = ['#4f46e5', '#3b82f6', '#0ea5e9', '#06b6d4', '#14b8a6', '#10b981', '#22c55e', '#84cc16', '#eab308', '#f59e0b', '#f97316', '#ef4444', '#f43f5e', '#d946ef', '#a855f7'];
-        const coresPrioridade = { 'Baixo': '#22c55e', 'Alto': '#f97316', 'Muito Baixo': '#94a3b8', 'Muito Alto': '#ef4444', 'Médio': '#eab308' };
+        const coresPrioridade = { 'Muito Alto': '#b91c1c', 'Alto': '#ef4444', 'Médio': '#f59e0b', 'Baixo': '#22c55e', 'Muito Baixo': '#94a3b8' };
         const coresTipo = { 'Requisição': '#6366f1', 'Incidente': '#f43f5e' };
 
-        // Analistas Foco (Para o filtro do gráfico de barras)
-        const analistasAlvos = [
-            'fabio.palma.prestador', 
-            'edison.neto.prestador', 
-            'antonio.muniz.prestador', 
-            'jose.andrade.prestador'
-        ];
-
-        // === CONTROLO DO MODAL ===
+        // === MODAL E PREFERÊNCIAS ===
         const modal = document.getElementById('modal-config');
         document.getElementById('btn-config').addEventListener('click', () => modal.classList.remove('hidden'));
         document.getElementById('btn-fechar-config').addEventListener('click', () => modal.classList.add('hidden'));
@@ -295,10 +247,10 @@
         });
 
         function aplicarPersonalizacao() {
-            const titulo = localStorage.getItem('dashTitulo') || 'Analytics Suporte SETIC';
-            document.getElementById('titulo-painel').innerText = titulo;
-            document.getElementById('input-titulo').value = titulo;
+            document.getElementById('titulo-painel').innerText = localStorage.getItem('dashTitulo') || 'Analytics Suporte SETIC';
+            document.getElementById('input-titulo').value = localStorage.getItem('dashTitulo') || 'Analytics Suporte SETIC';
             document.getElementById('input-cor').value = corPrincipal;
+            document.getElementById('input-equipe').value = equipeFocoStr;
             document.getElementById('header-bg').style.backgroundColor = corPrincipal;
             if(!document.getElementById('conteudo-aparencia').classList.contains('hidden')) {
                 document.getElementById('aba-aparencia').style.color = corPrincipal;
@@ -307,10 +259,11 @@
         }
 
         document.getElementById('btn-guardar-config').addEventListener('click', () => {
-            const novoTitulo = document.getElementById('input-titulo').value;
+            localStorage.setItem('dashTitulo', document.getElementById('input-titulo').value);
             corPrincipal = document.getElementById('input-cor').value;
-            localStorage.setItem('dashTitulo', novoTitulo);
             localStorage.setItem('dashCor', corPrincipal);
+            equipeFocoStr = document.getElementById('input-equipe').value;
+            localStorage.setItem('equipeFoco', equipeFocoStr);
             aplicarPersonalizacao();
             atualizarDashboard(); 
             modal.classList.add('hidden');
@@ -319,233 +272,58 @@
         // === FIREBASE ===
         async function carregarDadosNuvem() {
             try {
-                const querySnapshot = await getDocs(collection(db, "chamados"));
-                dadosGlobais = [];
-                querySnapshot.forEach((doc) => dadosGlobais.push(doc.data()));
-                
+                const qSnap = await getDocs(collection(db, "chamados"));
+                dadosGlobais = []; qSnap.forEach((d) => dadosGlobais.push(d.data()));
                 if(dadosGlobais.length > 0) {
                     document.getElementById('txt-ficheiros').innerText = "Base conectada";
-                    preencherFiltros();
-                    atualizarDashboard();
+                    preencherFiltros(); atualizarDashboard();
                 } else {
-                    document.getElementById('txt-ficheiros').innerText = "Base Vazia. Importe.";
+                    document.getElementById('txt-ficheiros').innerText = "Base Vazia.";
                 }
-            } catch (erro) {
-                console.error(erro);
-                document.getElementById('txt-ficheiros').innerText = "Erro de conexão";
-            }
+            } catch (e) { document.getElementById('txt-ficheiros').innerText = "Erro de conexão"; }
         }
 
-        async function processarEGravarPlanilha(e) {
-            const file = e.target.files[0];
-            if (!file) return;
+        document.getElementById('file-upload').addEventListener('change', (e) => {
+            const file = e.target.files[0]; if (!file) return;
             document.getElementById('loader-upload').style.display = 'block';
             document.getElementById('txt-ficheiros').innerText = "A gravar...";
-
             const reader = new FileReader();
-            reader.onload = async function(e) {
-                const data = new Uint8Array(e.target.result);
-                const workbook = XLSX.read(data, { type: 'array' });
-                const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-                const jsonRows = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
-
+            reader.onload = async function(ev) {
+                const wb = XLSX.read(new Uint8Array(ev.target.result), { type: 'array' });
+                const jsonRows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: "" });
                 try {
                     const batchArray = [writeBatch(db)];
-                    let operationCounter = 0; let batchIndex = 0;
-
+                    let c = 0, b = 0;
                     jsonRows.forEach(row => {
                         if(row.Ticket) {
-                            const docRef = doc(db, "chamados", String(row.Ticket));
-                            batchArray[batchIndex].set(docRef, row);
-                            operationCounter++;
-                            if (operationCounter === 490) { 
-                                batchArray.push(writeBatch(db));
-                                batchIndex++;
-                                operationCounter = 0;
-                            }
+                            batchArray[b].set(doc(db, "chamados", String(row.Ticket)), row);
+                            c++; if (c === 490) { batchArray.push(writeBatch(db)); b++; c = 0; }
                         }
                     });
-                    for (const batch of batchArray) { await batch.commit(); }
-                    
+                    for (const batch of batchArray) await batch.commit();
                     document.getElementById('loader-upload').style.display = 'none';
-                    document.getElementById('file-upload').value = ""; 
-                    await carregarDadosNuvem(); 
-                } catch (error) {
-                    console.error(error);
-                    document.getElementById('loader-upload').style.display = 'none';
-                    document.getElementById('txt-ficheiros').innerText = "Erro ao gravar";
-                }
+                    e.target.value = ""; await carregarDadosNuvem(); 
+                } catch (err) { document.getElementById('loader-upload').style.display = 'none'; }
             };
             reader.readAsArrayBuffer(file);
-        }
-        document.getElementById('file-upload').addEventListener('change', processarEGravarPlanilha);
-
-        document.getElementById('btn-limpar-filtros').addEventListener('click', () => {
-            document.getElementById('filtro-mes').value = "Todos";
-            document.getElementById('filtro-analista').value = "Todos";
-            document.getElementById('filtro-prioridade').value = "Todos";
-            atualizarDashboard();
         });
 
-        function formatarFiltrosRelatorio() {
-            const fMes = document.getElementById('relatorio-mes').value;
-            const fAnalista = document.getElementById('relatorio-analista').value;
-            const dadosFiltrados = dadosGlobais.filter(d => {
-                const mesMatch = fMes === "Todos" || obterMesAno(d['Data Abertura']) === fMes;
-                const analistaMatch = fAnalista === "Todos" || d['Analista'] === fAnalista;
-                return mesMatch && analistaMatch;
-            });
-            return { fMes, fAnalista, dadosFiltrados };
+        // === LÓGICA DE FILTROS & DADOS ===
+        function parseHoras(tempoStr) {
+            if(!tempoStr) return 0;
+            const p = String(tempoStr).split(':');
+            return p.length === 3 ? parseInt(p[0]) + (parseInt(p[1])/60) + (parseInt(p[2])/3600) : 0;
         }
 
-        // === GERAÇÃO EXCEL ===
-        document.getElementById('btn-gerar-excel').addEventListener('click', () => {
-            if(dadosGlobais.length === 0) return alert("Não há dados.");
-            const { fMes, fAnalista, dadosFiltrados } = formatarFiltrosRelatorio();
-            if (dadosFiltrados.length === 0) return alert("Nenhum chamado encontrado com estes filtros.");
-            
-            const worksheet = XLSX.utils.json_to_sheet(dadosFiltrados);
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Relatorio");
-            XLSX.writeFile(workbook, `Relatorio_Chamados_${fMes}_${fAnalista}.xlsx`.replace(/[\/\s]/g, '_'));
-        });
-
-        // === GERAÇÃO PDF COM GRÁFICOS ===
-        document.getElementById('btn-gerar-pdf').addEventListener('click', () => {
-            if(dadosGlobais.length === 0) return alert("Não há dados.");
-            const { fMes, fAnalista, dadosFiltrados } = formatarFiltrosRelatorio();
-            if (dadosFiltrados.length === 0) return alert("Nenhum chamado encontrado com estes filtros.");
-
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF('p', 'pt', 'a4'); // A4 Portrait (largura ~595pt)
-
-            // 1. CABEÇALHO SOFISTICADO (Banda Azul)
-            doc.setFillColor(26, 25, 65); // #1a1941
-            doc.rect(0, 0, doc.internal.pageSize.width, 70, 'F');
-            doc.setTextColor(255, 255, 255);
-            doc.setFontSize(16);
-            doc.setFont("helvetica", "bold");
-            const tituloDoc = localStorage.getItem('dashTitulo') || 'Analytics Suporte SETIC';
-            doc.text(`Relatório Gerencial - ${tituloDoc}`, 40, 42);
-
-            // 2. DADOS DE FILTRAGEM
-            doc.setTextColor(80, 80, 80);
-            doc.setFontSize(10);
-            doc.setFont("helvetica", "normal");
-            const dataHoje = new Date().toLocaleDateString('pt-BR');
-            doc.text(`Data de Emissão: ${dataHoje}`, 40, 100);
-            doc.text(`Mês Referência: ${fMes}`, 220, 100);
-            doc.text(`Analista Responsável: ${fAnalista}`, 380, 100);
-
-            doc.setDrawColor(200, 200, 200);
-            doc.line(40, 115, doc.internal.pageSize.width - 40, 115);
-
-            // 3. RESUMO EXECUTIVO (KPIs)
-            const total = dadosFiltrados.length;
-            const atendidos = dadosFiltrados.filter(d => d['SLA Atendido'] === 'Sim').length;
-            const incidentes = dadosFiltrados.filter(d => String(d['Tipo']).toLowerCase() === 'incidente').length;
-            
-            const slaPct = total > 0 ? ((atendidos / total) * 100).toFixed(1) + '%' : '0%';
-            const incPct = total > 0 ? ((incidentes / total) * 100).toFixed(1) + '%' : '0%';
-
-            doc.setFont("helvetica", "bold");
-            doc.setFontSize(11);
-            doc.setTextColor(26, 25, 65);
-            doc.text("Resumo de Indicadores", 40, 140);
-            
-            doc.setFontSize(10);
-            doc.setFont("helvetica", "normal");
-            doc.setTextColor(80, 80, 80);
-            doc.text(`Volume Total: ${total} chamados`, 40, 160);
-            
-            doc.setTextColor(22, 163, 74); 
-            doc.text(`SLA Atendido: ${slaPct}`, 220, 160);
-            
-            doc.setTextColor(220, 38, 38); 
-            doc.text(`Índice Incidentes: ${incPct}`, 380, 160);
-
-            // 4. INSERÇÃO DAS IMAGENS DOS GRÁFICOS (Página 1)
-            doc.setFont("helvetica", "bold");
-            doc.setFontSize(12);
-            doc.setTextColor(26, 25, 65);
-            doc.text("Análise Visual", 40, 195);
-            
-            doc.setFontSize(9);
-            doc.setTextColor(100, 100, 100);
-            
-            // Transformar Canvas em JPEG (usa o bgPlugin criado acima para fundo branco)
-            const getImg = (id) => document.getElementById(id).toDataURL('image/jpeg', 1.0);
-            
-            // Linha 1 de Gráficos (Y: 220)
-            doc.text("Evolução de Chamados por Mês", 40, 215);
-            doc.text("Volume por Analista (Equipe Foco)", 305, 215);
-            doc.addImage(getImg('chart-meses'), 'JPEG', 40, 220, 240, 125);
-            doc.addImage(getImg('chart-analistas'), 'JPEG', 305, 220, 240, 125);
-            
-            // Linha 2 de Gráficos (Y: 375)
-            doc.text("Top Assuntos Mais Solicitados", 40, 370);
-            doc.text("Top Maiores Requerentes", 305, 370);
-            doc.addImage(getImg('chart-assuntos'), 'JPEG', 40, 375, 240, 125);
-            doc.addImage(getImg('chart-requerentes'), 'JPEG', 305, 375, 240, 125);
-            
-            // Linha 3 de Gráficos (Y: 530)
-            doc.text("Distribuição por Prioridade", 40, 525);
-            doc.text("Tipo de Chamado", 305, 525);
-            doc.addImage(getImg('chart-prioridade'), 'JPEG', 40, 530, 240, 125);
-            doc.addImage(getImg('chart-tipo'), 'JPEG', 305, 530, 240, 125);
-
-            // 5. TABELA DE DADOS RESUMIDA (Página 2 em diante)
-            doc.addPage();
-            doc.setFontSize(12);
-            doc.setFont("helvetica", "bold");
-            doc.setTextColor(26, 25, 65);
-            doc.text("Detalhamento dos Chamados", 40, 40);
-
-            const colunas = ["Ticket", "Abertura", "Analista", "Assunto", "Prioridade", "SLA"];
-            const linhas = dadosFiltrados.map(d => [
-                d['Ticket'] || '-',
-                (d['Data Abertura'] || '').split(' ')[0], 
-                d['Analista'] || '-',
-                (d['Assunto'] || '').substring(0, 35) + ((d['Assunto'] || '').length > 35 ? '...' : ''), 
-                d['Prioridade'] || '-',
-                d['SLA Atendido'] || '-'
-            ]);
-
-            doc.autoTable({
-                startY: 55,
-                head: [colunas],
-                body: linhas,
-                theme: 'striped',
-                headStyles: { fillColor: [26, 25, 65], textColor: [255, 255, 255] },
-                styles: { fontSize: 8, cellPadding: 4 },
-                alternateRowStyles: { fillColor: [247, 248, 250] },
-                margin: { top: 30, right: 40, bottom: 40, left: 40 },
-                didDrawPage: function (data) {
-                    doc.setFontSize(8);
-                    doc.setTextColor(150, 150, 150);
-                    doc.text(`Página ${doc.internal.getNumberOfPages()}`, doc.internal.pageSize.width / 2, doc.internal.pageSize.height - 20, { align: 'center' });
-                }
-            });
-
-            const nomeArquivo = `Relatorio_SETIC_${fMes}_${fAnalista}.pdf`.replace(/[\/\s]/g, '_');
-            doc.save(nomeArquivo);
-        });
-
-        // Formatação de Data
-        function obterMesAno(dataStr) {
-            if (typeof dataStr === 'string' && dataStr.includes('-')) {
-                const partes = dataStr.split(' ')[0].split('-');
-                if(partes.length >= 2) return `${partes[1]}/${partes[0]}`;
+        function obterMesAno(dStr) {
+            if (dStr && dStr.includes('-')) {
+                const p = dStr.split(' ')[0].split('-');
+                if(p.length >= 2) return `${p[1]}/${p[0]}`;
             }
             return "Desconhecido";
         }
-        function converteParaDataOrdem(mesAnoStr) {
-            if(!mesAnoStr || mesAnoStr==="Desconhecido") return 0;
-            const p = mesAnoStr.split('/');
-            return parseInt(p[1]) * 100 + parseInt(p[0]); 
-        }
+        function cvDtOrd(ma) { return (!ma || ma==="Desconhecido") ? 0 : parseInt(ma.split('/')[1])*100 + parseInt(ma.split('/')[0]); }
 
-        // Dropdowns
         function preencherFiltros() {
             const meses = new Set(); const analistas = new Set(); const prioridades = new Set();
             dadosGlobais.forEach(d => {
@@ -553,128 +331,204 @@
                 if(d['Analista']) analistas.add(d['Analista']);
                 if(d['Prioridade']) prioridades.add(d['Prioridade']);
             });
-
-            const mesesArray = Array.from(meses).filter(m => m!=="Desconhecido").sort((a,b) => converteParaDataOrdem(a) - converteParaDataOrdem(b));
-            preencherSelect('filtro-mes', mesesArray, "Todos os Meses");
-            preencherSelect('relatorio-mes', mesesArray, "Geral (Todos os Meses)");
+            const mArr = Array.from(meses).filter(m => m!=="Desconhecido").sort((a,b) => cvDtOrd(a) - cvDtOrd(b));
+            preencherSelect('filtro-mes', mArr, "Todos os Meses");
             preencherSelect('filtro-analista', Array.from(analistas).sort(), "Todos os Analistas");
-            preencherSelect('relatorio-analista', Array.from(analistas).sort(), "Geral (Todos os Analistas)");
             preencherSelect('filtro-prioridade', Array.from(prioridades).sort(), "Todas as Prioridades");
         }
-
-        function preencherSelect(id, arrayOpcoes, textoDefault) {
-            const select = document.getElementById(id); const atual = select.value;
-            select.innerHTML = `<option value="Todos">${textoDefault}</option>`;
-            arrayOpcoes.forEach(item => {
-                const opt = document.createElement('option'); opt.value = item; opt.innerText = item;
-                select.appendChild(opt);
-            });
-            if (arrayOpcoes.includes(atual)) select.value = atual;
+        function preencherSelect(id, arr, def) {
+            const s = document.getElementById(id); const atual = s.value;
+            s.innerHTML = `<option value="Todos">${def}</option>`;
+            arr.forEach(i => { const opt = document.createElement('option'); opt.value = i; opt.innerText = i; s.appendChild(opt); });
+            if (arr.includes(atual)) s.value = atual;
         }
 
-        ['filtro-mes', 'filtro-analista', 'filtro-prioridade'].forEach(id => {
+        ['filtro-mes', 'filtro-analista', 'filtro-prioridade', 'filtro-data-inicio', 'filtro-data-fim'].forEach(id => {
             document.getElementById(id).addEventListener('change', atualizarDashboard);
         });
+        document.getElementById('btn-limpar-filtros').addEventListener('click', () => {
+            ['filtro-mes', 'filtro-analista', 'filtro-prioridade', 'filtro-data-inicio', 'filtro-data-fim'].forEach(i => document.getElementById(i).value = i.includes('data') ? "" : "Todos");
+            atualizarDashboard();
+        });
 
-        // === CORE DASHBOARD ===
+        let dadosFiltradosCache = []; // Para usar no PDF
+        let tmaGlobalTexto = "0.0h";
+        let slaGlobalTexto = "0%";
+        let incGlobalTexto = "0%";
+
         function atualizarDashboard() {
             if (dadosGlobais.length === 0) return;
-            const fMes = document.getElementById('filtro-mes').value;
-            const fAnalista = document.getElementById('filtro-analista').value;
-            const fPrio = document.getElementById('filtro-prioridade').value;
+            const fM = document.getElementById('filtro-mes').value;
+            const fA = document.getElementById('filtro-analista').value;
+            const fP = document.getElementById('filtro-prioridade').value;
+            const dIn = document.getElementById('filtro-data-inicio').value;
+            const dFim = document.getElementById('filtro-data-fim').value;
 
             const filtrados = dadosGlobais.filter(d => {
-                const mesMatch = fMes === "Todos" || obterMesAno(d['Data Abertura']) === fMes;
-                const analistaMatch = fAnalista === "Todos" || d['Analista'] === fAnalista;
-                const prioMatch = fPrio === "Todos" || d['Prioridade'] === fPrio;
-                return mesMatch && analistaMatch && prioMatch;
+                let match = (fM === "Todos" || obterMesAno(d['Data Abertura']) === fM) &&
+                            (fA === "Todos" || d['Analista'] === fA) &&
+                            (fP === "Todos" || d['Prioridade'] === fP);
+                if(match && (dIn || dFim) && d['Data Abertura']) {
+                    const dObj = new Date(d['Data Abertura'].split(' ')[0]);
+                    if(dIn && dObj < new Date(dIn)) match = false;
+                    if(dFim && dObj > new Date(dFim)) match = false;
+                }
+                return match;
             });
+            dadosFiltradosCache = filtrados;
 
             // KPIs
-            document.getElementById('kpi-total-global').innerText = dadosGlobais.length.toLocaleString('pt-BR');
-            document.getElementById('kpi-total-filtrado').innerText = filtrados.length.toLocaleString('pt-BR');
+            const total = filtrados.length;
+            document.getElementById('kpi-total').innerText = dadosGlobais.length.toLocaleString('pt-BR');
+            document.getElementById('kpi-filtrado').innerText = total.toLocaleString('pt-BR');
             
-            const atendidos = filtrados.filter(d => d['SLA Atendido'] === 'Sim').length;
-            const incidentes = filtrados.filter(d => String(d['Tipo']).toLowerCase() === 'incidente').length;
+            const horasTMA = total > 0 ? (filtrados.reduce((acc, d) => acc + parseHoras(d['Tempo Solução']), 0) / total) : 0;
+            tmaGlobalTexto = horasTMA.toFixed(1) + 'h';
+            document.getElementById('kpi-tma').innerText = tmaGlobalTexto;
+
+            const atend = filtrados.filter(d => d['SLA Atendido'] === 'Sim').length;
+            const incid = filtrados.filter(d => String(d['Tipo']).toLowerCase() === 'incidente').length;
             
-            document.getElementById('kpi-sla').innerText = filtrados.length > 0 ? ((atendidos / filtrados.length) * 100).toFixed(1) + '%' : '0%';
-            document.getElementById('kpi-incidentes').innerText = filtrados.length > 0 ? ((incidentes / filtrados.length) * 100).toFixed(1) + '%' : '0%';
+            slaGlobalTexto = total > 0 ? ((atend / total) * 100).toFixed(1) + '%' : '0%';
+            incGlobalTexto = total > 0 ? ((incid / total) * 100).toFixed(1) + '%' : '0%';
+            document.getElementById('kpi-sla').innerText = slaGlobalTexto;
+            document.getElementById('kpi-incidentes').innerText = incGlobalTexto;
 
-            // Dados Gráfico Meses
-            let dadosMes = agruparPor(filtrados, d => obterMesAno(d['Data Abertura']));
-            const indicesOrdenados = dadosMes.labels.map((val, ind) => ({val, ind})).sort((a,b) => converteParaDataOrdem(a.val) - converteParaDataOrdem(b.val));
-            dadosMes.labels = indicesOrdenados.map(i => i.val);
-            dadosMes.values = indicesOrdenados.map(i => dadosMes.values[i.ind]);
+            // Dados Gráficos
+            let dMes = agruparPor(filtrados, d => obterMesAno(d['Data Abertura']));
+            const indOrd = dMes.labels.map((val, ind) => ({val, ind})).sort((a,b) => cvDtOrd(a.val) - cvDtOrd(b.val));
+            dMes.labels = indOrd.map(i => i.val); dMes.values = indOrd.map(i => dMes.values[i.ind]);
 
-            // Dados Gráfico Analista (FILTRO APLICADO APENAS PARA OS 4 ALVOS)
-            let dadosAnaBruto = agruparPor(filtrados, 'Analista');
-            let dadosAna = { labels: [], values: [] };
-            dadosAnaBruto.labels.forEach((lbl, idx) => {
-                if(analistasAlvos.includes(lbl)) {
-                    dadosAna.labels.push(lbl);
-                    dadosAna.values.push(dadosAnaBruto.values[idx]);
-                }
+            const equipeArray = equipeFocoStr.split(',').map(s=>s.trim().toLowerCase());
+            let dAnaBruto = agruparPor(filtrados, 'Analista');
+            let dAna = { labels: [], values: [] };
+            dAnaBruto.labels.forEach((lbl, idx) => {
+                if(equipeArray.includes(lbl.toLowerCase())) { dAna.labels.push(lbl); dAna.values.push(dAnaBruto.values[idx]); }
             });
 
-            // Demais Dados
-            const dadosAss = agruparPor(filtrados, 'Categoria', 15);
-            const dadosReq = agruparPor(filtrados, 'Requerente', 10);
-            const dadosPrio = agruparPor(filtrados, 'Prioridade');
-            const dadosTipo = agruparPor(filtrados, 'Tipo');
+            const dAss = agruparPor(filtrados, 'Categoria', 15);
+            const dReq = agruparPor(filtrados, 'Requerente', 10);
+            
+            // Ordenação Lógica de Prioridade
+            let dPrioBruto = agruparPor(filtrados, 'Prioridade');
+            const mapOrdP = {'Muito Alto': 1, 'Alto': 2, 'Médio': 3, 'Baixo': 4, 'Muito Baixo': 5};
+            let arrP = dPrioBruto.labels.map((l, i) => ({l, v: dPrioBruto.values[i]}));
+            arrP.sort((a,b) => (mapOrdP[a.l] || 99) - (mapOrdP[b.l] || 99));
+            const dPrio = { labels: arrP.map(i=>i.l), values: arrP.map(i=>i.v) };
+            
+            const dTipo = agruparPor(filtrados, 'Tipo');
 
-            // Renderizar
-            renderizarGrafico('chart-meses', 'line', dadosMes, corPrincipal);
-            renderizarGrafico('chart-analistas', 'bar', dadosAna, corPrincipal);
-            renderizarGraficoMultiCor('chart-assuntos', 'bar', dadosAss, paletaAssuntos, true);
-            renderizarGrafico('chart-requerentes', 'bar', dadosReq, '#2e2b7a', true);
-            renderizarCircular('chart-prioridade', 'doughnut', dadosPrio, coresPrioridade);
-            renderizarCircular('chart-tipo', 'pie', dadosTipo, coresTipo);
-        }
-
-        function agruparPor(dados, chave, limite = null) {
-            const contagem = {};
-            dados.forEach(d => {
-                const k = typeof chave === 'function' ? chave(d) : d[chave];
-                if (k) contagem[k] = (contagem[k] || 0) + 1;
+            renderizarG('chart-meses', 'line', dMes, corPrincipal, false, false);
+            renderizarG('chart-analistas', 'bar', dAna, corPrincipal, false, true, (labelClicado) => {
+                document.getElementById('filtro-analista').value = labelClicado; atualizarDashboard();
             });
-            let arr = Object.keys(contagem).map(k => ({ label: k, value: contagem[k] }));
-            arr.sort((a, b) => b.value - a.value);
-            if (limite) arr = arr.slice(0, limite);
-            return { labels: arr.map(i => i.label), values: arr.map(i => i.value) };
+            renderizarGMulti('chart-assuntos', 'bar', dAss, paletaAssuntos, true);
+            renderizarG('chart-requerentes', 'bar', dReq, '#2e2b7a', true, false);
+            renderizarCirc('chart-prioridade', 'doughnut', dPrio, coresPrioridade);
+            renderizarCirc('chart-tipo', 'pie', dTipo, coresTipo);
         }
 
-        function renderizarGrafico(canvasId, tipo, dadosAgrupados, cor, horizontal = false) {
-            const ctx = document.getElementById(canvasId).getContext('2d');
-            if (graficos[canvasId]) graficos[canvasId].destroy();
-            const options = { responsive: true, plugins: { legend: { display: false } } };
+        function agruparPor(dados, chave, limite=null) {
+            const c = {};
+            dados.forEach(d => { const k = typeof chave==='function' ? chave(d) : d[chave]; if(k) c[k] = (c[k]||0)+1; });
+            let arr = Object.keys(c).map(k => ({ label: k, value: c[k] })).sort((a,b) => b.value - a.value);
+            if(limite) arr = arr.slice(0, limite);
+            return { labels: arr.map(i=>i.label), values: arr.map(i=>i.value) };
+        }
+
+        // === RENDERIZADORES DE CHART.JS ===
+        function renderizarG(id, tipo, dAgr, cor, horizontal, showLabels=false, onClickCallback=null) {
+            const ctx = document.getElementById(id).getContext('2d');
+            if (graficos[id]) graficos[id].destroy();
+            
+            const options = { 
+                responsive: true, maintainAspectRatio: false,
+                plugins: { 
+                    legend: { display: false },
+                    datalabels: {
+                        display: showLabels, color: '#fff', font: {weight: 'bold'},
+                        anchor: 'end', align: 'start', offset: 4
+                    }
+                },
+                onClick: (e, act) => { if(onClickCallback && act.length>0) onClickCallback(dAgr.labels[act[0].index]); }
+            };
             if(horizontal) options.indexAxis = 'y';
-            const dataset = { data: dadosAgrupados.values, backgroundColor: cor, borderRadius: horizontal ? 0 : 3 };
-            if(tipo === 'line') {
-                dataset.fill = true; dataset.backgroundColor = cor + '20'; dataset.borderColor = cor; dataset.tension = 0.4; dataset.pointBackgroundColor = cor;
-            }
-            graficos[canvasId] = new Chart(ctx, { type: tipo, data: { labels: dadosAgrupados.labels, datasets: [dataset] }, options: options });
+            if(tipo === 'line' && showLabels) options.plugins.datalabels = {display:true, color:cor, anchor:'end', align:'top', offset:4, font:{weight:'bold'}};
+
+            const ds = { data: dAgr.values, backgroundColor: cor, borderRadius: horizontal ? 0 : 4 };
+            if(tipo === 'line') { ds.fill=true; ds.backgroundColor=cor+'20'; ds.borderColor=cor; ds.tension=0.4; ds.pointBackgroundColor=cor; }
+            graficos[id] = new Chart(ctx, { type: tipo, data: { labels: dAgr.labels, datasets: [ds] }, options: options });
         }
 
-        function renderizarGraficoMultiCor(canvasId, tipo, dadosAgrupados, arrayCores, horizontal = false) {
-            const ctx = document.getElementById(canvasId).getContext('2d');
-            if (graficos[canvasId]) graficos[canvasId].destroy();
-            graficos[canvasId] = new Chart(ctx, {
-                type: tipo,
-                data: { labels: dadosAgrupados.labels, datasets: [{ data: dadosAgrupados.values, backgroundColor: arrayCores, borderRadius: 3 }] },
-                options: { indexAxis: horizontal ? 'y' : 'x', responsive: true, plugins: { legend: { display: false } } }
+        function renderizarGMulti(id, tipo, dAgr, cores, horizontal) {
+            const ctx = document.getElementById(id).getContext('2d');
+            if (graficos[id]) graficos[id].destroy();
+            graficos[id] = new Chart(ctx, {
+                type: tipo, data: { labels: dAgr.labels, datasets: [{ data: dAgr.values, backgroundColor: cores, borderRadius: 2 }] },
+                options: { indexAxis: horizontal ? 'y' : 'x', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, datalabels: { display: false } } }
             });
         }
 
-        function renderizarCircular(canvasId, tipo, dadosAgrupados, mapCores) {
-            const ctx = document.getElementById(canvasId).getContext('2d');
-            if (graficos[canvasId]) graficos[canvasId].destroy();
-            const bgColors = dadosAgrupados.labels.map(l => mapCores[l] || '#9ca3af');
-            graficos[canvasId] = new Chart(ctx, {
-                type: tipo,
-                data: { labels: dadosAgrupados.labels, datasets: [{ data: dadosAgrupados.values, backgroundColor: bgColors, borderWidth: 1 }] },
-                options: { responsive: true, plugins: { legend: { position: 'right' } } }
+        function renderizarCirc(id, tipo, dAgr, mapCores) {
+            const ctx = document.getElementById(id).getContext('2d');
+            if (graficos[id]) graficos[id].destroy();
+            const bgC = dAgr.labels.map(l => mapCores[l] || '#9ca3af');
+            graficos[id] = new Chart(ctx, {
+                type: tipo, data: { labels: dAgr.labels, datasets: [{ data: dAgr.values, backgroundColor: bgC, borderWidth: 1 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' }, datalabels: { display: false } } }
             });
         }
+
+        // === RELATÓRIOS (EXCEL E PDF) ===
+        document.getElementById('btn-gerar-excel').addEventListener('click', () => {
+            if(dadosFiltradosCache.length === 0) return alert("Nenhum dado.");
+            const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(dadosFiltradosCache), "Relatorio");
+            XLSX.writeFile(wb, `Relatorio_SETIC.xlsx`);
+        });
+
+        document.getElementById('btn-gerar-pdf').addEventListener('click', () => {
+            if(dadosFiltradosCache.length === 0) return alert("Nenhum dado.");
+            const { jsPDF } = window.jspdf; const doc = new jsPDF('p', 'pt', 'a4');
+            const w = doc.internal.pageSize.width;
+            
+            // Cabeçalho
+            doc.setFillColor(26, 25, 65); doc.rect(0, 0, w, 70, 'F');
+            doc.setTextColor(255, 255, 255); doc.setFontSize(16); doc.setFont("helvetica", "bold");
+            doc.text(`Relatório Gerencial - ${localStorage.getItem('dashTitulo') || 'Analytics'}`, 40, 42);
+
+            // Resumo Inteligente
+            doc.setTextColor(26, 25, 65); doc.setFontSize(12); doc.text("Resumo Executivo Automatizado", 40, 110);
+            doc.setTextColor(60, 60, 60); doc.setFontSize(10); doc.setFont("helvetica", "normal");
+            
+            const txtIA = `Data da Análise: ${new Date().toLocaleDateString('pt-BR')}. O período ou recorte selecionado processou um total de ${dadosFiltradosCache.length} chamados técnicos. O Tempo Médio de Atendimento (TMA) operacional fechou em ${tmaGlobalTexto}, garantindo uma taxa de cumprimento de SLA de ${slaGlobalTexto}. A volumetria de requisições preventivas/suporte padrão em relação às quebras/incidentes operacionais (${incGlobalTexto}) indica a estabilidade atual do parque tecnológico monitorado.`;
+            doc.text(doc.splitTextToSize(txtIA, w - 80), 40, 130);
+            doc.setDrawColor(200, 200, 200); doc.line(40, 175, w - 40, 175);
+
+            // Gráficos (Dimensões ajustadas)
+            doc.setFont("helvetica", "bold"); doc.setTextColor(26, 25, 65); doc.text("Painel Visual", 40, 205);
+            doc.setFontSize(9); doc.setTextColor(100, 100, 100);
+            
+            const getImg = (id) => document.getElementById(id).toDataURL('image/jpeg', 1.0);
+            
+            doc.text("Evolução", 40, 225); doc.addImage(getImg('chart-meses'), 'JPEG', 40, 230, 240, 130);
+            doc.text("Top Assuntos", 305, 225); doc.addImage(getImg('chart-assuntos'), 'JPEG', 305, 230, 240, 130);
+            
+            doc.text("Criticidade Lógica", 40, 395); doc.addImage(getImg('chart-prioridade'), 'JPEG', 40, 400, 240, 130);
+            doc.text("Time Foco", 305, 395); doc.addImage(getImg('chart-analistas'), 'JPEG', 305, 400, 240, 130);
+
+            // Tabela 
+            doc.addPage();
+            doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.setTextColor(26, 25, 65); doc.text("Detalhamento dos Chamados", 40, 40);
+
+            const linhas = dadosFiltradosCache.map(d => [ d['Ticket']||'-', (d['Data Abertura']||'').split(' ')[0], d['Analista']||'-', (d['Assunto']||'').substring(0, 35), d['Prioridade']||'-', d['Tempo Solução']||'-' ]);
+            doc.autoTable({
+                startY: 55, head: [["Ticket", "Abertura", "Analista", "Assunto", "Prioridade", "T. Solução"]], body: linhas,
+                theme: 'striped', headStyles: { fillColor: [26, 25, 65] }, styles: { fontSize: 8 }, alternateRowStyles: { fillColor: [247, 248, 250] },
+                margin: { top: 30, right: 40, bottom: 40, left: 40 },
+                didDrawPage: function (dt) { doc.setFontSize(8); doc.text(`Pág ${doc.internal.getNumberOfPages()}`, w/2, doc.internal.pageSize.height - 20, {align:'center'}); }
+            });
+            doc.save(`Relatorio_Executivo_SETIC.pdf`);
+        });
 
         aplicarPersonalizacao();
         carregarDadosNuvem();
