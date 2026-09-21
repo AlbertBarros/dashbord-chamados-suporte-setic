@@ -21,9 +21,9 @@
         body { background-color: #f3f4f6; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
         .card { background-color: #ffffff; border-radius: 0.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 1.25rem; }
         
-        /* TRAVA RÍGIDA DE ALTURA PARA OS GRÁFICOS (Evita o Loop Infinito) */
-        .chart-container { position: relative; height: 280px; width: 100%; }
-        .chart-container-small { position: relative; height: 220px; width: 100%; display: flex; justify-content: center; }
+        /* CONTAINER DE GRÁFICOS PARA PREENCHER LARGURA TOTAL E TRAVAR ALTURA */
+        .chart-container { position: relative; height: 260px; width: 100%; }
+        .chart-container-small { position: relative; height: 240px; width: 100%; display: flex; justify-content: center; }
         
         .loader { border: 3px solid #f3f3f3; border-top: 3px solid #ffffff; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: none; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -44,7 +44,7 @@
             <h1 id="titulo-painel" class="text-xl font-bold tracking-wide">Analytics Suporte SETIC</h1>
         </div>
         <div class="flex items-center gap-4 mr-4">
-            <span id="badge-status" class="text-xs font-bold px-2 py-1 bg-yellow-500 rounded text-white shadow" title="A carregar dados do ano atual..."><i class="fa-solid fa-spinner fa-spin"></i> A Ligar</span>
+            <span id="badge-status" class="text-xs font-bold px-2 py-1 bg-yellow-500 rounded text-white shadow"><i class="fa-solid fa-spinner fa-spin"></i> A Ligar</span>
             <button id="btn-config" class="bg-[#2c2a5e] hover:bg-[#3d3b73] px-4 py-2 rounded transition shadow flex items-center gap-2 text-sm font-semibold">
                 <i class="fa-solid fa-toolbox"></i> Painel de Ferramentas
             </button>
@@ -92,33 +92,29 @@
 
         <!-- KPIs Cards -->
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
-            <div class="card flex items-center gap-4 cursor-help hover:bg-gray-50 transition" title="Total Absoluto: Volume total de chamados na base atual, ignorando os filtros.">
+            <div class="card flex items-center gap-4 cursor-help hover:bg-gray-50 transition" title="Volume total de chamados na base.">
                 <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-xl"><i class="fa-solid fa-ticket"></i></div>
                 <div><p class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Total (Geral)</p><p id="kpi-total" class="text-2xl font-black text-gray-800">0</p></div>
             </div>
-            
-            <div class="card flex items-center gap-4 cursor-help hover:bg-gray-50 transition" title="Filtrados: Quantidade exata de chamados baseada nos filtros selecionados.">
+            <div class="card flex items-center gap-4 cursor-help hover:bg-gray-50 transition" title="Quantidade baseada nos filtros atuais.">
                 <div class="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 text-xl"><i class="fa-solid fa-calendar-check"></i></div>
                 <div><p class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Filtrados</p><p id="kpi-filtrado" class="text-2xl font-black text-gray-800">0</p></div>
             </div>
-            
-            <div class="card flex items-center gap-4 cursor-help hover:bg-gray-50 transition" title="TMA (Tempo Médio de Atendimento): Média em horas para fechar os chamados.">
+            <div class="card flex items-center gap-4 cursor-help hover:bg-gray-50 transition" title="Tempo Médio de Atendimento em horas.">
                 <div class="w-12 h-12 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600 text-xl"><i class="fa-regular fa-clock"></i></div>
                 <div><p class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">TMA (Horas)</p><p id="kpi-tma" class="text-2xl font-black text-gray-800">0.0h</p></div>
             </div>
-            
-            <div class="card flex items-center gap-4 cursor-help hover:bg-gray-50 transition" title="SLA Atendido: Percentagem de chamados resolvidos dentro do prazo estipulado.">
+            <div class="card flex items-center gap-4 cursor-help hover:bg-gray-50 transition" title="Percentagem resolvidos no prazo.">
                 <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-green-500 text-xl"><i class="fa-solid fa-stopwatch"></i></div>
                 <div><p class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">SLA Atendido</p><p id="kpi-sla" class="text-2xl font-black text-gray-800">0%</p></div>
             </div>
-            
-            <div class="card flex items-center gap-4 cursor-help hover:bg-gray-50 transition" title="Índice de Incidentes: Volume de quebras (falhas) vs pedidos de rotina (requisições).">
+            <div class="card flex items-center gap-4 cursor-help hover:bg-gray-50 transition" title="Volume de falhas (vs pedidos).">
                 <div class="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 text-xl"><i class="fa-solid fa-triangle-exclamation"></i></div>
                 <div><p class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Incidentes</p><p id="kpi-incidentes" class="text-2xl font-black text-gray-800">0%</p></div>
             </div>
         </div>
 
-        <!-- Gráficos com TRAVA de altura -->
+        <!-- Gráficos com Trava de Altura e Largura Total -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <div class="card flex flex-col">
                 <h3 class="font-bold text-gray-700 mb-4 border-b pb-2 text-sm uppercase">Evolução de Chamados</h3>
@@ -156,7 +152,7 @@
         <!-- Tabela de Dados Interativa -->
         <div class="card">
             <div class="flex justify-between items-end mb-4 border-b pb-2">
-                <h3 class="font-bold text-gray-700 text-sm uppercase"><i class="fa-solid fa-table-list mr-2 text-[#1a1941]"></i>Detalhamento Operacional (Lista de Tickets)</h3>
+                <h3 class="font-bold text-gray-700 text-sm uppercase"><i class="fa-solid fa-table-list mr-2 text-[#1a1941]"></i>Detalhamento Operacional</h3>
                 <span class="text-xs text-gray-500 font-semibold" id="txt-tabela-count">Exibindo 0 registros.</span>
             </div>
             <div class="table-container rounded border border-gray-200">
@@ -202,13 +198,7 @@
 
             <div class="p-6 overflow-y-auto flex-grow">
                 
-                <!-- Aba 1: Importar Base -->
                 <div id="conteudo-dados" class="block">
-                    <div class="bg-blue-50 text-blue-800 p-3 rounded text-sm mb-4 border border-blue-100 flex items-start gap-3">
-                        <i class="fa-solid fa-circle-info mt-1"></i>
-                        <p>O sistema carrega apenas os dados do Ano Corrente na inicialização para garantir alta performance. Os novos uploads fundem-se automaticamente (mesclam pelo Ticket).</p>
-                    </div>
-                    
                     <label class="bg-gray-50 hover:bg-gray-100 text-[#1a1941] border-2 border-dashed border-[#1a1941] w-full p-8 rounded-lg font-semibold cursor-pointer transition flex flex-col items-center justify-center gap-3">
                         <i class="fa-solid fa-cloud-arrow-up text-4xl mb-1"></i>
                         <span>Clique para Importar Planilha Atualizada (.xlsx)</span>
@@ -217,16 +207,14 @@
                     <div id="loader-upload" class="mt-4 flex items-center justify-center gap-2 text-sm font-semibold text-[#1a1941] hidden">
                         <div class="loader !border-t-[#1a1941] !border-4 !w-5 !h-5 inline-block"></div> Gravando no Firebase...
                     </div>
-                    
                     <div class="mt-6 text-center border-t pt-4">
                         <p class="text-xs text-gray-500 mb-2">Deseja cruzar dados e gerar análises com anos anteriores?</p>
                         <button id="btn-carregar-historico" class="bg-gray-800 hover:bg-black text-white px-4 py-2 rounded text-sm font-semibold transition shadow-sm">
-                            <i class="fa-solid fa-database"></i> Carregar Histórico Completo (Lento)
+                            <i class="fa-solid fa-database"></i> Carregar Histórico Completo
                         </button>
                     </div>
                 </div>
 
-                <!-- Aba 2: Configurações -->
                 <div id="conteudo-aparencia" class="hidden">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                         <div>
@@ -244,16 +232,12 @@
                     <div>
                         <label class="block text-sm font-semibold mb-1">Composição da Equipe Foco (Analistas Filtrados)</label>
                         <textarea id="input-equipe" class="w-full border rounded p-3 text-sm text-gray-700 bg-gray-50 focus:bg-white transition font-mono" rows="3" placeholder="fabio.palma.prestador, edison.neto.prestador..."></textarea>
-                        <p class="text-[11px] text-gray-500 mt-1"><i class="fa-solid fa-circle-info"></i> Separe os nomes por vírgula. Eles devem corresponder exatamente à coluna 'Analista' do Excel. Estes nomes serão os únicos no gráfico de Volume por Analista.</p>
                     </div>
                 </div>
 
-                <!-- Aba 3: Relatórios -->
                 <div id="conteudo-relatorios" class="hidden">
                     <div class="bg-indigo-50 border border-indigo-100 p-4 rounded mb-5">
-                        <h4 class="font-bold text-indigo-800 text-sm mb-2"><i class="fa-solid fa-file-signature"></i> Geração de Relatório Oficial (PDF/Excel)</h4>
-                        <p class="text-xs text-indigo-700 mb-3">Selecione o recorte desejado. O sistema vai gerar uma análise textual inteligente e alinhar os gráficos da tela para captura fotográfica no PDF.</p>
-                        
+                        <h4 class="font-bold text-indigo-800 text-sm mb-2"><i class="fa-solid fa-file-signature"></i> Geração de Relatório Oficial</h4>
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-xs font-bold text-indigo-900 uppercase mb-1">Filtro de Mês</label>
@@ -265,34 +249,29 @@
                             </div>
                         </div>
                     </div>
-                    
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
                         <button id="btn-gerar-excel" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-3 rounded shadow transition flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-file-excel text-xl"></i> <div><p class="text-sm">Extração Bruta</p><p class="text-[10px] font-normal opacity-80">Planilha Excel (XLSX)</p></div>
+                            <i class="fa-solid fa-file-excel text-xl"></i> Extração Excel
                         </button>
                         <button id="btn-gerar-pdf" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-3 rounded shadow transition flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-file-pdf text-xl"></i> <div><p class="text-sm">Relatório Executivo</p><p class="text-[10px] font-normal opacity-80">Documento Oficial PDF</p></div>
+                            <i class="fa-solid fa-file-pdf text-xl"></i> Relatório PDF
                         </button>
                     </div>
                 </div>
 
-                <!-- Aba 4: Admin (Perigo) -->
                 <div id="conteudo-admin" class="hidden">
                     <div class="border-2 border-red-200 bg-red-50 p-5 rounded-lg">
                         <div class="flex items-center gap-3 text-red-700 mb-3">
                             <i class="fa-solid fa-skull-crossbones text-2xl"></i>
-                            <h3 class="font-bold text-lg">Zona de Perigo (Reset de Banco)</h3>
+                            <h3 class="font-bold text-lg">Zona de Perigo</h3>
                         </div>
-                        <p class="text-sm text-red-800 mb-4 font-semibold">Esta ação apagará <strong>todos os chamados</strong> armazenados na nuvem (Firebase). Use apenas se o banco corromper ou se os dados subirem duplicados com erros severos. Não há como desfazer.</p>
-                        
+                        <p class="text-sm text-red-800 mb-4 font-semibold">Esta ação apagará <strong>todos os chamados</strong> armazenados na nuvem.</p>
                         <div class="flex items-end gap-3 bg-white p-4 rounded border border-red-200 shadow-inner">
                             <div class="flex-grow">
-                                <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Palavra-passe de Autorização</label>
-                                <input type="password" id="input-senha-admin" class="w-full border rounded p-2 text-sm focus:border-red-500 focus:ring-red-500" placeholder="Digite a senha para desbloquear">
+                                <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Palavra-passe</label>
+                                <input type="password" id="input-senha-admin" class="w-full border rounded p-2 text-sm" placeholder="Digite a senha para desbloquear">
                             </div>
-                            <button id="btn-zerar-banco" class="bg-gray-400 text-white font-bold py-2 px-4 rounded text-sm cursor-not-allowed transition" disabled>
-                                <i class="fa-solid fa-trash-can"></i> Apagar Nuvem
-                            </button>
+                            <button id="btn-zerar-banco" class="bg-gray-400 text-white font-bold py-2 px-4 rounded text-sm cursor-not-allowed transition" disabled>Apagar Nuvem</button>
                         </div>
                         <p id="msg-admin-status" class="text-xs font-bold mt-2 text-center hidden"></p>
                     </div>
@@ -307,12 +286,11 @@
         </div>
     </div>
 
-    <!-- Scripts da Lógica de Negócio -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
         import { getFirestore, collection, getDocs, doc, writeBatch } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
-        // === CONFIGURAÇÕES GLOBAIS CHART.JS ===
+        // === CHARTJS SETUP ===
         Chart.defaults.animation = false; 
         Chart.register(ChartDataLabels);
         const bgPlugin = {
@@ -324,7 +302,7 @@
         };
         Chart.register(bgPlugin);
 
-        // === INICIALIZAÇÃO FIREBASE ===
+        // === FIREBASE ===
         const firebaseConfig = {
             apiKey: "AIzaSyBmi5IQIl0WwwrGGqq8Q-lB2gcou8TDqaU",
             authDomain: "dashboard-chamado-setic.firebaseapp.com",
@@ -335,32 +313,19 @@
         };
         
         let app, db;
-        try {
-            app = initializeApp(firebaseConfig);
-            db = getFirestore(app);
-        } catch (error) {
-            console.error("Erro fatal ao inicializar Firebase:", error);
-        }
+        try { app = initializeApp(firebaseConfig); db = getFirestore(app); } catch (error) { console.error(error); }
 
-        // Variáveis Globais de Estado
-        let dadosGlobais = []; 
-        let dadosFiltradosCache = [];
-        let historicoCompletoCarregado = false;
-        
-        // Estética LocalStorage
+        let dadosGlobais = []; let dadosFiltradosCache = []; let historicoCompletoCarregado = false;
         let corPrincipal = localStorage.getItem('dashCor') || '#1a1941';
         let equipeFocoStr = localStorage.getItem('equipeFoco') || 'fabio.palma.prestador, edison.neto.prestador, antonio.muniz.prestador, jose.andrade.prestador';
         let graficos = {};
-
         const paletaAssuntos = ['#4f46e5', '#3b82f6', '#0ea5e9', '#06b6d4', '#14b8a6', '#10b981', '#22c55e', '#84cc16', '#eab308', '#f59e0b', '#f97316', '#ef4444', '#f43f5e', '#d946ef', '#a855f7'];
         const coresPrioridade = { 'Muito Alto': '#b91c1c', 'Alto': '#ef4444', 'Médio': '#f59e0b', 'Baixo': '#22c55e', 'Muito Baixo': '#94a3b8' };
         const coresTipo = { 'Requisição': '#6366f1', 'Incidente': '#f43f5e' };
         
-        // Paginação Tabela
-        let tabelaPaginaAtual = 1;
-        const tabelaItensPorPagina = 50;
+        let tabelaPaginaAtual = 1; const tabelaItensPorPagina = 50;
 
-        // === SISTEMA DE ABAS DO MODAL ===
+        // === MODAL ===
         const modal = document.getElementById('modal-config');
         document.getElementById('btn-config').addEventListener('click', () => { modal.classList.remove('hidden'); switchTab('aba-dados', 'conteudo-dados'); });
         ['btn-fechar-config', 'btn-fechar-config-icon'].forEach(id => document.getElementById(id).addEventListener('click', () => modal.classList.add('hidden')));
@@ -374,10 +339,8 @@
             const activeTab = document.getElementById(activeId);
             activeTab.className = activeId === 'aba-admin' ? `px-4 py-2 tab-active text-red-700 border-red-700 focus:outline-none font-semibold text-sm ml-auto` : `px-4 py-2 tab-active text-[${corPrincipal}] border-[${corPrincipal}] focus:outline-none font-semibold text-sm`;
             if (activeId !== 'aba-admin') { activeTab.style.color = corPrincipal; activeTab.style.borderColor = corPrincipal; }
-
             ['conteudo-dados', 'conteudo-aparencia', 'conteudo-relatorios', 'conteudo-admin'].forEach(id => document.getElementById(id).classList.add('hidden'));
             document.getElementById(contentId).classList.remove('hidden');
-            
             document.getElementById('btn-guardar-config').style.display = contentId === 'conteudo-aparencia' ? 'block' : 'none';
         }
 
@@ -391,8 +354,7 @@
         function aplicarPersonalizacao() {
             document.getElementById('titulo-painel').innerText = localStorage.getItem('dashTitulo') || 'Analytics Suporte SETIC';
             document.getElementById('input-titulo').value = localStorage.getItem('dashTitulo') || 'Analytics Suporte SETIC';
-            document.getElementById('input-cor').value = corPrincipal;
-            document.getElementById('hex-view').innerText = corPrincipal;
+            document.getElementById('input-cor').value = corPrincipal; document.getElementById('hex-view').innerText = corPrincipal;
             document.getElementById('input-equipe').value = equipeFocoStr;
             document.getElementById('header-bg').style.backgroundColor = corPrincipal;
             document.getElementById('card-filtros').style.borderTopColor = corPrincipal;
@@ -401,15 +363,12 @@
 
         document.getElementById('btn-guardar-config').addEventListener('click', () => {
             localStorage.setItem('dashTitulo', document.getElementById('input-titulo').value);
-            corPrincipal = document.getElementById('input-cor').value;
-            localStorage.setItem('dashCor', corPrincipal);
-            equipeFocoStr = document.getElementById('input-equipe').value;
-            localStorage.setItem('equipeFoco', equipeFocoStr);
-            aplicarPersonalizacao(); preencherFiltros(); atualizarDashboard(); 
-            modal.classList.add('hidden');
+            corPrincipal = document.getElementById('input-cor').value; localStorage.setItem('dashCor', corPrincipal);
+            equipeFocoStr = document.getElementById('input-equipe').value; localStorage.setItem('equipeFoco', equipeFocoStr);
+            aplicarPersonalizacao(); preencherFiltros(); atualizarDashboard(); modal.classList.add('hidden');
         });
 
-        // === CARGA INTELIGENTE DE DADOS (FIREBASE) ===
+        // === Carga Inteligente Firebase ===
         function definirStatus(badgeHtml, corClasse) {
             const b = document.getElementById('badge-status');
             b.className = `text-xs font-bold px-2 py-1 ${corClasse} rounded text-white shadow ml-2`;
@@ -418,18 +377,13 @@
 
         async function carregarDadosNuvem(forcarCompleto = false) {
             if(!db) { definirStatus('<i class="fa-solid fa-xmark"></i> Erro DB', 'bg-red-600'); return; }
-            
             try {
                 const anoAtualStr = new Date().getFullYear().toString(); 
                 const querySnapshot = await getDocs(collection(db, "chamados"));
-                
                 dadosGlobais = [];
                 querySnapshot.forEach((doc) => {
-                    const d = doc.data();
-                    const dStr = String(d['Data Abertura'] || d['Ticket'] || ""); 
-                    if (forcarCompleto || dStr.includes(anoAtualStr) || dStr.includes(anoAtualStr.substring(2))) {
-                        dadosGlobais.push(d);
-                    }
+                    const d = doc.data(); const dStr = String(d['Data Abertura'] || d['Ticket'] || ""); 
+                    if (forcarCompleto || dStr.includes(anoAtualStr) || dStr.includes(anoAtualStr.substring(2))) dadosGlobais.push(d);
                 });
                 
                 if(dadosGlobais.length > 0) {
@@ -441,9 +395,7 @@
                     definirStatus('<i class="fa-solid fa-triangle-exclamation"></i> Vazio', 'bg-red-500');
                 }
                 historicoCompletoCarregado = forcarCompleto;
-            } catch (e) { 
-                definirStatus('<i class="fa-solid fa-xmark"></i> Erro', 'bg-red-600'); console.error(e); 
-            }
+            } catch (e) { definirStatus('<i class="fa-solid fa-xmark"></i> Erro', 'bg-red-600'); console.error(e); }
         }
 
         document.getElementById('btn-carregar-historico').addEventListener('click', () => {
@@ -458,7 +410,6 @@
         document.getElementById('file-upload').addEventListener('change', (e) => {
             const file = e.target.files[0]; if (!file) return;
             document.getElementById('loader-upload').classList.remove('hidden');
-            
             const reader = new FileReader();
             reader.onload = async function(ev) {
                 const wb = XLSX.read(new Uint8Array(ev.target.result), { type: 'array' });
@@ -466,10 +417,7 @@
                 try {
                     const batchArray = [writeBatch(db)]; let c = 0, b = 0;
                     jsonRows.forEach(row => {
-                        if(row.Ticket) {
-                            batchArray[b].set(doc(db, "chamados", String(row.Ticket)), row);
-                            c++; if (c === 490) { batchArray.push(writeBatch(db)); b++; c = 0; }
-                        }
+                        if(row.Ticket) { batchArray[b].set(doc(db, "chamados", String(row.Ticket)), row); c++; if (c === 490) { batchArray.push(writeBatch(db)); b++; c = 0; } }
                     });
                     for (const batch of batchArray) await batch.commit();
                     document.getElementById('loader-upload').classList.add('hidden'); e.target.value = ""; 
@@ -479,69 +427,39 @@
             reader.readAsArrayBuffer(file);
         });
 
-        // === PAINEL ADMIN (RESET DATABASE) ===
-        const inputSenha = document.getElementById('input-senha-admin');
-        const btnReset = document.getElementById('btn-zerar-banco');
-        const msgAdmin = document.getElementById('msg-admin-status');
-
+        // Admin Reset
+        const inputSenha = document.getElementById('input-senha-admin'); const btnReset = document.getElementById('btn-zerar-banco'); const msgAdmin = document.getElementById('msg-admin-status');
         inputSenha.addEventListener('input', (e) => {
-            if(e.target.value === 'setic2026') {
-                btnReset.disabled = false; btnReset.className = "bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded text-sm transition shadow animate-pulse";
-            } else {
-                btnReset.disabled = true; btnReset.className = "bg-gray-300 text-white font-bold py-2 px-4 rounded text-sm cursor-not-allowed transition";
-            }
+            if(e.target.value === 'setic2026') { btnReset.disabled = false; btnReset.className = "bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded text-sm transition shadow animate-pulse"; } 
+            else { btnReset.disabled = true; btnReset.className = "bg-gray-300 text-white font-bold py-2 px-4 rounded text-sm cursor-not-allowed transition"; }
         });
-
         btnReset.addEventListener('click', async () => {
             if(!confirm("TEM A CERTEZA ABSOLUTA? Esta ação irá deletar TODOS os documentos da base.")) return;
-            btnReset.disabled = true; inputSenha.disabled = true;
-            btnReset.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Excluindo...';
+            btnReset.disabled = true; inputSenha.disabled = true; btnReset.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Excluindo...';
             msgAdmin.className = "text-xs font-bold mt-2 text-center text-blue-600 block"; msgAdmin.innerText = "Apagando lotes...";
-
             try {
-                const querySnapshot = await getDocs(collection(db, "chamados"));
-                const docsLength = querySnapshot.size;
-                
+                const querySnapshot = await getDocs(collection(db, "chamados")); const docsLength = querySnapshot.size;
                 let b = writeBatch(db); let c = 0; const promessas = [];
-                querySnapshot.docs.forEach((docSnap) => {
-                    b.delete(docSnap.ref); c++;
-                    if(c === 490) { promessas.push(b.commit()); b = writeBatch(db); c = 0; }
-                });
-                if(c > 0) promessas.push(b.commit());
-                await Promise.all(promessas);
-                
-                msgAdmin.className = "text-xs font-bold mt-2 text-center text-green-600 block"; msgAdmin.innerText = `Sucesso: ${docsLength} documentos apagados.`;
-                btnReset.innerHTML = '<i class="fa-solid fa-check"></i> Concluído';
-                dadosGlobais = []; atualizarDashboard();
-            } catch(e) {
-                msgAdmin.className = "text-xs font-bold mt-2 text-center text-red-600 block"; msgAdmin.innerText = "Erro ao excluir.";
-                btnReset.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Erro';
-            }
+                querySnapshot.docs.forEach((docSnap) => { b.delete(docSnap.ref); c++; if(c === 490) { promessas.push(b.commit()); b = writeBatch(db); c = 0; } });
+                if(c > 0) promessas.push(b.commit()); await Promise.all(promessas);
+                msgAdmin.className = "text-xs font-bold mt-2 text-center text-green-600 block"; msgAdmin.innerText = `Sucesso: ${docsLength} apagados.`;
+                btnReset.innerHTML = '<i class="fa-solid fa-check"></i> Concluído'; dadosGlobais = []; atualizarDashboard();
+            } catch(e) { msgAdmin.className = "text-xs font-bold mt-2 text-center text-red-600 block"; msgAdmin.innerText = "Erro ao excluir."; btnReset.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Erro'; }
         });
 
-        // === PROCESSAMENTO E CÁLCULOS ===
+        // === PROCESSAMENTO ===
         function parseHoras(tempoStr) {
-            if(!tempoStr) return 0;
-            const p = String(tempoStr).split(':');
-            return p.length === 3 ? parseInt(p[0]) + (parseInt(p[1])/60) + (parseInt(p[2])/3600) : 0;
+            if(!tempoStr) return 0; const p = String(tempoStr).split(':'); return p.length === 3 ? parseInt(p[0]) + (parseInt(p[1])/60) + (parseInt(p[2])/3600) : 0;
         }
-        function obterMesAno(dStr) {
-            if (dStr && dStr.includes('-')) { const p = dStr.split(' ')[0].split('-'); if(p.length >= 2) return `${p[1]}/${p[0]}`; }
-            return "Desconhecido";
-        }
+        function obterMesAno(dStr) { if (dStr && dStr.includes('-')) { const p = dStr.split(' ')[0].split('-'); if(p.length >= 2) return `${p[1]}/${p[0]}`; } return "Desconhecido"; }
         function cvDtOrd(ma) { return (!ma || ma==="Desconhecido") ? 0 : parseInt(ma.split('/')[1])*100 + parseInt(ma.split('/')[0]); }
 
         function preencherFiltros() {
             const meses = new Set(); const analistas = new Set(); const prioridades = new Set();
-            dadosGlobais.forEach(d => {
-                meses.add(obterMesAno(d['Data Abertura']));
-                if(d['Analista']) analistas.add(d['Analista']);
-                if(d['Prioridade']) prioridades.add(d['Prioridade']);
-            });
+            dadosGlobais.forEach(d => { meses.add(obterMesAno(d['Data Abertura'])); if(d['Analista']) analistas.add(d['Analista']); if(d['Prioridade']) prioridades.add(d['Prioridade']); });
             
             const mArr = Array.from(meses).filter(m => m!=="Desconhecido").sort((a,b) => cvDtOrd(a) - cvDtOrd(b));
             preencherSelect('filtro-mes', mArr, "Todos os Meses"); preencherSelect('relatorio-mes', mArr, "Geral (Todos)");
-
             const eqArray = equipeFocoStr.split(',').map(s=>s.trim().toLowerCase());
             const analistasFoco = Array.from(analistas).filter(a => eqArray.includes(a.toLowerCase())).sort();
             preencherSelect('filtro-analista', analistasFoco, "Geral (Todos)"); preencherSelect('relatorio-analista', analistasFoco, "Geral (Todos)");
@@ -549,20 +467,13 @@
         }
 
         function preencherSelect(id, arr, def) {
-            const s = document.getElementById(id); const atual = s.value;
-            s.innerHTML = `<option value="Todos">${def}</option>`;
+            const s = document.getElementById(id); const atual = s.value; s.innerHTML = `<option value="Todos">${def}</option>`;
             arr.forEach(i => { const opt = document.createElement('option'); opt.value = i; opt.innerText = i; s.appendChild(opt); });
             if (arr.includes(atual)) s.value = atual;
         }
 
-        ['filtro-mes', 'filtro-analista', 'filtro-prioridade', 'filtro-data-inicio', 'filtro-data-fim'].forEach(id => {
-            document.getElementById(id).addEventListener('change', () => { tabelaPaginaAtual = 1; atualizarDashboard(); });
-        });
-        document.getElementById('btn-limpar-filtros').addEventListener('click', () => {
-            ['filtro-mes', 'filtro-analista', 'filtro-prioridade', 'filtro-data-inicio', 'filtro-data-fim'].forEach(i => document.getElementById(i).value = i.includes('data') ? "" : "Todos");
-            tabelaPaginaAtual = 1; atualizarDashboard();
-        });
-
+        ['filtro-mes', 'filtro-analista', 'filtro-prioridade', 'filtro-data-inicio', 'filtro-data-fim'].forEach(id => { document.getElementById(id).addEventListener('change', () => { tabelaPaginaAtual = 1; atualizarDashboard(); }); });
+        document.getElementById('btn-limpar-filtros').addEventListener('click', () => { ['filtro-mes', 'filtro-analista', 'filtro-prioridade', 'filtro-data-inicio', 'filtro-data-fim'].forEach(i => document.getElementById(i).value = i.includes('data') ? "" : "Todos"); tabelaPaginaAtual = 1; atualizarDashboard(); });
         document.getElementById('btn-tab-prev').addEventListener('click', () => { if(tabelaPaginaAtual > 1) { tabelaPaginaAtual--; desenharTabela(); }});
         document.getElementById('btn-tab-next').addEventListener('click', () => { if(tabelaPaginaAtual < Math.ceil(dadosFiltradosCache.length / tabelaItensPorPagina)) { tabelaPaginaAtual++; desenharTabela(); }});
 
@@ -576,14 +487,12 @@
             }
 
             const fM = document.getElementById('filtro-mes').value; const fA = document.getElementById('filtro-analista').value;
-            const fP = document.getElementById('filtro-prioridade').value;
-            const dIn = document.getElementById('filtro-data-inicio').value; const dFim = document.getElementById('filtro-data-fim').value;
+            const fP = document.getElementById('filtro-prioridade').value; const dIn = document.getElementById('filtro-data-inicio').value; const dFim = document.getElementById('filtro-data-fim').value;
 
             const filtrados = dadosGlobais.filter(d => {
                 let match = (fM === "Todos" || obterMesAno(d['Data Abertura']) === fM) && (fA === "Todos" || d['Analista'] === fA) && (fP === "Todos" || d['Prioridade'] === fP);
                 if(match && (dIn || dFim) && d['Data Abertura']) {
-                    const dObjStr = d['Data Abertura'].split(' ')[0]; 
-                    const dNum = parseInt(dObjStr.replace(/-/g, ''));
+                    const dObjStr = d['Data Abertura'].split(' ')[0]; const dNum = parseInt(dObjStr.replace(/-/g, ''));
                     if(dIn && dNum < parseInt(dIn.replace(/-/g, ''))) match = false;
                     if(dFim && dNum > parseInt(dFim.replace(/-/g, ''))) match = false;
                 }
@@ -592,7 +501,6 @@
             filtrados.sort((a,b) => { const da = a['Data Abertura'] || ""; const db = b['Data Abertura'] || ""; return da > db ? -1 : (da < db ? 1 : 0); });
             dadosFiltradosCache = filtrados;
 
-            // KPIs
             const total = filtrados.length;
             document.getElementById('kpi-total').innerText = dadosGlobais.length.toLocaleString('pt-BR');
             document.getElementById('kpi-filtrado').innerText = total.toLocaleString('pt-BR');
@@ -600,9 +508,7 @@
             const horasTMA = total > 0 ? (filtrados.reduce((acc, d) => acc + parseHoras(d['Tempo Solução']), 0) / total) : 0;
             tmaGlobalTexto = horasTMA.toFixed(1) + 'h'; document.getElementById('kpi-tma').innerText = tmaGlobalTexto;
 
-            const atend = filtrados.filter(d => d['SLA Atendido'] === 'Sim').length;
-            const incid = filtrados.filter(d => String(d['Tipo']).toLowerCase() === 'incidente').length;
-            
+            const atend = filtrados.filter(d => d['SLA Atendido'] === 'Sim').length; const incid = filtrados.filter(d => String(d['Tipo']).toLowerCase() === 'incidente').length;
             slaGlobalTexto = total > 0 ? ((atend / total) * 100).toFixed(1) + '%' : '0%';
             incGlobalTexto = total > 0 ? ((incid / total) * 100).toFixed(1) + '%' : '0%';
             document.getElementById('kpi-sla').innerText = slaGlobalTexto; document.getElementById('kpi-incidentes').innerText = incGlobalTexto;
@@ -612,8 +518,7 @@
             dMes.labels = indOrd.map(i => i.val); dMes.values = indOrd.map(i => dMes.values[i.ind]);
 
             const eqArray = equipeFocoStr.split(',').map(s=>s.trim().toLowerCase());
-            let dAnaBruto = agruparPor(filtrados, 'Analista');
-            let dAna = { labels: [], values: [] };
+            let dAnaBruto = agruparPor(filtrados, 'Analista'); let dAna = { labels: [], values: [] };
             dAnaBruto.labels.forEach((lbl, idx) => { if(eqArray.includes(lbl.toLowerCase())) { dAna.labels.push(lbl); dAna.values.push(dAnaBruto.values[idx]); } });
 
             const dAss = agruparPor(filtrados, 'Categoria', 15); const dReq = agruparPor(filtrados, 'Requerente', 10);
@@ -625,11 +530,9 @@
             let prioSLA_Atendido = []; let prioSLA_Estourado = [];
             arrP.forEach(item => {
                 const noPrazo = filtrados.filter(d => d['Prioridade'] === item.l && d['SLA Atendido'] === 'Sim').length;
-                const foraPrazo = item.v - noPrazo;
-                prioSLA_Atendido.push(noPrazo); prioSLA_Estourado.push(foraPrazo);
+                prioSLA_Atendido.push(noPrazo); prioSLA_Estourado.push(item.v - noPrazo);
             });
             const dadosSlaPrio = { labels: arrP.map(i=>i.l), atendido: prioSLA_Atendido, estourado: prioSLA_Estourado };
-
             const dTipo = agruparPor(filtrados, 'Tipo');
 
             renderizarG('chart-meses', 'line', dMes, corPrincipal, false, false);
@@ -649,11 +552,11 @@
             return { labels: arr.map(i=>i.label), values: arr.map(i=>i.value) };
         }
 
-        // === RENDERIZADORES CHART.JS COM TRAVA RIGIDA (`maintainAspectRatio: true`) ===
+        // === RENDERIZADORES CHART.JS (maintainAspectRatio: false -> Permite esticar larguras e travar a altura) ===
         function renderizarG(id, tipo, dAgr, cor, horizontal, showLabels=false, onClickCallback=null) {
             const ctx = document.getElementById(id).getContext('2d'); if (graficos[id]) graficos[id].destroy();
             const options = { 
-                responsive: true, maintainAspectRatio: true,
+                responsive: true, maintainAspectRatio: false,
                 plugins: { legend: { display: false }, datalabels: { display: showLabels, color: '#fff', font: {weight: 'bold'}, anchor: 'end', align: 'start', offset: 4 } },
                 onClick: (e, act) => { if(onClickCallback && act.length>0) onClickCallback(dAgr.labels[act[0].index]); }
             };
@@ -668,7 +571,7 @@
             const ctx = document.getElementById(id).getContext('2d'); if (graficos[id]) graficos[id].destroy();
             graficos[id] = new Chart(ctx, {
                 type: tipo, data: { labels: dAgr.labels, datasets: [{ data: dAgr.values, backgroundColor: cores, borderRadius: 2 }] },
-                options: { indexAxis: horizontal ? 'y' : 'x', responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, datalabels: { display: false } } }
+                options: { indexAxis: horizontal ? 'y' : 'x', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, datalabels: { display: false } } }
             });
         }
 
@@ -677,7 +580,7 @@
             const bgC = dAgr.labels.map(l => mapCores[l] || '#9ca3af');
             graficos[id] = new Chart(ctx, {
                 type: tipo, data: { labels: dAgr.labels, datasets: [{ data: dAgr.values, backgroundColor: bgC, borderWidth: 1 }] },
-                options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'right' }, datalabels: { display: false } } }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' }, datalabels: { display: false } } }
             });
         }
 
@@ -688,12 +591,12 @@
                 data: {
                     labels: objDados.labels,
                     datasets: [
-                        { label: 'No Prazo', data: objDados.atendido, backgroundColor: '#22c55e', borderRadius: 2 },
-                        { label: 'Estourado', data: objDados.estourado, backgroundColor: '#ef4444', borderRadius: 2 }
+                        { label: 'SLA Cumprido', data: objDados.atendido, backgroundColor: '#22c55e', borderRadius: 2 },
+                        { label: 'SLA Violado', data: objDados.estourado, backgroundColor: '#ef4444', borderRadius: 2 }
                     ]
                 },
                 options: {
-                    responsive: true, maintainAspectRatio: true,
+                    responsive: true, maintainAspectRatio: false,
                     scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } },
                     plugins: { legend: { position: 'top', labels: { boxWidth: 12, font: {size: 10} } }, datalabels: { display: false } }
                 }
@@ -732,7 +635,7 @@
             document.getElementById('btn-tab-prev').disabled = tabelaPaginaAtual === 1; document.getElementById('btn-tab-next').disabled = tabelaPaginaAtual === totalP;
         }
 
-        // === RELATÓRIOS (PDF / EXCEL) COM DELAY CORRIGIDO E TRY CATCH DETALHADO ===
+        // === RELATÓRIOS (PDF / EXCEL) PDF BLINDADO CONTRA CRASHES ===
         document.getElementById('btn-gerar-excel').addEventListener('click', () => {
             const fM = document.getElementById('relatorio-mes').value; const fA = document.getElementById('relatorio-analista').value;
             const dadosExp = dadosGlobais.filter(d => (fM === "Todos" || obterMesAno(d['Data Abertura']) === fM) && (fA === "Todos" || d['Analista'] === fA));
@@ -740,9 +643,6 @@
             const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(dadosExp), "Relatorio");
             XLSX.writeFile(wb, `Base_Extraida_SETIC.xlsx`);
         });
-
-        // Logo genérica (Placeholder PRF)
-        const prfLogoBase64 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAQAAAD9CzEMAAAAc0lEQVR4Ae3XwQ3AIAxDUTX7r8wM0AE6AA2/R/B4wZJ8S7Ik17g0GhoNDY2GhkZDQ6OhoVnX/ZxzHkOaphmGcQ7O+TzPC8swzIsr0/O8lGUZU0q/0/M855xzHMf1vPd+HMfnnHPXdR3HcTxPRkOjoaHR0ND4v1f8AgU3Z02YAAAAAElFTkSuQmCC";
 
         document.getElementById('btn-gerar-pdf').addEventListener('click', () => {
             const fM = document.getElementById('relatorio-mes').value; const fA = document.getElementById('relatorio-analista').value;
@@ -756,7 +656,6 @@
             document.getElementById('filtro-prioridade').value = 'Todos'; document.getElementById('filtro-data-inicio').value = ''; document.getElementById('filtro-data-fim').value = '';
             atualizarDashboard(); 
 
-            // Atraso seguro para o Canvas desenhar
             setTimeout(() => {
                 try {
                     const dadosExp = dadosFiltradosCache;
@@ -768,54 +667,66 @@
                     const { jsPDF } = window.jspdf; const doc = new jsPDF('p', 'pt', 'a4'); const w = doc.internal.pageSize.width;
                     
                     doc.setFillColor(26, 25, 65); doc.rect(0, 0, w, 80, 'F');
-                    doc.addImage(prfLogoBase64, 'PNG', 40, 20, 40, 40); 
+                    
+                    // Removido o Base64 do Logo PRF para evitar travamento. Substituído por quadrado estético azul claro.
+                    doc.setFillColor(50, 50, 100); doc.rect(40, 20, 40, 40, 'F');
+                    
                     doc.setTextColor(255, 255, 255); doc.setFontSize(16); doc.setFont("helvetica", "bold");
-                    doc.text(`MINISTÉRIO DA JUSTIÇA E SEGURANÇA PÚBLICA`, 90, 35);
+                    doc.text(`MINISTÉRIO DA JUSTIÇA E SEGURANÇA PÚBLICA`, 95, 35);
                     doc.setFontSize(11); doc.setFont("helvetica", "normal");
-                    doc.text(`Polícia Rodoviária Federal - Diretoria de Tecnologia (SETIC)`, 90, 52);
+                    doc.text(`Polícia Rodoviária Federal - Diretoria de Tecnologia (SETIC)`, 95, 52);
                     doc.setFontSize(12); doc.setFont("helvetica", "bold");
-                    doc.text(`Relatório Gerencial Analítico - ${localStorage.getItem('dashTitulo') || 'Painel de Suporte'}`, 90, 68);
+                    doc.text(`Relatório Gerencial Analítico - Suporte`, 95, 68);
 
                     doc.setTextColor(26, 25, 65); doc.setFontSize(12); doc.text("Suma Executiva", 40, 110);
                     doc.setTextColor(60, 60, 60); doc.setFontSize(10); doc.setFont("helvetica", "normal");
                     
-                    const txtIA = `Documento gerado em ${new Date().toLocaleDateString('pt-BR')} (Filtro Aplicado: Mês ${fM} | Analista: ${fA}). O período de extração processou um total de ${dadosExp.length} tickets de suporte técnico. A eficiência operacional da equipe registrou um Tempo Médio de Atendimento (TMA) de ${tmaGlobalTexto}, garantindo que ${slaGlobalTexto} das demandas fossem solucionadas dentro dos Acordos de Nível de Serviço (SLA) estabelecidos. A taxa de indisponibilidade ou falhas ativas (Incidentes) correspondeu a ${incGlobalTexto} do volume operado.`;
+                    const txtIA = `Documento gerado em ${new Date().toLocaleDateString('pt-BR')} (Filtro Aplicado: Mês ${fM} | Analista: ${fA}). O período processou um total de ${dadosExp.length} tickets. A eficiência registrou um TMA de ${tmaGlobalTexto}, garantindo que ${slaGlobalTexto} das demandas fossem solucionadas no prazo. A taxa de incidentes correspondeu a ${incGlobalTexto}.`;
                     doc.text(doc.splitTextToSize(txtIA, w - 80), 40, 130);
                     
                     doc.setFillColor(245, 247, 250); doc.rect(40, 180, 160, 50, 'F'); doc.rect(215, 180, 160, 50, 'F'); doc.rect(390, 180, 160, 50, 'F');
                     doc.setFontSize(9); doc.setTextColor(120, 120, 120); doc.setFont("helvetica", "bold");
-                    doc.text("VOLUME PROCESSADO", 120, 200, {align: 'center'}); doc.text("TMA (MÉDIA GLOBAL)", 295, 200, {align: 'center'}); doc.text("EFICIÊNCIA DE SLA", 470, 200, {align: 'center'});
+                    doc.text("VOLUME TOTAL", 120, 200, {align: 'center'}); doc.text("TMA (MÉDIA HORAS)", 295, 200, {align: 'center'}); doc.text("EFICIÊNCIA DE SLA", 470, 200, {align: 'center'});
                     doc.setFontSize(16); doc.setTextColor(26, 25, 65);
-                    doc.text(dadosExp.length.toString(), 120, 220, {align: 'center'}); doc.text(tmaGlobalTexto, 295, 220, {align: 'center'});
-                    doc.setTextColor(22, 163, 74); doc.text(slaGlobalTexto, 470, 220, {align: 'center'});
+                    doc.text(String(dadosExp.length), 120, 220, {align: 'center'}); doc.text(String(tmaGlobalTexto), 295, 220, {align: 'center'});
+                    doc.setTextColor(22, 163, 74); doc.text(String(slaGlobalTexto), 470, 220, {align: 'center'});
 
-                    doc.setFontSize(12); doc.setTextColor(26, 25, 65); doc.text("Caderno Visual (Diagnóstico)", 40, 260);
+                    doc.setFontSize(12); doc.setTextColor(26, 25, 65); doc.text("Caderno Visual", 40, 260);
                     doc.setFontSize(9); doc.setTextColor(100, 100, 100);
                     
-                    const getImg = (id) => { const c = document.getElementById(id); return c ? c.toDataURL('image/jpeg', 1.0) : null; };
+                    const getImg = (id) => { try { const c = document.getElementById(id); return c ? c.toDataURL('image/jpeg', 1.0) : null; } catch(e) { return null; } };
                     
                     doc.text("Evolução Histórica", 40, 280); const i1 = getImg('chart-meses'); if(i1) doc.addImage(i1, 'JPEG', 40, 285, 240, 135);
-                    doc.text("Desempenho por Agente/Analista", 305, 280); const i2 = getImg('chart-analistas'); if(i2) doc.addImage(i2, 'JPEG', 305, 285, 240, 135);
-                    doc.text("Categorização Temática (Top 15)", 40, 440); const i3 = getImg('chart-assuntos'); if(i3) doc.addImage(i3, 'JPEG', 40, 445, 240, 135);
-                    doc.text("Análise de Gargalos: Eficiência vs Criticidade", 305, 440); const i4 = getImg('chart-prioridade'); if(i4) doc.addImage(i4, 'JPEG', 305, 445, 240, 135);
+                    doc.text("Volume Foco", 305, 280); const i2 = getImg('chart-analistas'); if(i2) doc.addImage(i2, 'JPEG', 305, 285, 240, 135);
+                    doc.text("Assuntos Top 15", 40, 440); const i3 = getImg('chart-assuntos'); if(i3) doc.addImage(i3, 'JPEG', 40, 445, 240, 135);
+                    doc.text("SLA vs Criticidade", 305, 440); const i4 = getImg('chart-prioridade'); if(i4) doc.addImage(i4, 'JPEG', 305, 445, 240, 135);
 
                     doc.addPage();
-                    doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.setTextColor(26, 25, 65); doc.text("Apêndice Operacional (Detalhamento)", 40, 40);
+                    doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.setTextColor(26, 25, 65); doc.text("Apêndice Operacional", 40, 40);
 
-                    const linhas = dadosExp.map(d => [ d['Ticket']||'-', (d['Data Abertura']||'').split(' ')[0], (d['Analista']||'-').split('.')[0], (d['Assunto']||'').substring(0, 35), d['Prioridade']||'-', d['Tempo Solução']||'-' ]);
+                    const linhas = dadosExp.map(d => [ 
+                        String(d['Ticket']||'-'), 
+                        String((d['Data Abertura']||'').split(' ')[0]), 
+                        String((d['Analista']||'-').split('.')[0]), 
+                        String((d['Assunto']||'').substring(0, 35)), 
+                        String(d['Prioridade']||'-'), 
+                        String(d['SLA Atendido']||'-') // Trocado "Tempo Solução" por "SLA" que é mais limpo
+                    ]);
+                    
                     doc.autoTable({
-                        startY: 55, head: [["Ticket Oficial", "Data Registro", "Agente Resolutor", "Objeto (Resumo)", "Criticidade", "T. Solução"]], body: linhas,
+                        startY: 55, head: [["Ticket", "Abertura", "Analista", "Assunto", "Prioridade", "SLA Ok?"]], body: linhas,
                         theme: 'striped', headStyles: { fillColor: [26, 25, 65] }, styles: { fontSize: 8 }, alternateRowStyles: { fillColor: [247, 248, 250] },
                         margin: { top: 30, right: 40, bottom: 40, left: 40 },
-                        didDrawPage: function (dt) { doc.setFontSize(8); doc.setTextColor(150, 150, 150); doc.text(`Documento Restrito | Pág ${doc.internal.getNumberOfPages()}`, w/2, doc.internal.pageSize.height - 20, {align:'center'}); }
+                        didDrawPage: function (dt) { doc.setFontSize(8); doc.setTextColor(150, 150, 150); doc.text(`Página ${doc.internal.getNumberOfPages()}`, w/2, doc.internal.pageSize.height - 20, {align:'center'}); }
                     });
                     doc.save(`Relatorio_Oficial_SETIC.pdf`);
                 } catch (err) {
-                    console.error("Erro na geração do PDF:", err); alert("Ocorreu um erro ao montar o arquivo PDF. Tente atualizar a página (F5).");
+                    console.error("Erro FATAL na geração do PDF:", err); 
+                    alert("Ainda ocorreu um erro ao gerar o PDF. A console do navegador tem os detalhes.");
                 } finally {
                     btn.innerHTML = conteudoOriginal; btn.disabled = false;
                 }
-            }, 800); // Delay aumentado ligeiramente para garantir o desenho do Chart.js
+            }, 800); 
         });
 
         aplicarPersonalizacao();
