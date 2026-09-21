@@ -552,7 +552,7 @@
             return { labels: arr.map(i=>i.label), values: arr.map(i=>i.value) };
         }
 
-        // === RENDERIZADORES CHART.JS (maintainAspectRatio: false -> Permite esticar larguras e travar a altura) ===
+        // === RENDERIZADORES CHART.JS (maintainAspectRatio: false) ===
         function renderizarG(id, tipo, dAgr, cor, horizontal, showLabels=false, onClickCallback=null) {
             const ctx = document.getElementById(id).getContext('2d'); if (graficos[id]) graficos[id].destroy();
             const options = { 
@@ -635,7 +635,7 @@
             document.getElementById('btn-tab-prev').disabled = tabelaPaginaAtual === 1; document.getElementById('btn-tab-next').disabled = tabelaPaginaAtual === totalP;
         }
 
-        // === RELATÓRIOS (PDF / EXCEL) PDF BLINDADO CONTRA CRASHES ===
+        // === RELATÓRIOS (EXCEL E PDF COM URL DO BRASÃO DO GITHUB) ===
         document.getElementById('btn-gerar-excel').addEventListener('click', () => {
             const fM = document.getElementById('relatorio-mes').value; const fA = document.getElementById('relatorio-analista').value;
             const dadosExp = dadosGlobais.filter(d => (fM === "Todos" || obterMesAno(d['Data Abertura']) === fM) && (fA === "Todos" || d['Analista'] === fA));
@@ -668,8 +668,13 @@
                     
                     doc.setFillColor(26, 25, 65); doc.rect(0, 0, w, 80, 'F');
                     
-                    // Removido o Base64 do Logo PRF para evitar travamento. Substituído por quadrado estético azul claro.
-                    doc.setFillColor(50, 50, 100); doc.rect(40, 20, 40, 40, 'F');
+                    // Carregamento do Brasão direto do repositório GitHub do usuário
+                    try {
+                        const urlBrasao = 'https://raw.githubusercontent.com/AlbertBarros/dashbord-chamados-suporte-setic/main/bras%C3%A3o.png.png';
+                        doc.addImage(urlBrasao, 'PNG', 40, 20, 40, 40);
+                    } catch(e) {
+                        doc.setFillColor(50, 50, 100); doc.rect(40, 20, 40, 40, 'F');
+                    }
                     
                     doc.setTextColor(255, 255, 255); doc.setFontSize(16); doc.setFont("helvetica", "bold");
                     doc.text(`MINISTÉRIO DA JUSTIÇA E SEGURANÇA PÚBLICA`, 95, 35);
@@ -710,7 +715,7 @@
                         String((d['Analista']||'-').split('.')[0]), 
                         String((d['Assunto']||'').substring(0, 35)), 
                         String(d['Prioridade']||'-'), 
-                        String(d['SLA Atendido']||'-') // Trocado "Tempo Solução" por "SLA" que é mais limpo
+                        String(d['SLA Atendido']||'-') 
                     ]);
                     
                     doc.autoTable({
