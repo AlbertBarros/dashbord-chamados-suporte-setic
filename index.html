@@ -436,13 +436,14 @@
             return { labels: arr.map(i=>i.label), values: arr.map(i=>i.value) };
         }
 
-        // === RENDERIZADORES DE CHART.JS ===
+     // === RENDERIZADORES DE CHART.JS CORRIGIDOS ===
         function renderizarG(id, tipo, dAgr, cor, horizontal, showLabels=false, onClickCallback=null) {
             const ctx = document.getElementById(id).getContext('2d');
             if (graficos[id]) graficos[id].destroy();
             
             const options = { 
-                responsive: true, maintainAspectRatio: false,
+                responsive: true, 
+                maintainAspectRatio: true, // <--- CORREÇÃO APLICADA AQUI
                 plugins: { 
                     legend: { display: false },
                     datalabels: {
@@ -465,7 +466,12 @@
             if (graficos[id]) graficos[id].destroy();
             graficos[id] = new Chart(ctx, {
                 type: tipo, data: { labels: dAgr.labels, datasets: [{ data: dAgr.values, backgroundColor: cores, borderRadius: 2 }] },
-                options: { indexAxis: horizontal ? 'y' : 'x', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, datalabels: { display: false } } }
+                options: { 
+                    indexAxis: horizontal ? 'y' : 'x', 
+                    responsive: true, 
+                    maintainAspectRatio: true, // <--- CORREÇÃO APLICADA AQUI
+                    plugins: { legend: { display: false }, datalabels: { display: false } } 
+                }
             });
         }
 
@@ -475,10 +481,13 @@
             const bgC = dAgr.labels.map(l => mapCores[l] || '#9ca3af');
             graficos[id] = new Chart(ctx, {
                 type: tipo, data: { labels: dAgr.labels, datasets: [{ data: dAgr.values, backgroundColor: bgC, borderWidth: 1 }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' }, datalabels: { display: false } } }
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: true, // <--- CORREÇÃO APLICADA AQUI
+                    plugins: { legend: { position: 'right' }, datalabels: { display: false } } 
+                }
             });
         }
-
         // === RELATÓRIOS (EXCEL E PDF) ===
         document.getElementById('btn-gerar-excel').addEventListener('click', () => {
             if(dadosFiltradosCache.length === 0) return alert("Nenhum dado.");
