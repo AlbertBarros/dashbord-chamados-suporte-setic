@@ -83,25 +83,29 @@
             </div>
         </div>
 
-        <!-- KPIs Cards -->
+        <!-- KPIs Cards (Com Tooltips) -->
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
-            <div class="card flex items-center gap-4">
+            <div class="card flex items-center gap-4 cursor-help hover:bg-gray-50 transition" title="Total Absoluto: Volume total de chamados registrados na base, ignorando os filtros.">
                 <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-xl"><i class="fa-solid fa-ticket"></i></div>
                 <div><p class="text-xs text-gray-500 uppercase font-bold">Total</p><p id="kpi-total" class="text-2xl font-bold text-gray-800">0</p></div>
             </div>
-            <div class="card flex items-center gap-4">
+            
+            <div class="card flex items-center gap-4 cursor-help hover:bg-gray-50 transition" title="Filtrados: Quantidade de chamados que correspondem exatemente aos filtros selecionados acima.">
                 <div class="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 text-xl"><i class="fa-solid fa-calendar-check"></i></div>
                 <div><p class="text-xs text-gray-500 uppercase font-bold">Filtrados</p><p id="kpi-filtrado" class="text-2xl font-bold text-gray-800">0</p></div>
             </div>
-            <div class="card flex items-center gap-4">
+            
+            <div class="card flex items-center gap-4 cursor-help hover:bg-gray-50 transition" title="TMA (Tempo Médio de Atendimento): Média de horas gastas pela equipa para resolver os chamados, desde a abertura até ao fecho. Mede a velocidade da operação.">
                 <div class="w-12 h-12 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600 text-xl"><i class="fa-regular fa-clock"></i></div>
                 <div><p class="text-xs text-gray-500 uppercase font-bold">TMA (Horas)</p><p id="kpi-tma" class="text-2xl font-bold text-gray-800">0.0h</p></div>
             </div>
-            <div class="card flex items-center gap-4">
+            
+            <div class="card flex items-center gap-4 cursor-help hover:bg-gray-50 transition" title="SLA Atendido: Percentagem de chamados resolvidos dentro do prazo estipulado (Acordo de Nível de Serviço). Mede a pontualidade.">
                 <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-green-500 text-xl"><i class="fa-solid fa-stopwatch"></i></div>
                 <div><p class="text-xs text-gray-500 uppercase font-bold">SLA Atendido</p><p id="kpi-sla" class="text-2xl font-bold text-gray-800">0%</p></div>
             </div>
-            <div class="card flex items-center gap-4">
+            
+            <div class="card flex items-center gap-4 cursor-help hover:bg-gray-50 transition" title="Índice de Incidentes: Percentagem de chamados que representam quebras ou falhas nos sistemas (apagamento de incêndios), em oposição a pedidos de rotina (requisições).">
                 <div class="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 text-xl"><i class="fa-solid fa-triangle-exclamation"></i></div>
                 <div><p class="text-xs text-gray-500 uppercase font-bold">Incidentes</p><p id="kpi-incidentes" class="text-2xl font-bold text-gray-800">0%</p></div>
             </div>
@@ -205,6 +209,9 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
         import { getFirestore, collection, getDocs, doc, writeBatch } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
+        // Desativar animações do Chart.js para captura instantânea no PDF
+        Chart.defaults.animation = false;
+        
         Chart.register(ChartDataLabels);
         const bgPlugin = {
             id: 'customCanvasBackgroundColor',
@@ -290,7 +297,7 @@
             modal.classList.add('hidden');
         });
 
-        // === FIREBASE: ARMAZENAMENTO E CONSULTA ===
+        // === FIREBASE ===
         async function carregarDadosNuvem() {
             try {
                 const qSnap = await getDocs(collection(db, "chamados"));
@@ -308,7 +315,7 @@
         document.getElementById('file-upload').addEventListener('change', (e) => {
             const file = e.target.files[0]; if (!file) return;
             document.getElementById('loader-upload').classList.remove('hidden');
-            document.getElementById('txt-ficheiros').innerText = "Gravando na nuvem...";
+            document.getElementById('txt-ficheiros').innerText = "A gravar na nuvem...";
             
             const reader = new FileReader();
             reader.onload = async function(ev) {
@@ -361,7 +368,6 @@
             preencherSelect('filtro-mes', mArr, "Todos os Meses");
             preencherSelect('relatorio-mes', mArr, "Geral (Todos)");
 
-            // Filtro Analista APENAS com a Equipe Foco
             const eqArray = equipeFocoStr.split(',').map(s=>s.trim().toLowerCase());
             const analistasFoco = Array.from(analistas).filter(a => eqArray.includes(a.toLowerCase())).sort();
             preencherSelect('filtro-analista', analistasFoco, "Geral (Todos)");
@@ -409,7 +415,6 @@
             });
             dadosFiltradosCache = filtrados;
 
-            // KPIs
             const total = filtrados.length;
             document.getElementById('kpi-total').innerText = dadosGlobais.length.toLocaleString('pt-BR');
             document.getElementById('kpi-filtrado').innerText = total.toLocaleString('pt-BR');
@@ -466,7 +471,7 @@
             return { labels: arr.map(i=>i.label), values: arr.map(i=>i.value) };
         }
 
-        // === RENDERIZADORES DO CHART.JS ===
+        // === RENDERIZADORES ===
         function renderizarG(id, tipo, dAgr, cor, horizontal, showLabels=false, onClickCallback=null) {
             const ctx = document.getElementById(id).getContext('2d');
             if (graficos[id]) graficos[id].destroy();
@@ -504,53 +509,79 @@
             });
         }
 
-        // === EMISSÃO DE RELATÓRIOS (EXCEL & PDF) ===
-        function getDadosRelatorioFiltrados() {
+        // === EMISSÃO DE RELATÓRIOS ===
+        document.getElementById('btn-gerar-excel').addEventListener('click', () => {
             const fM = document.getElementById('relatorio-mes').value;
             const fA = document.getElementById('relatorio-analista').value;
-            return dadosGlobais.filter(d => {
-                const mM = fM === "Todos" || obterMesAno(d['Data Abertura']) === fM;
-                const aM = fA === "Todos" || d['Analista'] === fA;
-                return mM && aM;
-            });
-        }
-
-        document.getElementById('btn-gerar-excel').addEventListener('click', () => {
-            const dadosExp = getDadosRelatorioFiltrados();
+            const dadosExp = dadosGlobais.filter(d => (fM === "Todos" || obterMesAno(d['Data Abertura']) === fM) && (fA === "Todos" || d['Analista'] === fA));
             if(dadosExp.length === 0) return alert("Nenhum dado encontrado para exportar.");
             const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(dadosExp), "Relatorio");
             XLSX.writeFile(wb, `Base_Extraida_SETIC.xlsx`);
         });
 
         document.getElementById('btn-gerar-pdf').addEventListener('click', () => {
-            const dadosExp = getDadosRelatorioFiltrados();
-            if(dadosExp.length === 0) return alert("Nenhum dado encontrado para gerar o PDF.");
+            const fM = document.getElementById('relatorio-mes').value;
+            const fA = document.getElementById('relatorio-analista').value;
             
-            const total = dadosExp.length;
-            const hTMA = total > 0 ? (dadosExp.reduce((a, d) => a + parseHoras(d['Tempo Solução']), 0) / total) : 0;
-            const vSLA = total > 0 ? ((dadosExp.filter(d => d['SLA Atendido'] === 'Sim').length / total) * 100).toFixed(1) + '%' : '0%';
-            const vInc = total > 0 ? ((dadosExp.filter(d => String(d['Tipo']).toLowerCase() === 'incidente').length / total) * 100).toFixed(1) + '%' : '0%';
+            // Força a atualização do ecrã para garantir que os gráficos correspondem exatamente aos filtros do relatório
+            document.getElementById('filtro-mes').value = fM;
+            document.getElementById('filtro-analista').value = fA;
+            document.getElementById('filtro-prioridade').value = 'Todos';
+            document.getElementById('filtro-data-inicio').value = '';
+            document.getElementById('filtro-data-fim').value = '';
+            atualizarDashboard(); // Síncrono e sem animações
+
+            const dadosExp = dadosFiltradosCache;
+            if(dadosExp.length === 0) return alert("Nenhum dado encontrado com os filtros selecionados.");
             
             const { jsPDF } = window.jspdf; const doc = new jsPDF('p', 'pt', 'a4'); const w = doc.internal.pageSize.width;
             
+            // Cabeçalho
             doc.setFillColor(26, 25, 65); doc.rect(0, 0, w, 70, 'F');
             doc.setTextColor(255, 255, 255); doc.setFontSize(16); doc.setFont("helvetica", "bold");
             doc.text(`Relatório Gerencial - ${localStorage.getItem('dashTitulo') || 'Analytics'}`, 40, 42);
 
+            // Resumo Inteligente
             doc.setTextColor(26, 25, 65); doc.setFontSize(12); doc.text("Resumo Executivo", 40, 110);
             doc.setTextColor(60, 60, 60); doc.setFontSize(10); doc.setFont("helvetica", "normal");
             
-            const pFiltro = `(Filtro: Mês ${document.getElementById('relatorio-mes').value} | Analista: ${document.getElementById('relatorio-analista').value})`;
-            const txtIA = `Emitido em ${new Date().toLocaleDateString('pt-BR')} ${pFiltro}. A extração atual contempla ${total} chamados registrados. O Tempo Médio de Atendimento (TMA) fechou em ${hTMA.toFixed(1)}h, alcançando um índice de SLA de ${vSLA}. A volumetria de requisições sobrepõe-se às quebras operacionais, que representaram ${vInc} do total.`;
+            const txtIA = `Emitido em ${new Date().toLocaleDateString('pt-BR')} (Filtro: Mês ${fM} | Analista: ${fA}). A extração atual processou ${dadosExp.length} chamados técnicos. O Tempo Médio de Atendimento (TMA) fechou em ${tmaGlobalTexto}, alcançando um índice de SLA Atendido de ${slaGlobalTexto}. A proporção de quebras/incidentes reportados foi de ${incGlobalTexto}.`;
             doc.text(doc.splitTextToSize(txtIA, w - 80), 40, 130);
-            doc.setDrawColor(200, 200, 200); doc.line(40, 175, w - 40, 175);
+            
+            // Blocos Visuais de KPI
+            doc.setFillColor(245, 247, 250); 
+            doc.rect(40, 175, 160, 50, 'F');
+            doc.rect(215, 175, 160, 50, 'F');
+            doc.rect(390, 175, 160, 50, 'F');
+            
+            doc.setFontSize(9); doc.setTextColor(120, 120, 120); doc.setFont("helvetica", "bold");
+            doc.text("TOTAL CHAMADOS", 120, 195, {align: 'center'});
+            doc.text("TMA (HORAS)", 295, 195, {align: 'center'});
+            doc.text("SLA ATENDIDO", 470, 195, {align: 'center'});
+            
+            doc.setFontSize(16); doc.setTextColor(26, 25, 65);
+            doc.text(dadosExp.length.toString(), 120, 215, {align: 'center'});
+            doc.text(tmaGlobalTexto, 295, 215, {align: 'center'});
+            doc.setTextColor(22, 163, 74); // Verde SLA
+            doc.text(slaGlobalTexto, 470, 215, {align: 'center'});
 
-            // Tabela Detalhada no PDF (Pula imagens se o filtro for diferente do dashboard pra não confundir, traz apenas os dados)
-            doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.setTextColor(26, 25, 65); doc.text("Detalhamento dos Chamados Extraídos", 40, 205);
+            // Gráficos (Dimensões e Posições)
+            doc.setFontSize(12); doc.setTextColor(26, 25, 65); doc.text("Análise Visual", 40, 260);
+            doc.setFontSize(9); doc.setTextColor(100, 100, 100);
+            
+            const getImg = (id) => document.getElementById(id).toDataURL('image/jpeg', 1.0);
+            doc.text("Evolução Mensal", 40, 280); doc.addImage(getImg('chart-meses'), 'JPEG', 40, 285, 240, 130);
+            doc.text("Volume por Analista", 305, 280); doc.addImage(getImg('chart-analistas'), 'JPEG', 305, 285, 240, 130);
+            doc.text("Top Assuntos Solicitados", 40, 440); doc.addImage(getImg('chart-assuntos'), 'JPEG', 40, 445, 240, 130);
+            doc.text("Distribuição por Prioridade", 305, 440); doc.addImage(getImg('chart-prioridade'), 'JPEG', 305, 445, 240, 130);
+
+            // Tabela Detalhada (Página 2)
+            doc.addPage();
+            doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.setTextColor(26, 25, 65); doc.text("Detalhamento dos Chamados Extraídos", 40, 40);
 
             const linhas = dadosExp.map(d => [ d['Ticket']||'-', (d['Data Abertura']||'').split(' ')[0], d['Analista']||'-', (d['Assunto']||'').substring(0, 35), d['Prioridade']||'-', d['Tempo Solução']||'-' ]);
             doc.autoTable({
-                startY: 220, head: [["Ticket", "Abertura", "Analista", "Assunto", "Prioridade", "T. Solução"]], body: linhas,
+                startY: 55, head: [["Ticket", "Abertura", "Analista", "Assunto", "Prioridade", "T. Solução"]], body: linhas,
                 theme: 'striped', headStyles: { fillColor: [26, 25, 65] }, styles: { fontSize: 8 }, alternateRowStyles: { fillColor: [247, 248, 250] },
                 margin: { top: 30, right: 40, bottom: 40, left: 40 },
                 didDrawPage: function (dt) { doc.setFontSize(8); doc.text(`Pág ${doc.internal.getNumberOfPages()}`, w/2, doc.internal.pageSize.height - 20, {align:'center'}); }
