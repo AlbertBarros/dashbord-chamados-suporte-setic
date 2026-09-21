@@ -27,7 +27,6 @@
         .tab-active { border-bottom: 2px solid; font-weight: bold; }
         .tab-inactive { border-color: transparent; color: #6b7280; }
         .tab-inactive:hover { color: #1f2937; }
-        input[type="file"] { display: none; }
     </style>
 </head>
 <body class="text-gray-800">
@@ -39,24 +38,16 @@
             <h1 id="titulo-painel" class="text-xl font-bold tracking-wide">Analytics Suporte SETIC</h1>
         </div>
         <div class="flex items-center gap-4 mr-4">
-            <label class="bg-white text-[#1a1941] hover:bg-gray-100 px-4 py-2 rounded text-sm font-semibold cursor-pointer transition flex items-center gap-2 shadow">
-                <i class="fa-solid fa-file-import"></i>
-                Importar Planilha (.xlsx)
-                <input type="file" id="file-upload" accept=".xlsx, .xls">
-                <div id="loader-upload" class="loader !border-t-[#1a1941]"></div>
-            </label>
-            <span id="txt-ficheiros" class="text-sm font-medium">Nenhum ficheiro...</span>
-            <button id="btn-config" class="bg-[#2c2a5e] hover:bg-[#3d3b73] px-3 py-2 rounded transition">
-                <i class="fa-solid fa-gear"></i>
+            <span id="badge-status" class="text-xs font-bold px-2 py-1 bg-green-500 rounded text-white hidden shadow"><i class="fa-solid fa-cloud-check"></i> Base Sincronizada</span>
+            <button id="btn-config" class="bg-[#2c2a5e] hover:bg-[#3d3b73] px-4 py-2 rounded transition shadow flex items-center gap-2 text-sm font-semibold">
+                <i class="fa-solid fa-gear"></i> Painel de Ferramentas
             </button>
         </div>
     </header>
-    
-    <div id="status-mensagem" class="text-center text-sm font-bold p-2 hidden"></div>
 
     <div class="max-w-[98%] mx-auto mt-6">
         
-        <!-- Filtros -->
+        <!-- Filtros do Dashboard -->
         <div class="card mb-6">
             <div class="flex justify-between items-center mb-4 border-b pb-2">
                 <div class="flex items-center gap-2 text-[#1a1941] font-bold text-lg">
@@ -82,8 +73,8 @@
                     <input type="date" id="filtro-data-fim" class="w-full border-gray-300 border rounded p-2 text-sm focus:ring-[#1a1941]">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Analista (Clique no Gráfico)</label>
-                    <select id="filtro-analista" class="w-full border-gray-300 border rounded p-2 text-sm focus:ring-[#1a1941]"><option value="Todos">Todos os Analistas</option></select>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Analista (Foco)</label>
+                    <select id="filtro-analista" class="w-full border-gray-300 border rounded p-2 text-sm focus:ring-[#1a1941]"><option value="Todos">Geral (Todos)</option></select>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Criticidade</label>
@@ -132,20 +123,37 @@
 
     </div>
 
-    <!-- Modal -->
+    <!-- Modal de Painel de Ferramentas -->
     <div id="modal-config" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
         <div class="bg-white p-6 rounded-lg shadow-xl w-[36rem]">
             <div class="flex justify-between items-center mb-4 border-b pb-2">
-                <h2 class="text-xl font-bold">Painel de Controlo Avançado</h2>
+                <h2 class="text-xl font-bold text-[#1a1941]"><i class="fa-solid fa-toolbox mr-2"></i> Painel de Ferramentas</h2>
                 <button id="btn-fechar-config-icon" class="text-gray-400 hover:text-gray-700"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
             
             <div class="flex gap-4 mb-4 border-b">
-                <button id="aba-aparencia" class="pb-2 tab-active text-[#1a1941] border-[#1a1941] focus:outline-none">Configurações Base</button>
-                <button id="aba-relatorios" class="pb-2 tab-inactive focus:outline-none">Exportação / PDF</button>
+                <button id="aba-dados" class="pb-2 tab-active text-[#1a1941] border-[#1a1941] focus:outline-none font-semibold">Importar Base</button>
+                <button id="aba-aparencia" class="pb-2 tab-inactive focus:outline-none font-semibold">Configurações</button>
+                <button id="aba-relatorios" class="pb-2 tab-inactive focus:outline-none font-semibold">Emitir Relatórios</button>
             </div>
 
-            <div id="conteudo-aparencia" class="block">
+            <!-- Aba 1: Importar Base -->
+            <div id="conteudo-dados" class="block">
+                <p class="text-sm text-gray-600 mb-4">Importe a planilha atualizada para alimentar o banco de dados da nuvem. O sistema mesclará automaticamente pelo número do Ticket.</p>
+                <label class="bg-gray-50 hover:bg-gray-100 text-[#1a1941] border-2 border-dashed border-[#1a1941] w-full p-6 rounded-lg font-semibold cursor-pointer transition flex flex-col items-center justify-center gap-2">
+                    <i class="fa-solid fa-cloud-arrow-up text-3xl"></i>
+                    <span>Clique aqui para selecionar o arquivo (.xlsx)</span>
+                    <input type="file" id="file-upload" accept=".xlsx, .xls" class="hidden">
+                </label>
+                <div id="loader-upload" class="mt-4 flex items-center justify-center gap-2 text-sm font-semibold text-[#1a1941] hidden">
+                    <div class="loader !border-t-[#1a1941] !border-4 !w-5 !h-5 inline-block"></div>
+                    Gravando na nuvem. Aguarde...
+                </div>
+                <p id="txt-ficheiros" class="text-sm font-medium mt-3 text-center text-gray-500">Pronto para importar.</p>
+            </div>
+
+            <!-- Aba 2: Configurações -->
+            <div id="conteudo-aparencia" class="hidden">
                 <div class="mb-3">
                     <label class="block text-sm font-semibold mb-1">Título do Painel</label>
                     <input type="text" id="input-titulo" class="w-full border rounded p-2 text-sm">
@@ -155,27 +163,39 @@
                     <input type="color" id="input-cor" class="w-full border rounded p-0 h-10 cursor-pointer" value="#1a1941">
                 </div>
                 <div class="mb-3">
-                    <label class="block text-sm font-semibold mb-1">Equipe Foco (Analistas separados por vírgula)</label>
+                    <label class="block text-sm font-semibold mb-1">Equipe Foco (Analistas que aparecerão no filtro e no gráfico)</label>
                     <textarea id="input-equipe" class="w-full border rounded p-2 text-sm text-gray-600" rows="3" placeholder="fabio.palma.prestador, edison.neto.prestador..."></textarea>
+                    <p class="text-xs text-gray-400 mt-1">Separe os nomes exatamente como na planilha, usando vírgula.</p>
                 </div>
             </div>
 
+            <!-- Aba 3: Relatórios -->
             <div id="conteudo-relatorios" class="hidden">
-                <p class="text-sm text-gray-600 mb-4">Gere um PDF executivo contendo o resumo textual automatizado e todos os gráficos em tela, ou extraia a tabela completa em Excel bruto.</p>
+                <p class="text-sm text-gray-600 mb-4">Selecione os filtros abaixo para formatar e extrair o seu relatório direto do banco de dados em nuvem.</p>
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-semibold mb-1">Mês Base</label>
+                        <select id="relatorio-mes" class="w-full border rounded p-2 text-sm"><option value="Todos">Geral (Todos)</option></select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-1">Analista (Foco)</label>
+                        <select id="relatorio-analista" class="w-full border rounded p-2 text-sm"><option value="Todos">Geral (Todos)</option></select>
+                    </div>
+                </div>
                 
                 <div class="flex gap-3 mt-4">
                     <button id="btn-gerar-excel" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-3 rounded transition flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-file-excel text-xl"></i> Exportar Dados Brutos
+                        <i class="fa-solid fa-file-excel text-xl"></i> Base Excel
                     </button>
                     <button id="btn-gerar-pdf" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-3 rounded transition flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-file-pdf text-xl"></i> Emitir Relatório Gerencial
+                        <i class="fa-solid fa-file-pdf text-xl"></i> PDF Analítico
                     </button>
                 </div>
             </div>
 
             <div class="flex justify-end gap-2 mt-6 pt-4 border-t">
-                <button id="btn-fechar-config" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 font-semibold text-sm">Fechar</button>
-                <button id="btn-guardar-config" class="px-4 py-2 bg-[#1a1941] text-white rounded hover:bg-opacity-90 font-semibold text-sm">Guardar Preferências</button>
+                <button id="btn-fechar-config" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 font-semibold text-sm">Fechar Painel</button>
+                <button id="btn-guardar-config" class="px-4 py-2 bg-[#1a1941] text-white rounded hover:bg-opacity-90 font-semibold text-sm hidden">Guardar Configurações</button>
             </div>
         </div>
     </div>
@@ -185,7 +205,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
         import { getFirestore, collection, getDocs, doc, writeBatch } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
-        // Plugin de Fundo Branco (PDF) e DataLabels
         Chart.register(ChartDataLabels);
         const bgPlugin = {
             id: 'customCanvasBackgroundColor',
@@ -220,31 +239,36 @@
         const coresPrioridade = { 'Muito Alto': '#b91c1c', 'Alto': '#ef4444', 'Médio': '#f59e0b', 'Baixo': '#22c55e', 'Muito Baixo': '#94a3b8' };
         const coresTipo = { 'Requisição': '#6366f1', 'Incidente': '#f43f5e' };
 
-        // === MODAL E PREFERÊNCIAS ===
+        // === GESTÃO DO MODAL ===
         const modal = document.getElementById('modal-config');
-        document.getElementById('btn-config').addEventListener('click', () => modal.classList.remove('hidden'));
+        
+        document.getElementById('btn-config').addEventListener('click', () => {
+            modal.classList.remove('hidden');
+            switchTab('aba-dados', 'conteudo-dados');
+        });
         document.getElementById('btn-fechar-config').addEventListener('click', () => modal.classList.add('hidden'));
         document.getElementById('btn-fechar-config-icon').addEventListener('click', () => modal.classList.add('hidden'));
 
-        document.getElementById('aba-aparencia').addEventListener('click', function() {
-            this.className = `pb-2 tab-active text-[${corPrincipal}] border-[${corPrincipal}] focus:outline-none`;
-            this.style.color = corPrincipal; this.style.borderColor = corPrincipal;
-            const abaRelat = document.getElementById('aba-relatorios');
-            abaRelat.className = 'pb-2 tab-inactive focus:outline-none'; abaRelat.style.color = ''; abaRelat.style.borderColor = '';
-            document.getElementById('conteudo-aparencia').classList.remove('hidden');
-            document.getElementById('conteudo-relatorios').classList.add('hidden');
-            document.getElementById('btn-guardar-config').style.display = 'block';
-        });
+        function switchTab(activeId, contentId) {
+            ['aba-dados', 'aba-aparencia', 'aba-relatorios'].forEach(id => {
+                const el = document.getElementById(id);
+                el.className = 'pb-2 tab-inactive focus:outline-none font-semibold';
+                el.style.color = ''; el.style.borderColor = '';
+            });
+            const activeTab = document.getElementById(activeId);
+            activeTab.className = `pb-2 tab-active text-[${corPrincipal}] border-[${corPrincipal}] focus:outline-none font-semibold`;
+            activeTab.style.color = corPrincipal;
+            activeTab.style.borderColor = corPrincipal;
 
-        document.getElementById('aba-relatorios').addEventListener('click', function() {
-            this.className = `pb-2 tab-active text-[${corPrincipal}] border-[${corPrincipal}] focus:outline-none`;
-            this.style.color = corPrincipal; this.style.borderColor = corPrincipal;
-            const abaApa = document.getElementById('aba-aparencia');
-            abaApa.className = 'pb-2 tab-inactive focus:outline-none'; abaApa.style.color = ''; abaApa.style.borderColor = '';
-            document.getElementById('conteudo-relatorios').classList.remove('hidden');
-            document.getElementById('conteudo-aparencia').classList.add('hidden');
-            document.getElementById('btn-guardar-config').style.display = 'none';
-        });
+            ['conteudo-dados', 'conteudo-aparencia', 'conteudo-relatorios'].forEach(id => document.getElementById(id).classList.add('hidden'));
+            document.getElementById(contentId).classList.remove('hidden');
+            
+            document.getElementById('btn-guardar-config').style.display = contentId === 'conteudo-aparencia' ? 'block' : 'none';
+        }
+
+        document.getElementById('aba-dados').addEventListener('click', () => switchTab('aba-dados', 'conteudo-dados'));
+        document.getElementById('aba-aparencia').addEventListener('click', () => switchTab('aba-aparencia', 'conteudo-aparencia'));
+        document.getElementById('aba-relatorios').addEventListener('click', () => switchTab('aba-relatorios', 'conteudo-relatorios'));
 
         function aplicarPersonalizacao() {
             document.getElementById('titulo-painel').innerText = localStorage.getItem('dashTitulo') || 'Analytics Suporte SETIC';
@@ -252,10 +276,6 @@
             document.getElementById('input-cor').value = corPrincipal;
             document.getElementById('input-equipe').value = equipeFocoStr;
             document.getElementById('header-bg').style.backgroundColor = corPrincipal;
-            if(!document.getElementById('conteudo-aparencia').classList.contains('hidden')) {
-                document.getElementById('aba-aparencia').style.color = corPrincipal;
-                document.getElementById('aba-aparencia').style.borderColor = corPrincipal;
-            }
         }
 
         document.getElementById('btn-guardar-config').addEventListener('click', () => {
@@ -265,28 +285,31 @@
             equipeFocoStr = document.getElementById('input-equipe').value;
             localStorage.setItem('equipeFoco', equipeFocoStr);
             aplicarPersonalizacao();
+            preencherFiltros();
             atualizarDashboard(); 
             modal.classList.add('hidden');
         });
 
-        // === FIREBASE ===
+        // === FIREBASE: ARMAZENAMENTO E CONSULTA ===
         async function carregarDadosNuvem() {
             try {
                 const qSnap = await getDocs(collection(db, "chamados"));
                 dadosGlobais = []; qSnap.forEach((d) => dadosGlobais.push(d.data()));
                 if(dadosGlobais.length > 0) {
-                    document.getElementById('txt-ficheiros').innerText = "Base conectada";
+                    document.getElementById('txt-ficheiros').innerText = `Base conectada. Total: ${dadosGlobais.length} chamados.`;
+                    document.getElementById('badge-status').classList.remove('hidden');
                     preencherFiltros(); atualizarDashboard();
                 } else {
-                    document.getElementById('txt-ficheiros').innerText = "Base Vazia.";
+                    document.getElementById('txt-ficheiros').innerText = "Nenhum dado encontrado. Faça a primeira importação.";
                 }
-            } catch (e) { document.getElementById('txt-ficheiros').innerText = "Erro de conexão"; }
+            } catch (e) { document.getElementById('txt-ficheiros').innerText = "Erro ao ler dados da nuvem."; }
         }
 
         document.getElementById('file-upload').addEventListener('change', (e) => {
             const file = e.target.files[0]; if (!file) return;
-            document.getElementById('loader-upload').style.display = 'block';
-            document.getElementById('txt-ficheiros').innerText = "A gravar...";
+            document.getElementById('loader-upload').classList.remove('hidden');
+            document.getElementById('txt-ficheiros').innerText = "Gravando na nuvem...";
+            
             const reader = new FileReader();
             reader.onload = async function(ev) {
                 const wb = XLSX.read(new Uint8Array(ev.target.result), { type: 'array' });
@@ -301,14 +324,16 @@
                         }
                     });
                     for (const batch of batchArray) await batch.commit();
-                    document.getElementById('loader-upload').style.display = 'none';
-                    e.target.value = ""; await carregarDadosNuvem(); 
-                } catch (err) { document.getElementById('loader-upload').style.display = 'none'; }
+                    
+                    document.getElementById('loader-upload').classList.add('hidden');
+                    e.target.value = ""; 
+                    await carregarDadosNuvem(); 
+                } catch (err) { document.getElementById('loader-upload').classList.add('hidden'); document.getElementById('txt-ficheiros').innerText = "Falha ao importar."; }
             };
             reader.readAsArrayBuffer(file);
         });
 
-        // === LÓGICA DE FILTROS & DADOS ===
+        // === LÓGICA DE DADOS & FILTRAGEM ===
         function parseHoras(tempoStr) {
             if(!tempoStr) return 0;
             const p = String(tempoStr).split(':');
@@ -331,11 +356,20 @@
                 if(d['Analista']) analistas.add(d['Analista']);
                 if(d['Prioridade']) prioridades.add(d['Prioridade']);
             });
+            
             const mArr = Array.from(meses).filter(m => m!=="Desconhecido").sort((a,b) => cvDtOrd(a) - cvDtOrd(b));
             preencherSelect('filtro-mes', mArr, "Todos os Meses");
-            preencherSelect('filtro-analista', Array.from(analistas).sort(), "Todos os Analistas");
+            preencherSelect('relatorio-mes', mArr, "Geral (Todos)");
+
+            // Filtro Analista APENAS com a Equipe Foco
+            const eqArray = equipeFocoStr.split(',').map(s=>s.trim().toLowerCase());
+            const analistasFoco = Array.from(analistas).filter(a => eqArray.includes(a.toLowerCase())).sort();
+            preencherSelect('filtro-analista', analistasFoco, "Geral (Todos)");
+            preencherSelect('relatorio-analista', analistasFoco, "Geral (Todos)");
+
             preencherSelect('filtro-prioridade', Array.from(prioridades).sort(), "Todas as Prioridades");
         }
+
         function preencherSelect(id, arr, def) {
             const s = document.getElementById(id); const atual = s.value;
             s.innerHTML = `<option value="Todos">${def}</option>`;
@@ -351,10 +385,8 @@
             atualizarDashboard();
         });
 
-        let dadosFiltradosCache = []; // Para usar no PDF
-        let tmaGlobalTexto = "0.0h";
-        let slaGlobalTexto = "0%";
-        let incGlobalTexto = "0%";
+        let dadosFiltradosCache = [];
+        let tmaGlobalTexto = "0.0h"; let slaGlobalTexto = "0%"; let incGlobalTexto = "0%";
 
         function atualizarDashboard() {
             if (dadosGlobais.length === 0) return;
@@ -394,22 +426,20 @@
             document.getElementById('kpi-sla').innerText = slaGlobalTexto;
             document.getElementById('kpi-incidentes').innerText = incGlobalTexto;
 
-            // Dados Gráficos
             let dMes = agruparPor(filtrados, d => obterMesAno(d['Data Abertura']));
             const indOrd = dMes.labels.map((val, ind) => ({val, ind})).sort((a,b) => cvDtOrd(a.val) - cvDtOrd(b.val));
             dMes.labels = indOrd.map(i => i.val); dMes.values = indOrd.map(i => dMes.values[i.ind]);
 
-            const equipeArray = equipeFocoStr.split(',').map(s=>s.trim().toLowerCase());
+            const eqArray = equipeFocoStr.split(',').map(s=>s.trim().toLowerCase());
             let dAnaBruto = agruparPor(filtrados, 'Analista');
             let dAna = { labels: [], values: [] };
             dAnaBruto.labels.forEach((lbl, idx) => {
-                if(equipeArray.includes(lbl.toLowerCase())) { dAna.labels.push(lbl); dAna.values.push(dAnaBruto.values[idx]); }
+                if(eqArray.includes(lbl.toLowerCase())) { dAna.labels.push(lbl); dAna.values.push(dAnaBruto.values[idx]); }
             });
 
             const dAss = agruparPor(filtrados, 'Categoria', 15);
             const dReq = agruparPor(filtrados, 'Requerente', 10);
             
-            // Ordenação Lógica de Prioridade
             let dPrioBruto = agruparPor(filtrados, 'Prioridade');
             const mapOrdP = {'Muito Alto': 1, 'Alto': 2, 'Médio': 3, 'Baixo': 4, 'Muito Baixo': 5};
             let arrP = dPrioBruto.labels.map((l, i) => ({l, v: dPrioBruto.values[i]}));
@@ -436,26 +466,20 @@
             return { labels: arr.map(i=>i.label), values: arr.map(i=>i.value) };
         }
 
-     // === RENDERIZADORES DE CHART.JS CORRIGIDOS ===
+        // === RENDERIZADORES DO CHART.JS ===
         function renderizarG(id, tipo, dAgr, cor, horizontal, showLabels=false, onClickCallback=null) {
             const ctx = document.getElementById(id).getContext('2d');
             if (graficos[id]) graficos[id].destroy();
-            
             const options = { 
-                responsive: true, 
-                maintainAspectRatio: true, // <--- CORREÇÃO APLICADA AQUI
+                responsive: true, maintainAspectRatio: true,
                 plugins: { 
                     legend: { display: false },
-                    datalabels: {
-                        display: showLabels, color: '#fff', font: {weight: 'bold'},
-                        anchor: 'end', align: 'start', offset: 4
-                    }
+                    datalabels: { display: showLabels, color: '#fff', font: {weight: 'bold'}, anchor: 'end', align: 'start', offset: 4 }
                 },
                 onClick: (e, act) => { if(onClickCallback && act.length>0) onClickCallback(dAgr.labels[act[0].index]); }
             };
             if(horizontal) options.indexAxis = 'y';
             if(tipo === 'line' && showLabels) options.plugins.datalabels = {display:true, color:cor, anchor:'end', align:'top', offset:4, font:{weight:'bold'}};
-
             const ds = { data: dAgr.values, backgroundColor: cor, borderRadius: horizontal ? 0 : 4 };
             if(tipo === 'line') { ds.fill=true; ds.backgroundColor=cor+'20'; ds.borderColor=cor; ds.tension=0.4; ds.pointBackgroundColor=cor; }
             graficos[id] = new Chart(ctx, { type: tipo, data: { labels: dAgr.labels, datasets: [ds] }, options: options });
@@ -466,12 +490,7 @@
             if (graficos[id]) graficos[id].destroy();
             graficos[id] = new Chart(ctx, {
                 type: tipo, data: { labels: dAgr.labels, datasets: [{ data: dAgr.values, backgroundColor: cores, borderRadius: 2 }] },
-                options: { 
-                    indexAxis: horizontal ? 'y' : 'x', 
-                    responsive: true, 
-                    maintainAspectRatio: true, // <--- CORREÇÃO APLICADA AQUI
-                    plugins: { legend: { display: false }, datalabels: { display: false } } 
-                }
+                options: { indexAxis: horizontal ? 'y' : 'x', responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, datalabels: { display: false } } }
             });
         }
 
@@ -481,57 +500,57 @@
             const bgC = dAgr.labels.map(l => mapCores[l] || '#9ca3af');
             graficos[id] = new Chart(ctx, {
                 type: tipo, data: { labels: dAgr.labels, datasets: [{ data: dAgr.values, backgroundColor: bgC, borderWidth: 1 }] },
-                options: { 
-                    responsive: true, 
-                    maintainAspectRatio: true, // <--- CORREÇÃO APLICADA AQUI
-                    plugins: { legend: { position: 'right' }, datalabels: { display: false } } 
-                }
+                options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'right' }, datalabels: { display: false } } }
             });
         }
-        // === RELATÓRIOS (EXCEL E PDF) ===
+
+        // === EMISSÃO DE RELATÓRIOS (EXCEL & PDF) ===
+        function getDadosRelatorioFiltrados() {
+            const fM = document.getElementById('relatorio-mes').value;
+            const fA = document.getElementById('relatorio-analista').value;
+            return dadosGlobais.filter(d => {
+                const mM = fM === "Todos" || obterMesAno(d['Data Abertura']) === fM;
+                const aM = fA === "Todos" || d['Analista'] === fA;
+                return mM && aM;
+            });
+        }
+
         document.getElementById('btn-gerar-excel').addEventListener('click', () => {
-            if(dadosFiltradosCache.length === 0) return alert("Nenhum dado.");
-            const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(dadosFiltradosCache), "Relatorio");
-            XLSX.writeFile(wb, `Relatorio_SETIC.xlsx`);
+            const dadosExp = getDadosRelatorioFiltrados();
+            if(dadosExp.length === 0) return alert("Nenhum dado encontrado para exportar.");
+            const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(dadosExp), "Relatorio");
+            XLSX.writeFile(wb, `Base_Extraida_SETIC.xlsx`);
         });
 
         document.getElementById('btn-gerar-pdf').addEventListener('click', () => {
-            if(dadosFiltradosCache.length === 0) return alert("Nenhum dado.");
-            const { jsPDF } = window.jspdf; const doc = new jsPDF('p', 'pt', 'a4');
-            const w = doc.internal.pageSize.width;
+            const dadosExp = getDadosRelatorioFiltrados();
+            if(dadosExp.length === 0) return alert("Nenhum dado encontrado para gerar o PDF.");
             
-            // Cabeçalho
+            const total = dadosExp.length;
+            const hTMA = total > 0 ? (dadosExp.reduce((a, d) => a + parseHoras(d['Tempo Solução']), 0) / total) : 0;
+            const vSLA = total > 0 ? ((dadosExp.filter(d => d['SLA Atendido'] === 'Sim').length / total) * 100).toFixed(1) + '%' : '0%';
+            const vInc = total > 0 ? ((dadosExp.filter(d => String(d['Tipo']).toLowerCase() === 'incidente').length / total) * 100).toFixed(1) + '%' : '0%';
+            
+            const { jsPDF } = window.jspdf; const doc = new jsPDF('p', 'pt', 'a4'); const w = doc.internal.pageSize.width;
+            
             doc.setFillColor(26, 25, 65); doc.rect(0, 0, w, 70, 'F');
             doc.setTextColor(255, 255, 255); doc.setFontSize(16); doc.setFont("helvetica", "bold");
             doc.text(`Relatório Gerencial - ${localStorage.getItem('dashTitulo') || 'Analytics'}`, 40, 42);
 
-            // Resumo Inteligente
-            doc.setTextColor(26, 25, 65); doc.setFontSize(12); doc.text("Resumo Executivo Automatizado", 40, 110);
+            doc.setTextColor(26, 25, 65); doc.setFontSize(12); doc.text("Resumo Executivo", 40, 110);
             doc.setTextColor(60, 60, 60); doc.setFontSize(10); doc.setFont("helvetica", "normal");
             
-            const txtIA = `Data da Análise: ${new Date().toLocaleDateString('pt-BR')}. O período ou recorte selecionado processou um total de ${dadosFiltradosCache.length} chamados técnicos. O Tempo Médio de Atendimento (TMA) operacional fechou em ${tmaGlobalTexto}, garantindo uma taxa de cumprimento de SLA de ${slaGlobalTexto}. A volumetria de requisições preventivas/suporte padrão em relação às quebras/incidentes operacionais (${incGlobalTexto}) indica a estabilidade atual do parque tecnológico monitorado.`;
+            const pFiltro = `(Filtro: Mês ${document.getElementById('relatorio-mes').value} | Analista: ${document.getElementById('relatorio-analista').value})`;
+            const txtIA = `Emitido em ${new Date().toLocaleDateString('pt-BR')} ${pFiltro}. A extração atual contempla ${total} chamados registrados. O Tempo Médio de Atendimento (TMA) fechou em ${hTMA.toFixed(1)}h, alcançando um índice de SLA de ${vSLA}. A volumetria de requisições sobrepõe-se às quebras operacionais, que representaram ${vInc} do total.`;
             doc.text(doc.splitTextToSize(txtIA, w - 80), 40, 130);
             doc.setDrawColor(200, 200, 200); doc.line(40, 175, w - 40, 175);
 
-            // Gráficos (Dimensões ajustadas)
-            doc.setFont("helvetica", "bold"); doc.setTextColor(26, 25, 65); doc.text("Painel Visual", 40, 205);
-            doc.setFontSize(9); doc.setTextColor(100, 100, 100);
-            
-            const getImg = (id) => document.getElementById(id).toDataURL('image/jpeg', 1.0);
-            
-            doc.text("Evolução", 40, 225); doc.addImage(getImg('chart-meses'), 'JPEG', 40, 230, 240, 130);
-            doc.text("Top Assuntos", 305, 225); doc.addImage(getImg('chart-assuntos'), 'JPEG', 305, 230, 240, 130);
-            
-            doc.text("Criticidade Lógica", 40, 395); doc.addImage(getImg('chart-prioridade'), 'JPEG', 40, 400, 240, 130);
-            doc.text("Time Foco", 305, 395); doc.addImage(getImg('chart-analistas'), 'JPEG', 305, 400, 240, 130);
+            // Tabela Detalhada no PDF (Pula imagens se o filtro for diferente do dashboard pra não confundir, traz apenas os dados)
+            doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.setTextColor(26, 25, 65); doc.text("Detalhamento dos Chamados Extraídos", 40, 205);
 
-            // Tabela 
-            doc.addPage();
-            doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.setTextColor(26, 25, 65); doc.text("Detalhamento dos Chamados", 40, 40);
-
-            const linhas = dadosFiltradosCache.map(d => [ d['Ticket']||'-', (d['Data Abertura']||'').split(' ')[0], d['Analista']||'-', (d['Assunto']||'').substring(0, 35), d['Prioridade']||'-', d['Tempo Solução']||'-' ]);
+            const linhas = dadosExp.map(d => [ d['Ticket']||'-', (d['Data Abertura']||'').split(' ')[0], d['Analista']||'-', (d['Assunto']||'').substring(0, 35), d['Prioridade']||'-', d['Tempo Solução']||'-' ]);
             doc.autoTable({
-                startY: 55, head: [["Ticket", "Abertura", "Analista", "Assunto", "Prioridade", "T. Solução"]], body: linhas,
+                startY: 220, head: [["Ticket", "Abertura", "Analista", "Assunto", "Prioridade", "T. Solução"]], body: linhas,
                 theme: 'striped', headStyles: { fillColor: [26, 25, 65] }, styles: { fontSize: 8 }, alternateRowStyles: { fillColor: [247, 248, 250] },
                 margin: { top: 30, right: 40, bottom: 40, left: 40 },
                 didDrawPage: function (dt) { doc.setFontSize(8); doc.text(`Pág ${doc.internal.getNumberOfPages()}`, w/2, doc.internal.pageSize.height - 20, {align:'center'}); }
