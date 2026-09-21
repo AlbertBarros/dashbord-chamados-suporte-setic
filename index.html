@@ -632,7 +632,7 @@
             XLSX.writeFile(wb, `Base_Extraida_SETIC.xlsx`);
         });
 
-        // === RELATÓRIO PDF COM CABEÇALHO INSTITUCIONAL AJUSTADO E TÍTULOS CORRIGIDOS ===
+        // === RELATÓRIO PDF COM CABEÇALHO PROPORCIONAL E TÍTULOS DE GRÁFICOS CORRIGIDOS ===
         document.getElementById('btn-gerar-pdf').addEventListener('click', () => {
             const fM = document.getElementById('relatorio-mes').value; const fA = document.getElementById('relatorio-analista').value;
             const btn = document.getElementById('btn-gerar-pdf');
@@ -660,17 +660,17 @@
                     
                     doc.setTextColor(255, 255, 255); 
                     
-                    // Linha 1: Ministério
-                    doc.setFontSize(10); doc.setFont("helvetica", "bold");
-                    doc.text("MINISTÉRIO DA JUSTIÇA E SEGURANÇA PÚBLICA", 40, 28);
+                    // Linha 1: MINISTÉRIO (Fonte Grande, igual à imagem de referência)
+                    doc.setFontSize(14); doc.setFont("helvetica", "bold");
+                    doc.text("MINISTÉRIO DA JUSTIÇA E SEGURANÇA PÚBLICA", 40, 32);
                     
-                    // Linha 2: Polícia Rodoviária Federal - Diretoria de Tecnologia da Informação e Comunicação (DTIC)
-                    doc.setFontSize(7.5); doc.setFont("helvetica", "normal");
-                    doc.text("Polícia Rodoviária Federal - Diretoria de Tecnologia da Informação e Comunicação (DTIC)", 40, 46);
+                    // Linha 2: Polícia Rodoviária Federal (Tamanho médio)
+                    doc.setFontSize(9.5); doc.setFont("helvetica", "normal");
+                    doc.text("Polícia Rodoviária Federal - Diretoria de Tecnologia da Informação e Comunicação (DTIC)", 40, 52);
                     
-                    // Linha 3: Relatório Gerencial Analítico (Suporte N2) - Serviço de pronto atendimento (SETIC)
-                    doc.setFontSize(8.5); doc.setFont("helvetica", "bold");
-                    doc.text("Relatório Gerencial Analítico (Suporte N2) - Serviço de pronto atendimento (SETIC)", 40, 65);
+                    // Linha 3: Relatório Gerencial Analítico - Suporte (Destaque em negrito)
+                    doc.setFontSize(11); doc.setFont("helvetica", "bold");
+                    doc.text("Relatório Gerencial Analítico - Suporte", 40, 74);
 
                     // Seção: Resumo Executivo
                     doc.setTextColor(26, 25, 65); doc.setFontSize(12); doc.text("Resumo Executivo", 40, 125);
@@ -693,10 +693,21 @@
                     
                     const getImg = (id) => { try { const c = document.getElementById(id); return c ? c.toDataURL('image/jpeg', 1.0) : null; } catch(e) { return null; } };
                     
-                    doc.text("Evolução Histórica", 40, 295); const i1 = getImg('chart-meses'); if(i1) doc.addImage(i1, 'JPEG', 40, 300, 240, 130);
-                    doc.text("Volume Foco", 305, 295); const i2 = getImg('chart-analistas'); if(i2) doc.addImage(i2, 'JPEG', 305, 300, 240, 130);
-                    doc.text("Assuntos Top 15", 40, 450); const i3 = getImg('chart-assuntos'); if(i3) doc.addImage(i3, 'JPEG', 40, 455, 240, 130);
-                    doc.text("SLA vs Criticidade", 305, 450); const i4 = getImg('chart-prioridade'); if(i4) doc.addImage(i4, 'JPEG', 40, 455, 240, 130);
+                    // Gráfico 1: Evolução Histórica (chart-meses)
+                    doc.text("Evolução Histórica", 40, 295); 
+                    const i1 = getImg('chart-meses'); if(i1) doc.addImage(i1, 'JPEG', 40, 300, 240, 130);
+                    
+                    // Gráfico 2: Volume Foco (chart-analistas)
+                    doc.text("Volume Foco", 305, 295); 
+                    const i2 = getImg('chart-analistas'); if(i2) doc.addImage(i2, 'JPEG', 305, 300, 240, 130);
+                    
+                    // Gráfico 3: Assuntos Top 15 (chart-assuntos)
+                    doc.text("Assuntos Top 15", 40, 450); 
+                    const i3 = getImg('chart-assuntos'); if(i3) doc.addImage(i3, 'JPEG', 40, 455, 240, 130);
+                    
+                    // Gráfico 4: SLA vs Criticidade (chart-prioridade)
+                    doc.text("SLA vs Criticidade", 305, 450); 
+                    const i4 = getImg('chart-prioridade'); if(i4) doc.addImage(i4, 'JPEG', 305, 455, 240, 130);
 
                     // Página 2: Detalhamento dos Chamados Extraídos
                     doc.addPage();
