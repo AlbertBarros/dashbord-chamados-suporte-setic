@@ -3,151 +3,225 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel de Chamados SETIC</title>
+    <title>Analytics Suporte SETIC</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- SheetJS (Excel) -->
+    
+    <!-- Excel -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <!-- PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    
+    <!-- Ícones FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
-        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; display: none; }
+        body { background-color: #f3f4f6; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+        .card { background-color: #ffffff; border-radius: 0.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 1.25rem; }
+        .loader { border: 3px solid #f3f3f3; border-top: 3px solid #ffffff; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: none; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
-        /* Estilos para as abas do modal */
+        /* Abas do Modal */
         .tab-active { border-bottom: 2px solid; font-weight: bold; }
         .tab-inactive { border-color: transparent; color: #6b7280; }
         .tab-inactive:hover { color: #1f2937; }
+        
+        /* Ocultar input file original */
+        input[type="file"] { display: none; }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-800 font-sans">
+<body class="text-gray-800">
 
-    <!-- Cabeçalho -->
-    <header id="header-bg" class="bg-blue-800 text-white p-4 shadow-md flex justify-between items-center">
-        <div class="flex items-center gap-3">
-            <div id="logo-container" class="bg-white text-blue-800 font-bold p-2 rounded">SETIC</div>
-            <h1 id="titulo-painel" class="text-2xl font-bold">Dashboard de Suporte</h1>
+    <!-- Cabeçalho Principal -->
+    <header id="header-bg" class="bg-[#1a1941] text-white p-4 shadow-md flex justify-between items-center">
+        <div class="flex items-center gap-3 ml-4">
+            <i class="fa-solid fa-chart-line text-2xl"></i>
+            <h1 id="titulo-painel" class="text-xl font-bold tracking-wide">Analytics Suporte SETIC</h1>
         </div>
-        <button id="btn-config" class="bg-blue-700 hover:bg-blue-600 px-4 py-2 rounded text-sm font-semibold transition flex items-center gap-2">
-            <!-- Ícone de Engrenagem -->
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-            Configurações
-        </button>
+        <div class="flex items-center gap-4 mr-4">
+            <label class="bg-white text-[#1a1941] hover:bg-gray-100 px-4 py-2 rounded text-sm font-semibold cursor-pointer transition flex items-center gap-2 shadow">
+                <i class="fa-solid fa-file-import"></i>
+                Importar Planilha (.xlsx)
+                <input type="file" id="file-upload" accept=".xlsx, .xls">
+                <div id="loader-upload" class="loader !border-t-[#1a1941]"></div>
+            </label>
+            <span id="txt-ficheiros" class="text-sm font-medium">Nenhum ficheiro...</span>
+            
+            <button id="btn-config" class="bg-[#2c2a5e] hover:bg-[#3d3b73] px-3 py-2 rounded transition">
+                <i class="fa-solid fa-gear"></i>
+            </button>
+        </div>
     </header>
+    
+    <div id="status-mensagem" class="text-center text-sm font-bold p-2 hidden"></div>
 
-    <!-- Modal de Configurações e Relatórios -->
-    <div id="modal-config" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white p-6 rounded shadow-lg w-[32rem] text-black">
+    <div class="max-w-[95%] mx-auto mt-6">
+        
+        <!-- Filtros Dinâmicos -->
+        <div class="card mb-6">
             <div class="flex justify-between items-center mb-4 border-b pb-2">
-                <h2 class="text-xl font-bold">Painel de Controle</h2>
+                <div class="flex items-center gap-2 text-[#1a1941] font-bold text-lg">
+                    <i class="fa-solid fa-filter"></i>
+                    <h2>Filtros Dinâmicos</h2>
+                </div>
+                <button id="btn-limpar-filtros" class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3 py-1 rounded text-sm font-semibold transition">
+                    Limpar Filtros
+                </button>
             </div>
             
-            <!-- Navegação de Abas -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Mês de Abertura</label>
+                    <select id="filtro-mes" class="w-full border-gray-300 border rounded p-2 text-sm focus:ring-[#1a1941] focus:border-[#1a1941]"><option value="Todos">Todos os Meses</option></select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Analista</label>
+                    <select id="filtro-analista" class="w-full border-gray-300 border rounded p-2 text-sm focus:ring-[#1a1941] focus:border-[#1a1941]"><option value="Todos">Todos os Analistas</option></select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Criticidade / Prioridade</label>
+                    <select id="filtro-prioridade" class="w-full border-gray-300 border rounded p-2 text-sm focus:ring-[#1a1941] focus:border-[#1a1941]"><option value="Todos">Todas as Prioridades</option></select>
+                </div>
+            </div>
+        </div>
+
+        <!-- KPIs Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+            <div class="card flex items-center gap-4">
+                <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-xl">
+                    <i class="fa-solid fa-ticket"></i>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500">Total de Chamados</p>
+                    <p id="kpi-total-global" class="text-2xl font-bold text-gray-800">0</p>
+                </div>
+            </div>
+            <div class="card flex items-center gap-4">
+                <div class="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 text-xl">
+                    <i class="fa-solid fa-calendar-check"></i>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500">Filtrados Selecionados</p>
+                    <p id="kpi-total-filtrado" class="text-2xl font-bold text-gray-800">0</p>
+                </div>
+            </div>
+            <div class="card flex items-center gap-4">
+                <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-green-500 text-xl">
+                    <i class="fa-solid fa-stopwatch"></i>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500">SLA Atendido</p>
+                    <p id="kpi-sla" class="text-2xl font-bold text-gray-800">0%</p>
+                </div>
+            </div>
+            <div class="card flex items-center gap-4">
+                <div class="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 text-xl">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500">Índice de Incidentes</p>
+                    <p id="kpi-incidentes" class="text-2xl font-bold text-gray-800">0%</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Linha de Gráficos 1 -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div class="card">
+                <h3 class="font-bold text-gray-700 mb-4">Evolução de Chamados por Mês</h3>
+                <canvas id="chart-meses" height="120"></canvas>
+            </div>
+            <div class="card">
+                <h3 class="font-bold text-gray-700 mb-4">Volume por Analista</h3>
+                <canvas id="chart-analistas" height="120"></canvas>
+            </div>
+        </div>
+
+        <!-- Linha de Gráficos 2 -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div class="card">
+                <h3 class="font-bold text-gray-700 mb-4">Top 15 Assuntos (Categorias) Mais Solicitados</h3>
+                <canvas id="chart-assuntos" height="150"></canvas>
+            </div>
+            <div class="card">
+                <h3 class="font-bold text-gray-700 mb-4">Top Requerentes</h3>
+                <canvas id="chart-requerentes" height="150"></canvas>
+            </div>
+        </div>
+        
+        <!-- Linha de Gráficos 3 (Secundários) -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+            <div class="card flex flex-col items-center">
+                <h3 class="font-bold text-gray-700 mb-4 w-full text-left">Distribuição por Prioridade</h3>
+                <div class="w-3/4 max-w-sm"><canvas id="chart-prioridade"></canvas></div>
+            </div>
+            <div class="card flex flex-col items-center">
+                <h3 class="font-bold text-gray-700 mb-4 w-full text-left">Tipo de Chamado (Requisição vs Incidente)</h3>
+                <div class="w-3/4 max-w-sm"><canvas id="chart-tipo"></canvas></div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Modal de Configurações e Relatórios -->
+    <div id="modal-config" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-lg shadow-xl w-[32rem]">
+            <div class="flex justify-between items-center mb-4 border-b pb-2">
+                <h2 class="text-xl font-bold">Painel de Controlo</h2>
+                <button id="btn-fechar-config-icon" class="text-gray-400 hover:text-gray-700"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            
             <div class="flex gap-4 mb-4 border-b">
-                <button id="aba-aparencia" class="pb-2 tab-active text-blue-600 border-blue-600 focus:outline-none">Aparência</button>
+                <button id="aba-aparencia" class="pb-2 tab-active text-[#1a1941] border-[#1a1941] focus:outline-none">Aparência</button>
                 <button id="aba-relatorios" class="pb-2 tab-inactive focus:outline-none">Gerar Relatórios</button>
             </div>
 
-            <!-- CONTEÚDO: Aparência -->
             <div id="conteudo-aparencia" class="block">
                 <div class="mb-4">
                     <label class="block text-sm font-semibold mb-1">Título do Painel</label>
-                    <input type="text" id="input-titulo" class="w-full border rounded p-2" placeholder="Ex: Dashboard SETIC">
+                    <input type="text" id="input-titulo" class="w-full border rounded p-2" placeholder="Ex: Analytics Suporte SETIC">
                 </div>
                 <div class="mb-4">
-                    <label class="block text-sm font-semibold mb-1">Cor Principal (Hex)</label>
-                    <input type="color" id="input-cor" class="w-full border rounded p-1 h-10 cursor-pointer" value="#1e40af">
+                    <label class="block text-sm font-semibold mb-1">Cor do Cabeçalho (Hex)</label>
+                    <input type="color" id="input-cor" class="w-full border rounded p-1 h-10 cursor-pointer" value="#1a1941">
                 </div>
             </div>
 
-            <!-- CONTEÚDO: Relatórios -->
             <div id="conteudo-relatorios" class="hidden">
-                <p class="text-sm text-gray-600 mb-4">Selecione os filtros abaixo para extrair uma planilha Excel personalizada da base na nuvem.</p>
+                <p class="text-sm text-gray-600 mb-4">Selecione os filtros abaixo para extrair relatórios da base na nuvem.</p>
                 <div class="grid grid-cols-2 gap-4 mb-4">
                     <div>
-                        <label class="block text-sm font-semibold mb-1">Filtrar por Mês</label>
-                        <select id="relatorio-mes" class="w-full border rounded p-2"><option value="Todos">Geral (Todos)</option></select>
+                        <label class="block text-sm font-semibold mb-1">Mês</label>
+                        <select id="relatorio-mes" class="w-full border rounded p-2 text-sm"><option value="Todos">Geral (Todos)</option></select>
                     </div>
                     <div>
-                        <label class="block text-sm font-semibold mb-1">Filtrar por Analista</label>
-                        <select id="relatorio-analista" class="w-full border rounded p-2"><option value="Todos">Geral (Todos)</option></select>
+                        <label class="block text-sm font-semibold mb-1">Analista</label>
+                        <select id="relatorio-analista" class="w-full border rounded p-2 text-sm"><option value="Todos">Geral (Todos)</option></select>
                     </div>
                 </div>
-                <button id="btn-gerar-relatorio" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition flex items-center justify-center gap-2 mt-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                    Baixar Relatório (Excel)
-                </button>
+                
+                <div class="flex gap-3 mt-4">
+                    <button id="btn-gerar-excel" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-3 rounded transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-file-excel"></i> Excel (Bruto)
+                    </button>
+                    <button id="btn-gerar-pdf" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-3 rounded transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-file-pdf"></i> PDF (Resumo)
+                    </button>
+                </div>
             </div>
 
-            <!-- Botões de Ação Inferiores -->
             <div class="flex justify-end gap-2 mt-6 pt-4 border-t">
-                <button id="btn-fechar-config" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">Fechar</button>
-                <button id="btn-guardar-config" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Guardar Aparência</button>
+                <button id="btn-fechar-config" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 font-semibold">Fechar</button>
+                <button id="btn-guardar-config" class="px-4 py-2 bg-[#1a1941] text-white rounded hover:bg-opacity-90 font-semibold">Guardar Alterações</button>
             </div>
         </div>
     </div>
 
-    <!-- Barra de Controlos e Upload -->
-    <div class="max-w-7xl mx-auto p-4 mt-4 bg-white rounded shadow flex flex-col md:flex-row justify-between items-center gap-4">
-        <div class="flex items-center gap-4 w-full md:w-auto">
-            <label class="block font-semibold text-sm">Importar Planilha Quadrimestral:</label>
-            <input type="file" id="file-upload" accept=".xlsx, .xls" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer">
-            <div id="loader-upload" class="loader"></div>
-        </div>
-        <div id="status-mensagem" class="text-sm font-semibold text-green-600 hidden"></div>
-    </div>
-
-    <!-- Filtros do Dashboard -->
-    <div class="max-w-7xl mx-auto p-4 mt-4 bg-white rounded shadow grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div>
-            <label class="block text-sm font-semibold mb-1">Mês de Referência</label>
-            <select id="filtro-mes" class="w-full border rounded p-2"><option value="Todos">Todos os Meses</option></select>
-        </div>
-        <div>
-            <label class="block text-sm font-semibold mb-1">Analista Responsável</label>
-            <select id="filtro-analista" class="w-full border rounded p-2"><option value="Todos">Todos os Analistas</option></select>
-        </div>
-        <div>
-            <label class="block text-sm font-semibold mb-1">Prioridade / Criticidade</label>
-            <select id="filtro-prioridade" class="w-full border rounded p-2"><option value="Todos">Todas as Prioridades</option></select>
-        </div>
-    </div>
-
-    <!-- Indicadores (KPIs) -->
-    <div class="max-w-7xl mx-auto mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="bg-white p-6 rounded shadow flex flex-col items-center justify-center">
-            <h3 class="text-gray-500 text-sm font-bold uppercase">Total de Chamados</h3>
-            <span id="kpi-total" class="text-4xl font-extrabold text-blue-800">0</span>
-        </div>
-        <div class="bg-white p-6 rounded shadow flex flex-col items-center justify-center">
-            <h3 class="text-gray-500 text-sm font-bold uppercase">Taxa de Resolução (SLA Atendido)</h3>
-            <span id="kpi-sla" class="text-4xl font-extrabold text-green-600">0%</span>
-        </div>
-    </div>
-
-    <!-- Gráficos -->
-    <div class="max-w-7xl mx-auto mt-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div class="bg-white p-4 rounded shadow">
-            <h3 class="font-bold text-center mb-2">Chamados por Mês</h3>
-            <canvas id="chart-meses"></canvas>
-        </div>
-        <div class="bg-white p-4 rounded shadow">
-            <h3 class="font-bold text-center mb-2">Volume por Analista</h3>
-            <canvas id="chart-analistas"></canvas>
-        </div>
-    </div>
-
-    <div class="max-w-7xl mx-auto mt-4 grid grid-cols-1 lg:grid-cols-2 gap-4 mb-10">
-        <div class="bg-white p-4 rounded shadow">
-            <h3 class="font-bold text-center mb-2">Top 15 Assuntos Mais Solicitados</h3>
-            <canvas id="chart-assuntos"></canvas>
-        </div>
-        <div class="bg-white p-4 rounded shadow">
-            <h3 class="font-bold text-center mb-2">Top 10 Maiores Requerentes</h3>
-            <canvas id="chart-requerentes"></canvas>
-        </div>
-    </div>
-
+    <!-- Scripts da Lógica e Gráficos -->
     <script type="module">
-        // Importações do Firebase
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
         import { getFirestore, collection, getDocs, doc, writeBatch } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
@@ -164,29 +238,25 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // Variáveis globais
         let dadosGlobais = [];
-        let corPrincipal = localStorage.getItem('dashCor') || '#1e40af';
+        let corPrincipal = localStorage.getItem('dashCor') || '#1a1941';
         let graficos = {};
 
-        // === CONTROLO DO MODAL E ABAS ===
+        const paletaAssuntos = ['#4f46e5', '#3b82f6', '#0ea5e9', '#06b6d4', '#14b8a6', '#10b981', '#22c55e', '#84cc16', '#eab308', '#f59e0b', '#f97316', '#ef4444', '#f43f5e', '#d946ef', '#a855f7'];
+        const coresPrioridade = { 'Baixo': '#22c55e', 'Alto': '#f97316', 'Muito Baixo': '#94a3b8', 'Muito Alto': '#ef4444', 'Médio': '#eab308' };
+        const coresTipo = { 'Requisição': '#6366f1', 'Incidente': '#f43f5e' };
+
+        // === CONTROLO DO MODAL ===
         const modal = document.getElementById('modal-config');
-        
         document.getElementById('btn-config').addEventListener('click', () => modal.classList.remove('hidden'));
         document.getElementById('btn-fechar-config').addEventListener('click', () => modal.classList.add('hidden'));
+        document.getElementById('btn-fechar-config-icon').addEventListener('click', () => modal.classList.add('hidden'));
 
-        // Alternar entre abas do modal
         document.getElementById('aba-aparencia').addEventListener('click', function() {
-            // Mudar visual da aba
             this.className = `pb-2 tab-active text-[${corPrincipal}] border-[${corPrincipal}] focus:outline-none`;
-            this.style.color = corPrincipal;
-            this.style.borderColor = corPrincipal;
-            
+            this.style.color = corPrincipal; this.style.borderColor = corPrincipal;
             const abaRelat = document.getElementById('aba-relatorios');
-            abaRelat.className = 'pb-2 tab-inactive focus:outline-none';
-            abaRelat.style.color = ''; abaRelat.style.borderColor = '';
-
-            // Mudar conteúdo e botões
+            abaRelat.className = 'pb-2 tab-inactive focus:outline-none'; abaRelat.style.color = ''; abaRelat.style.borderColor = '';
             document.getElementById('conteudo-aparencia').classList.remove('hidden');
             document.getElementById('conteudo-relatorios').classList.add('hidden');
             document.getElementById('btn-guardar-config').style.display = 'block';
@@ -194,27 +264,20 @@
 
         document.getElementById('aba-relatorios').addEventListener('click', function() {
             this.className = `pb-2 tab-active text-[${corPrincipal}] border-[${corPrincipal}] focus:outline-none`;
-            this.style.color = corPrincipal;
-            this.style.borderColor = corPrincipal;
-            
+            this.style.color = corPrincipal; this.style.borderColor = corPrincipal;
             const abaApa = document.getElementById('aba-aparencia');
-            abaApa.className = 'pb-2 tab-inactive focus:outline-none';
-            abaApa.style.color = ''; abaApa.style.borderColor = '';
-
+            abaApa.className = 'pb-2 tab-inactive focus:outline-none'; abaApa.style.color = ''; abaApa.style.borderColor = '';
             document.getElementById('conteudo-relatorios').classList.remove('hidden');
             document.getElementById('conteudo-aparencia').classList.add('hidden');
             document.getElementById('btn-guardar-config').style.display = 'none';
         });
 
-        // === PERSONALIZAÇÃO DE APARÊNCIA ===
         function aplicarPersonalizacao() {
-            const titulo = localStorage.getItem('dashTitulo') || 'Dashboard de Suporte';
+            const titulo = localStorage.getItem('dashTitulo') || 'Analytics Suporte SETIC';
             document.getElementById('titulo-painel').innerText = titulo;
             document.getElementById('input-titulo').value = titulo;
             document.getElementById('input-cor').value = corPrincipal;
             document.getElementById('header-bg').style.backgroundColor = corPrincipal;
-            
-            // Força cor na aba ativa atual se for Aparência
             if(!document.getElementById('conteudo-aparencia').classList.contains('hidden')) {
                 document.getElementById('aba-aparencia').style.color = corPrincipal;
                 document.getElementById('aba-aparencia').style.borderColor = corPrincipal;
@@ -227,71 +290,35 @@
             localStorage.setItem('dashTitulo', novoTitulo);
             localStorage.setItem('dashCor', corPrincipal);
             aplicarPersonalizacao();
-            atualizarDashboard(); // Recarrega gráficos
+            atualizarDashboard(); 
             modal.classList.add('hidden');
         });
 
-        // === EXTRAÇÃO DE RELATÓRIOS (EXCEL) ===
-        document.getElementById('btn-gerar-relatorio').addEventListener('click', () => {
-            if(dadosGlobais.length === 0) {
-                alert("Não há dados na nuvem para gerar o relatório.");
-                return;
-            }
-
-            const fMes = document.getElementById('relatorio-mes').value;
-            const fAnalista = document.getElementById('relatorio-analista').value;
-
-            // Filtra os dados baseado na seleção do Modal
-            const dadosFiltrados = dadosGlobais.filter(d => {
-                const mesMatch = fMes === "Todos" || obterMesAno(d['Data Abertura']) === fMes;
-                const analistaMatch = fAnalista === "Todos" || d['Analista'] === fAnalista;
-                return mesMatch && analistaMatch;
-            });
-
-            if (dadosFiltrados.length === 0) {
-                alert("Nenhum chamado encontrado com estes filtros.");
-                return;
-            }
-
-            // Criar e baixar arquivo Excel usando SheetJS
-            const worksheet = XLSX.utils.json_to_sheet(dadosFiltrados);
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Relatorio");
-            
-            const nomeFicheiro = `Relatorio_Chamados_${fMes}_${fAnalista}.xlsx`.replace(/[\/\s]/g, '_');
-            XLSX.writeFile(workbook, nomeFicheiro);
-        });
-
-        // === FIREBASE: LER E GRAVAR ===
+        // === FIREBASE ===
         async function carregarDadosNuvem() {
             try {
-                mostrarMensagem("A carregar base de dados...", false);
                 const querySnapshot = await getDocs(collection(db, "chamados"));
                 dadosGlobais = [];
-                querySnapshot.forEach((doc) => {
-                    dadosGlobais.push(doc.data());
-                });
+                querySnapshot.forEach((doc) => dadosGlobais.push(doc.data()));
                 
                 if(dadosGlobais.length > 0) {
+                    document.getElementById('txt-ficheiros').innerText = "Base conectada";
                     preencherFiltros();
                     atualizarDashboard();
-                    mostrarMensagem(`Sucesso: ${dadosGlobais.length} chamados sincronizados.`, false);
-                    setTimeout(() => document.getElementById('status-mensagem').classList.add('hidden'), 3000);
                 } else {
-                    mostrarMensagem("Banco de dados vazio. Importe a primeira planilha.", false);
+                    document.getElementById('txt-ficheiros').innerText = "Base Vazia. Importe.";
                 }
             } catch (erro) {
                 console.error(erro);
-                mostrarMensagem("Erro ao conectar à nuvem.", true);
+                document.getElementById('txt-ficheiros').innerText = "Erro de conexão";
             }
         }
 
         async function processarEGravarPlanilha(e) {
             const file = e.target.files[0];
             if (!file) return;
-
             document.getElementById('loader-upload').style.display = 'block';
-            mostrarMensagem("A ler e gravar ficheiro na nuvem. Aguarde...", false);
+            document.getElementById('txt-ficheiros').innerText = "A gravar...";
 
             const reader = new FileReader();
             reader.onload = async function(e) {
@@ -302,8 +329,7 @@
 
                 try {
                     const batchArray = [writeBatch(db)];
-                    let operationCounter = 0;
-                    let batchIndex = 0;
+                    let operationCounter = 0; let batchIndex = 0;
 
                     jsonRows.forEach(row => {
                         if(row.Ticket) {
@@ -317,29 +343,146 @@
                             }
                         }
                     });
-
                     for (const batch of batchArray) { await batch.commit(); }
                     
                     document.getElementById('loader-upload').style.display = 'none';
-                    document.getElementById('file-upload').value = ""; // Limpa input
+                    document.getElementById('file-upload').value = ""; 
                     await carregarDadosNuvem(); 
                 } catch (error) {
                     console.error(error);
-                    mostrarMensagem("Erro ao gravar na nuvem.", true);
                     document.getElementById('loader-upload').style.display = 'none';
+                    document.getElementById('txt-ficheiros').innerText = "Erro ao gravar";
                 }
             };
             reader.readAsArrayBuffer(file);
         }
-
         document.getElementById('file-upload').addEventListener('change', processarEGravarPlanilha);
 
-        function mostrarMensagem(texto, isError) {
-            const msg = document.getElementById('status-mensagem');
-            msg.innerText = texto;
-            msg.className = `text-sm font-semibold ${isError ? 'text-red-600' : 'text-green-600'} block`;
+        document.getElementById('btn-limpar-filtros').addEventListener('click', () => {
+            document.getElementById('filtro-mes').value = "Todos";
+            document.getElementById('filtro-analista').value = "Todos";
+            document.getElementById('filtro-prioridade').value = "Todos";
+            atualizarDashboard();
+        });
+
+        function formatarFiltrosRelatorio() {
+            const fMes = document.getElementById('relatorio-mes').value;
+            const fAnalista = document.getElementById('relatorio-analista').value;
+            const dadosFiltrados = dadosGlobais.filter(d => {
+                const mesMatch = fMes === "Todos" || obterMesAno(d['Data Abertura']) === fMes;
+                const analistaMatch = fAnalista === "Todos" || d['Analista'] === fAnalista;
+                return mesMatch && analistaMatch;
+            });
+            return { fMes, fAnalista, dadosFiltrados };
         }
 
+        // === GERAÇÃO EXCEL ===
+        document.getElementById('btn-gerar-excel').addEventListener('click', () => {
+            if(dadosGlobais.length === 0) return alert("Não há dados.");
+            const { fMes, fAnalista, dadosFiltrados } = formatarFiltrosRelatorio();
+            if (dadosFiltrados.length === 0) return alert("Nenhum chamado encontrado com estes filtros.");
+            
+            const worksheet = XLSX.utils.json_to_sheet(dadosFiltrados);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Relatorio");
+            XLSX.writeFile(workbook, `Relatorio_Chamados_${fMes}_${fAnalista}.xlsx`.replace(/[\/\s]/g, '_'));
+        });
+
+        // === GERAÇÃO PDF SOFISTICADA ===
+        document.getElementById('btn-gerar-pdf').addEventListener('click', () => {
+            if(dadosGlobais.length === 0) return alert("Não há dados.");
+            const { fMes, fAnalista, dadosFiltrados } = formatarFiltrosRelatorio();
+            if (dadosFiltrados.length === 0) return alert("Nenhum chamado encontrado com estes filtros.");
+
+            // Inicializa jsPDF
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'pt', 'a4'); // A4 Portrait
+
+            // 1. CABEÇALHO SOFISTICADO (Banda Azul)
+            doc.setFillColor(26, 25, 65); // #1a1941
+            doc.rect(0, 0, doc.internal.pageSize.width, 70, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(16);
+            doc.setFont("helvetica", "bold");
+            const tituloDoc = localStorage.getItem('dashTitulo') || 'Analytics Suporte SETIC';
+            doc.text(`Relatório Gerencial - ${tituloDoc}`, 40, 42);
+
+            // 2. DADOS DE FILTRAGEM
+            doc.setTextColor(80, 80, 80);
+            doc.setFontSize(10);
+            doc.setFont("helvetica", "normal");
+            const dataHoje = new Date().toLocaleDateString('pt-BR');
+            doc.text(`Data de Emissão: ${dataHoje}`, 40, 100);
+            doc.text(`Mês Referência: ${fMes}`, 220, 100);
+            doc.text(`Analista Responsável: ${fAnalista}`, 380, 100);
+
+            // Linha divisória
+            doc.setDrawColor(200, 200, 200);
+            doc.line(40, 115, doc.internal.pageSize.width - 40, 115);
+
+            // 3. RESUMO EXECUTIVO (KPIs)
+            const total = dadosFiltrados.length;
+            const atendidos = dadosFiltrados.filter(d => d['SLA Atendido'] === 'Sim').length;
+            const incidentes = dadosFiltrados.filter(d => String(d['Tipo']).toLowerCase() === 'incidente').length;
+            
+            const slaPct = total > 0 ? ((atendidos / total) * 100).toFixed(1) + '%' : '0%';
+            const incPct = total > 0 ? ((incidentes / total) * 100).toFixed(1) + '%' : '0%';
+
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(11);
+            doc.setTextColor(26, 25, 65);
+            doc.text("Resumo de Indicadores", 40, 140);
+            
+            doc.setFontSize(10);
+            doc.setFont("helvetica", "normal");
+            doc.setTextColor(80, 80, 80);
+            doc.text(`Volume Total: ${total} chamados`, 40, 160);
+            
+            doc.setTextColor(22, 163, 74); // Verde para SLA
+            doc.text(`SLA Atendido: ${slaPct}`, 220, 160);
+            
+            doc.setTextColor(220, 38, 38); // Vermelho para Incidente
+            doc.text(`Índice Incidentes: ${incPct}`, 380, 160);
+
+            // 4. TABELA DE DADOS RESUMIDA (jsPDF-AutoTable)
+            const colunas = ["Ticket", "Abertura", "Analista", "Assunto", "Prioridade", "SLA"];
+            const linhas = dadosFiltrados.map(d => [
+                d['Ticket'] || '-',
+                (d['Data Abertura'] || '').split(' ')[0], // Apenas a data, remove a hora
+                d['Analista'] || '-',
+                (d['Assunto'] || '').substring(0, 35) + ((d['Assunto'] || '').length > 35 ? '...' : ''), // Trunca assunto
+                d['Prioridade'] || '-',
+                d['SLA Atendido'] || '-'
+            ]);
+
+            doc.autoTable({
+                startY: 190,
+                head: [colunas],
+                body: linhas,
+                theme: 'striped',
+                headStyles: { fillColor: [26, 25, 65], textColor: [255, 255, 255] },
+                styles: { fontSize: 8, cellPadding: 4 },
+                alternateRowStyles: { fillColor: [247, 248, 250] },
+                margin: { top: 30, right: 40, bottom: 40, left: 40 },
+                didDrawPage: function (data) {
+                    // Rodapé (Paginação)
+                    doc.setFontSize(8);
+                    doc.setTextColor(150, 150, 150);
+                    doc.text(
+                        `Página ${doc.internal.getNumberOfPages()}`, 
+                        doc.internal.pageSize.width / 2, 
+                        doc.internal.pageSize.height - 20, 
+                        { align: 'center' }
+                    );
+                }
+            });
+
+            // Gerar Arquivo
+            const nomeArquivo = `Relatorio_SETIC_${fMes}_${fAnalista}.pdf`.replace(/[\/\s]/g, '_');
+            doc.save(nomeArquivo);
+        });
+
+        // Formatação de Data
         function obterMesAno(dataStr) {
             if (typeof dataStr === 'string' && dataStr.includes('-')) {
                 const partes = dataStr.split(' ')[0].split('-');
@@ -347,52 +490,46 @@
             }
             return "Desconhecido";
         }
+        function converteParaDataOrdem(mesAnoStr) {
+            if(!mesAnoStr || mesAnoStr==="Desconhecido") return 0;
+            const p = mesAnoStr.split('/');
+            return parseInt(p[1]) * 100 + parseInt(p[0]); // YYYYMM
+        }
 
-        // === PREENCHIMENTO DE DROPDOWNS ===
+        // Dropdowns
         function preencherFiltros() {
-            const meses = new Set();
-            const analistas = new Set();
-            const prioridades = new Set();
-
+            const meses = new Set(); const analistas = new Set(); const prioridades = new Set();
             dadosGlobais.forEach(d => {
                 meses.add(obterMesAno(d['Data Abertura']));
                 if(d['Analista']) analistas.add(d['Analista']);
                 if(d['Prioridade']) prioridades.add(d['Prioridade']);
             });
 
-            // Preenche filtros do Dashboard
-            preencherSelect('filtro-mes', meses, "Todos os Meses");
-            preencherSelect('filtro-analista', analistas, "Todos os Analistas");
-            preencherSelect('filtro-prioridade', prioridades, "Todas as Prioridades");
-
-            // Preenche filtros da nova aba de Relatórios
-            preencherSelect('relatorio-mes', meses, "Geral (Todos os Meses)");
-            preencherSelect('relatorio-analista', analistas, "Geral (Todos os Analistas)");
+            const mesesArray = Array.from(meses).filter(m => m!=="Desconhecido").sort((a,b) => converteParaDataOrdem(a) - converteParaDataOrdem(b));
+            preencherSelect('filtro-mes', mesesArray, "Todos os Meses");
+            preencherSelect('relatorio-mes', mesesArray, "Geral (Todos os Meses)");
+            preencherSelect('filtro-analista', Array.from(analistas).sort(), "Todos os Analistas");
+            preencherSelect('relatorio-analista', Array.from(analistas).sort(), "Geral (Todos os Analistas)");
+            preencherSelect('filtro-prioridade', Array.from(prioridades).sort(), "Todas as Prioridades");
         }
 
-        function preencherSelect(id, itensSet, textoDefault) {
-            const select = document.getElementById(id);
-            const atual = select.value;
+        function preencherSelect(id, arrayOpcoes, textoDefault) {
+            const select = document.getElementById(id); const atual = select.value;
             select.innerHTML = `<option value="Todos">${textoDefault}</option>`;
-            Array.from(itensSet).sort().forEach(item => {
-                if (item && item !== "Desconhecido") {
-                    const opt = document.createElement('option');
-                    opt.value = item;
-                    opt.innerText = item;
-                    select.appendChild(opt);
-                }
+            arrayOpcoes.forEach(item => {
+                const opt = document.createElement('option'); opt.value = item; opt.innerText = item;
+                select.appendChild(opt);
             });
-            if (Array.from(itensSet).includes(atual)) select.value = atual;
+            if (arrayOpcoes.includes(atual)) select.value = atual;
         }
 
         ['filtro-mes', 'filtro-analista', 'filtro-prioridade'].forEach(id => {
             document.getElementById(id).addEventListener('change', atualizarDashboard);
         });
 
-        // === ATUALIZAÇÃO DOS GRÁFICOS ===
+        // === CORE DASHBOARD ===
         function atualizarDashboard() {
             if (dadosGlobais.length === 0) return;
-
             const fMes = document.getElementById('filtro-mes').value;
             const fAnalista = document.getElementById('filtro-analista').value;
             const fPrio = document.getElementById('filtro-prioridade').value;
@@ -405,60 +542,80 @@
             });
 
             // KPIs
-            document.getElementById('kpi-total').innerText = filtrados.length;
-            document.getElementById('kpi-total').style.color = corPrincipal;
+            document.getElementById('kpi-total-global').innerText = dadosGlobais.length.toLocaleString('pt-BR');
+            document.getElementById('kpi-total-filtrado').innerText = filtrados.length.toLocaleString('pt-BR');
             
             const atendidos = filtrados.filter(d => d['SLA Atendido'] === 'Sim').length;
-            const slaPercent = filtrados.length > 0 ? ((atendidos / filtrados.length) * 100).toFixed(1) : 0;
-            document.getElementById('kpi-sla').innerText = `${slaPercent}%`;
+            const incidentes = filtrados.filter(d => String(d['Tipo']).toLowerCase() === 'incidente').length;
+            
+            document.getElementById('kpi-sla').innerText = filtrados.length > 0 ? ((atendidos / filtrados.length) * 100).toFixed(1) + '%' : '0%';
+            document.getElementById('kpi-incidentes').innerText = filtrados.length > 0 ? ((incidentes / filtrados.length) * 100).toFixed(1) + '%' : '0%';
 
-            // Gráficos
-            renderizarGrafico('chart-meses', 'bar', agruparPor(filtrados, d => obterMesAno(d['Data Abertura'])));
-            renderizarGrafico('chart-analistas', 'bar', agruparPor(filtrados, 'Analista'));
-            renderizarGrafico('chart-assuntos', 'bar', agruparPor(filtrados, 'Assunto', 15), true);
-            renderizarGrafico('chart-requerentes', 'bar', agruparPor(filtrados, 'Requerente', 10), true);
+            // Preparar Dados Gráficos
+            let dadosMes = agruparPor(filtrados, d => obterMesAno(d['Data Abertura']));
+            const indicesOrdenados = dadosMes.labels.map((val, ind) => ({val, ind})).sort((a,b) => converteParaDataOrdem(a.val) - converteParaDataOrdem(b.val));
+            dadosMes.labels = indicesOrdenados.map(i => i.val);
+            dadosMes.values = indicesOrdenados.map(i => dadosMes.values[i.ind]);
+
+            const dadosAna = agruparPor(filtrados, 'Analista');
+            const dadosAss = agruparPor(filtrados, 'Categoria', 15);
+            const dadosReq = agruparPor(filtrados, 'Requerente', 10);
+            const dadosPrio = agruparPor(filtrados, 'Prioridade');
+            const dadosTipo = agruparPor(filtrados, 'Tipo');
+
+            renderizarGrafico('chart-meses', 'line', dadosMes, corPrincipal);
+            renderizarGrafico('chart-analistas', 'bar', dadosAna, corPrincipal);
+            renderizarGraficoMultiCor('chart-assuntos', 'bar', dadosAss, paletaAssuntos, true);
+            renderizarGrafico('chart-requerentes', 'bar', dadosReq, '#2e2b7a', true);
+            renderizarCircular('chart-prioridade', 'doughnut', dadosPrio, coresPrioridade);
+            renderizarCircular('chart-tipo', 'pie', dadosTipo, coresTipo);
         }
 
-        function agruparPor(dados, chaveOuFuncao, limite = null) {
+        function agruparPor(dados, chave, limite = null) {
             const contagem = {};
             dados.forEach(d => {
-                const chave = typeof chaveOuFuncao === 'function' ? chaveOuFuncao(d) : d[chaveOuFuncao];
-                if (chave) contagem[chave] = (contagem[chave] || 0) + 1;
+                const k = typeof chave === 'function' ? chave(d) : d[chave];
+                if (k) contagem[k] = (contagem[k] || 0) + 1;
             });
-            let array = Object.keys(contagem).map(k => ({ label: k, value: contagem[k] }));
-            array.sort((a, b) => b.value - a.value);
-            if (limite) array = array.slice(0, limite);
-            return {
-                labels: array.map(i => i.label),
-                values: array.map(i => i.value)
-            };
+            let arr = Object.keys(contagem).map(k => ({ label: k, value: contagem[k] }));
+            arr.sort((a, b) => b.value - a.value);
+            if (limite) arr = arr.slice(0, limite);
+            return { labels: arr.map(i => i.label), values: arr.map(i => i.value) };
         }
 
-        function renderizarGrafico(canvasId, tipo, dadosAgrupados, horizontal = false) {
+        function renderizarGrafico(canvasId, tipo, dadosAgrupados, cor, horizontal = false) {
             const ctx = document.getElementById(canvasId).getContext('2d');
             if (graficos[canvasId]) graficos[canvasId].destroy();
+            const options = { responsive: true, plugins: { legend: { display: false } } };
+            if(horizontal) options.indexAxis = 'y';
+            const dataset = { data: dadosAgrupados.values, backgroundColor: cor, borderRadius: horizontal ? 0 : 3 };
+            if(tipo === 'line') {
+                dataset.fill = true; dataset.backgroundColor = cor + '20'; dataset.borderColor = cor; dataset.tension = 0.4; dataset.pointBackgroundColor = cor;
+            }
+            graficos[canvasId] = new Chart(ctx, { type: tipo, data: { labels: dadosAgrupados.labels, datasets: [dataset] }, options: options });
+        }
 
+        function renderizarGraficoMultiCor(canvasId, tipo, dadosAgrupados, arrayCores, horizontal = false) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            if (graficos[canvasId]) graficos[canvasId].destroy();
             graficos[canvasId] = new Chart(ctx, {
                 type: tipo,
-                data: {
-                    labels: dadosAgrupados.labels,
-                    datasets: [{
-                        label: 'Qtd Chamados',
-                        data: dadosAgrupados.values,
-                        backgroundColor: corPrincipal,
-                        borderRadius: 4
-                    }]
-                },
-                options: {
-                    indexAxis: horizontal ? 'y' : 'x',
-                    responsive: true,
-                    plugins: { legend: { display: false } },
-                    scales: { x: { beginAtZero: true } }
-                }
+                data: { labels: dadosAgrupados.labels, datasets: [{ data: dadosAgrupados.values, backgroundColor: arrayCores, borderRadius: 3 }] },
+                options: { indexAxis: horizontal ? 'y' : 'x', responsive: true, plugins: { legend: { display: false } } }
             });
         }
 
-        // Init
+        function renderizarCircular(canvasId, tipo, dadosAgrupados, mapCores) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            if (graficos[canvasId]) graficos[canvasId].destroy();
+            const bgColors = dadosAgrupados.labels.map(l => mapCores[l] || '#9ca3af');
+            graficos[canvasId] = new Chart(ctx, {
+                type: tipo,
+                data: { labels: dadosAgrupados.labels, datasets: [{ data: dadosAgrupados.values, backgroundColor: bgColors, borderWidth: 1 }] },
+                options: { responsive: true, plugins: { legend: { position: 'right' } } }
+            });
+        }
+
         aplicarPersonalizacao();
         carregarDadosNuvem();
     </script>
