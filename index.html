@@ -20,13 +20,17 @@
     <style>
         body { background-color: #f3f4f6; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
         .card { background-color: #ffffff; border-radius: 0.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 1.25rem; }
+        
+        /* TRAVA RÍGIDA DE ALTURA PARA OS GRÁFICOS (Evita o Loop Infinito) */
+        .chart-container { position: relative; height: 280px; width: 100%; }
+        .chart-container-small { position: relative; height: 220px; width: 100%; display: flex; justify-content: center; }
+        
         .loader { border: 3px solid #f3f3f3; border-top: 3px solid #ffffff; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: none; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .tab-active { border-bottom: 2px solid; font-weight: bold; }
         .tab-inactive { border-color: transparent; color: #6b7280; }
         .tab-inactive:hover { color: #1f2937; }
         
-        /* Estilos da Tabela de Dados */
         .table-container { max-height: 400px; overflow-y: auto; }
         .data-table th { position: sticky; top: 0; background-color: #f8fafc; z-index: 10; }
     </style>
@@ -114,26 +118,38 @@
             </div>
         </div>
 
-        <!-- Gráficos -->
+        <!-- Gráficos com TRAVA de altura -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <div class="card"><h3 class="font-bold text-gray-700 mb-4 border-b pb-2 text-sm uppercase">Evolução de Chamados</h3><canvas id="chart-meses" height="130"></canvas></div>
-            <div class="card"><h3 class="font-bold text-gray-700 mb-4 border-b pb-2 text-sm uppercase">Volume por Analista Foco (Clique para Filtrar)</h3><canvas id="chart-analistas" height="130"></canvas></div>
+            <div class="card flex flex-col">
+                <h3 class="font-bold text-gray-700 mb-4 border-b pb-2 text-sm uppercase">Evolução de Chamados</h3>
+                <div class="chart-container"><canvas id="chart-meses"></canvas></div>
+            </div>
+            <div class="card flex flex-col">
+                <h3 class="font-bold text-gray-700 mb-4 border-b pb-2 text-sm uppercase">Volume por Analista Foco (Clique para Filtrar)</h3>
+                <div class="chart-container"><canvas id="chart-analistas"></canvas></div>
+            </div>
         </div>
         
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <div class="card"><h3 class="font-bold text-gray-700 mb-4 border-b pb-2 text-sm uppercase">Top 15 Assuntos (Categorias)</h3><canvas id="chart-assuntos" height="140"></canvas></div>
             <div class="card flex flex-col">
-                <h3 class="font-bold text-gray-700 mb-4 border-b pb-2 text-sm uppercase">Eficiência SLA por Criticidade</h3>
-                <p class="text-xs text-gray-500 mb-2">Compara chamados dentro do prazo vs estourados para identificar gargalos nos níveis de risco.</p>
-                <div class="flex-grow"><canvas id="chart-prioridade" height="140"></canvas></div>
+                <h3 class="font-bold text-gray-700 mb-4 border-b pb-2 text-sm uppercase">Top 15 Assuntos (Categorias)</h3>
+                <div class="chart-container"><canvas id="chart-assuntos"></canvas></div>
+            </div>
+            <div class="card flex flex-col">
+                <h3 class="font-bold text-gray-700 mb-2 border-b pb-2 text-sm uppercase">Eficiência SLA por Criticidade</h3>
+                <p class="text-[10px] text-gray-500 mb-2">Compara chamados dentro do prazo vs estourados.</p>
+                <div class="chart-container"><canvas id="chart-prioridade"></canvas></div>
             </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <div class="card"><h3 class="font-bold text-gray-700 mb-4 border-b pb-2 text-sm uppercase">Top Maiores Requerentes</h3><canvas id="chart-requerentes" height="140"></canvas></div>
+            <div class="card flex flex-col">
+                <h3 class="font-bold text-gray-700 mb-4 border-b pb-2 text-sm uppercase">Top Maiores Requerentes</h3>
+                <div class="chart-container"><canvas id="chart-requerentes"></canvas></div>
+            </div>
             <div class="card flex flex-col items-center justify-center">
                 <h3 class="font-bold text-gray-700 mb-4 w-full border-b pb-2 text-sm uppercase">Natureza do Chamado</h3>
-                <div class="w-3/4 max-w-xs mt-2"><canvas id="chart-tipo"></canvas></div>
+                <div class="chart-container-small"><canvas id="chart-tipo"></canvas></div>
             </div>
         </div>
 
@@ -633,11 +649,11 @@
             return { labels: arr.map(i=>i.label), values: arr.map(i=>i.value) };
         }
 
-        // === RENDERIZADORES CHART.JS ===
+        // === RENDERIZADORES CHART.JS COM TRAVA RIGIDA (`maintainAspectRatio: true`) ===
         function renderizarG(id, tipo, dAgr, cor, horizontal, showLabels=false, onClickCallback=null) {
             const ctx = document.getElementById(id).getContext('2d'); if (graficos[id]) graficos[id].destroy();
             const options = { 
-                responsive: true, maintainAspectRatio: false,
+                responsive: true, maintainAspectRatio: true,
                 plugins: { legend: { display: false }, datalabels: { display: showLabels, color: '#fff', font: {weight: 'bold'}, anchor: 'end', align: 'start', offset: 4 } },
                 onClick: (e, act) => { if(onClickCallback && act.length>0) onClickCallback(dAgr.labels[act[0].index]); }
             };
@@ -652,7 +668,7 @@
             const ctx = document.getElementById(id).getContext('2d'); if (graficos[id]) graficos[id].destroy();
             graficos[id] = new Chart(ctx, {
                 type: tipo, data: { labels: dAgr.labels, datasets: [{ data: dAgr.values, backgroundColor: cores, borderRadius: 2 }] },
-                options: { indexAxis: horizontal ? 'y' : 'x', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, datalabels: { display: false } } }
+                options: { indexAxis: horizontal ? 'y' : 'x', responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, datalabels: { display: false } } }
             });
         }
 
@@ -661,7 +677,7 @@
             const bgC = dAgr.labels.map(l => mapCores[l] || '#9ca3af');
             graficos[id] = new Chart(ctx, {
                 type: tipo, data: { labels: dAgr.labels, datasets: [{ data: dAgr.values, backgroundColor: bgC, borderWidth: 1 }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' }, datalabels: { display: false } } }
+                options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'right' }, datalabels: { display: false } } }
             });
         }
 
@@ -672,12 +688,12 @@
                 data: {
                     labels: objDados.labels,
                     datasets: [
-                        { label: 'SLA Cumprido', data: objDados.atendido, backgroundColor: '#22c55e', borderRadius: 2 },
-                        { label: 'SLA Violado', data: objDados.estourado, backgroundColor: '#ef4444', borderRadius: 2 }
+                        { label: 'No Prazo', data: objDados.atendido, backgroundColor: '#22c55e', borderRadius: 2 },
+                        { label: 'Estourado', data: objDados.estourado, backgroundColor: '#ef4444', borderRadius: 2 }
                     ]
                 },
                 options: {
-                    responsive: true, maintainAspectRatio: false,
+                    responsive: true, maintainAspectRatio: true,
                     scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } },
                     plugins: { legend: { position: 'top', labels: { boxWidth: 12, font: {size: 10} } }, datalabels: { display: false } }
                 }
@@ -716,7 +732,7 @@
             document.getElementById('btn-tab-prev').disabled = tabelaPaginaAtual === 1; document.getElementById('btn-tab-next').disabled = tabelaPaginaAtual === totalP;
         }
 
-        // === RELATÓRIOS (PDF / EXCEL) COM DELAY CORRIGIDO ===
+        // === RELATÓRIOS (PDF / EXCEL) COM DELAY CORRIGIDO E TRY CATCH DETALHADO ===
         document.getElementById('btn-gerar-excel').addEventListener('click', () => {
             const fM = document.getElementById('relatorio-mes').value; const fA = document.getElementById('relatorio-analista').value;
             const dadosExp = dadosGlobais.filter(d => (fM === "Todos" || obterMesAno(d['Data Abertura']) === fM) && (fA === "Todos" || d['Analista'] === fA));
@@ -795,11 +811,11 @@
                     });
                     doc.save(`Relatorio_Oficial_SETIC.pdf`);
                 } catch (err) {
-                    console.error("Erro na geração do PDF:", err); alert("Ocorreu um erro ao montar o arquivo PDF.");
+                    console.error("Erro na geração do PDF:", err); alert("Ocorreu um erro ao montar o arquivo PDF. Tente atualizar a página (F5).");
                 } finally {
                     btn.innerHTML = conteudoOriginal; btn.disabled = false;
                 }
-            }, 600); 
+            }, 800); // Delay aumentado ligeiramente para garantir o desenho do Chart.js
         });
 
         aplicarPersonalizacao();
