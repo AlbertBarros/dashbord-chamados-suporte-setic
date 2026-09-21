@@ -632,7 +632,7 @@
             XLSX.writeFile(wb, `Base_Extraida_SETIC.xlsx`);
         });
 
-        // === RELATÓRIO PDF COM O NOVO CABEÇALHO OFICIAL DTIC / SETIC ===
+        // === RELATÓRIO PDF COM CABEÇALHO INSTITUCIONAL AJUSTADO E TÍTULOS CORRIGIDOS ===
         document.getElementById('btn-gerar-pdf').addEventListener('click', () => {
             const fM = document.getElementById('relatorio-mes').value; const fA = document.getElementById('relatorio-analista').value;
             const btn = document.getElementById('btn-gerar-pdf');
@@ -655,32 +655,31 @@
                     
                     const { jsPDF } = window.jspdf; const doc = new jsPDF('p', 'pt', 'a4'); const w = doc.internal.pageSize.width;
                     
-                    // Cabeçalho institucional oficial de fundo azul escuro
+                    // Cabeçalho institucional (Fundo azul escuro)
                     doc.setFillColor(26, 25, 65); doc.rect(0, 0, w, 95, 'F');
                     
-                    // Textos do Cabeçalho ajustados exatamente ao modelo institucional solicitado
                     doc.setTextColor(255, 255, 255); 
                     
                     // Linha 1: Ministério
-                    doc.setFontSize(11); doc.setFont("helvetica", "bold");
-                    doc.text("MINISTÉRIO DA JUSTIÇA E SEGURANÇA PÚBLICA", 40, 30);
+                    doc.setFontSize(10); doc.setFont("helvetica", "bold");
+                    doc.text("MINISTÉRIO DA JUSTIÇA E SEGURANÇA PÚBLICA", 40, 28);
                     
-                    // Linha 2: Polícia Rodoviária Federal - DTIC
-                    doc.setFontSize(9); doc.setFont("helvetica", "normal");
-                    doc.text("Polícia Rodoviária Federal - DIRETORIA DE TECNOLOGIA DA INFORMAÇÃO E COMUNICAÇÃO (DTIC)", 40, 48);
+                    // Linha 2: Polícia Rodoviária Federal - Diretoria de Tecnologia da Informação e Comunicação (DTIC)
+                    doc.setFontSize(7.5); doc.setFont("helvetica", "normal");
+                    doc.text("Polícia Rodoviária Federal - Diretoria de Tecnologia da Informação e Comunicação (DTIC)", 40, 46);
                     
-                    // Linha 3: Relatório Gerencial Analítico (Suporte N2)
-                    doc.setFontSize(9); doc.setFont("helvetica", "bold");
-                    doc.text("Relatório Gerencial Analítico (Suporte N2) - Serviço de pronto atendimento (SETIC)", 40, 66);
+                    // Linha 3: Relatório Gerencial Analítico (Suporte N2) - Serviço de pronto atendimento (SETIC)
+                    doc.setFontSize(8.5); doc.setFont("helvetica", "bold");
+                    doc.text("Relatório Gerencial Analítico (Suporte N2) - Serviço de pronto atendimento (SETIC)", 40, 65);
 
-                    // Soma Executiva
-                    doc.setTextColor(26, 25, 65); doc.setFontSize(12); doc.text("Suma Executiva", 40, 125);
+                    // Seção: Resumo Executivo
+                    doc.setTextColor(26, 25, 65); doc.setFontSize(12); doc.text("Resumo Executivo", 40, 125);
                     doc.setTextColor(60, 60, 60); doc.setFontSize(10); doc.setFont("helvetica", "normal");
                     
                     const txtIA = `Documento gerado em ${new Date().toLocaleDateString('pt-BR')} (Filtro Aplicado: Mês ${fM} | Analista: ${fA}). O período processou um total de ${dadosExp.length} tickets. A eficiência registrou um TMA de ${tmaGlobalTexto}, garantindo que ${slaGlobalTexto} das demandas fossem solucionadas no prazo. A taxa de incidentes correspondeu a ${incGlobalTexto}.`;
                     doc.text(doc.splitTextToSize(txtIA, w - 80), 40, 145);
                     
-                    // Blocos de KPI no PDF
+                    // Blocos de KPI
                     doc.setFillColor(245, 247, 250); doc.rect(40, 195, 160, 50, 'F'); doc.rect(215, 195, 160, 50, 'F'); doc.rect(390, 195, 160, 50, 'F');
                     doc.setFontSize(9); doc.setTextColor(120, 120, 120); doc.setFont("helvetica", "bold");
                     doc.text("VOLUME TOTAL", 120, 215, {align: 'center'}); doc.text("TMA (MÉDIA HORAS)", 295, 215, {align: 'center'}); doc.text("EFICIÊNCIA DE SLA", 470, 215, {align: 'center'});
@@ -688,8 +687,8 @@
                     doc.text(String(dadosExp.length), 120, 235, {align: 'center'}); doc.text(String(tmaGlobalTexto), 295, 235, {align: 'center'});
                     doc.setTextColor(22, 163, 74); doc.text(String(slaGlobalTexto), 470, 235, {align: 'center'});
 
-                    // Gráficos
-                    doc.setFontSize(12); doc.setTextColor(26, 25, 65); doc.text("Caderno Visual", 40, 275);
+                    // Seção: Análise Visual
+                    doc.setFontSize(12); doc.setTextColor(26, 25, 65); doc.text("Análise Visual", 40, 275);
                     doc.setFontSize(9); doc.setTextColor(100, 100, 100);
                     
                     const getImg = (id) => { try { const c = document.getElementById(id); return c ? c.toDataURL('image/jpeg', 1.0) : null; } catch(e) { return null; } };
@@ -697,10 +696,11 @@
                     doc.text("Evolução Histórica", 40, 295); const i1 = getImg('chart-meses'); if(i1) doc.addImage(i1, 'JPEG', 40, 300, 240, 130);
                     doc.text("Volume Foco", 305, 295); const i2 = getImg('chart-analistas'); if(i2) doc.addImage(i2, 'JPEG', 305, 300, 240, 130);
                     doc.text("Assuntos Top 15", 40, 450); const i3 = getImg('chart-assuntos'); if(i3) doc.addImage(i3, 'JPEG', 40, 455, 240, 130);
-                    doc.text("SLA vs Criticidade", 305, 450); const i4 = getImg('chart-prioridade'); if(i4) doc.addImage(i4, 'JPEG', 305, 455, 240, 130);
+                    doc.text("SLA vs Criticidade", 305, 450); const i4 = getImg('chart-prioridade'); if(i4) doc.addImage(i4, 'JPEG', 40, 455, 240, 130);
 
+                    // Página 2: Detalhamento dos Chamados Extraídos
                     doc.addPage();
-                    doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.setTextColor(26, 25, 65); doc.text("Apêndice Operacional", 40, 40);
+                    doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.setTextColor(26, 25, 65); doc.text("Detalhamento dos Chamados Extraídos", 40, 40);
 
                     const linhas = dadosExp.map(d => [ 
                         String(d['Ticket']||'-'), 
