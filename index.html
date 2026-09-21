@@ -156,7 +156,6 @@
                         </tr>
                     </thead>
                     <tbody id="tabela-corpo" class="divide-y divide-gray-100 bg-white">
-                        <!-- Preenchido via JS -->
                         <tr><td colspan="6" class="px-4 py-8 text-center text-gray-400">Aguardando dados...</td></tr>
                     </tbody>
                 </table>
@@ -292,13 +291,13 @@
         </div>
     </div>
 
-    <!-- Scripts -->
+    <!-- Scripts da Lógica de Negócio -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
-        import { getFirestore, collection, getDocs, doc, writeBatch, deleteDoc, query, where } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, doc, writeBatch } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
-        // === CONFIGURAÇÕES E PLUGINS CHARTJS ===
-        Chart.defaults.animation = false; // Desativa animação para fotos do PDF perfeitas
+        // === CONFIGURAÇÕES GLOBAIS CHART.JS ===
+        Chart.defaults.animation = false; 
         Chart.register(ChartDataLabels);
         const bgPlugin = {
             id: 'customCanvasBackgroundColor',
@@ -318,10 +317,16 @@
             messagingSenderId: "502847512745",
             appId: "1:502847512745:web:2941e763621ecc0af509b8"
         };
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+        
+        let app, db;
+        try {
+            app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+        } catch (error) {
+            console.error("Erro fatal ao inicializar Firebase:", error);
+        }
 
-        // Variáveis de Estado
+        // Variáveis Globais de Estado
         let dadosGlobais = []; 
         let dadosFiltradosCache = [];
         let historicoCompletoCarregado = false;
@@ -388,28 +393,24 @@
             modal.classList.add('hidden');
         });
 
-        // === CARGA DE DADOS INTELIGENTE FIREBASE ===
+        // === CARGA INTELIGENTE DE DADOS (FIREBASE) ===
         function definirStatus(badgeHtml, corClasse) {
             const b = document.getElementById('badge-status');
             b.className = `text-xs font-bold px-2 py-1 ${corClasse} rounded text-white shadow ml-2`;
-            b.innerHTML = badgeHtml;
-            b.classList.remove('hidden');
+            b.innerHTML = badgeHtml; b.classList.remove('hidden');
         }
 
         async function carregarDadosNuvem(forcarCompleto = false) {
+            if(!db) { definirStatus('<i class="fa-solid fa-xmark"></i> Erro DB', 'bg-red-600'); return; }
+            
             try {
-                const anoAtualStr = new Date().getFullYear().toString(); // "2026"
-                let querySnapshot;
-
-                // Para otimizar a leitura do Firestore sem criar índices complexos, lemos tudo no client por ser < 50.000 docs.
-                // Mas na lógica da aplicação simulamos o comportamento.
-                querySnapshot = await getDocs(collection(db, "chamados"));
+                const anoAtualStr = new Date().getFullYear().toString(); 
+                const querySnapshot = await getDocs(collection(db, "chamados"));
                 
                 dadosGlobais = [];
                 querySnapshot.forEach((doc) => {
                     const d = doc.data();
-                    const dStr = String(d['Data Abertura'] || d['Ticket'] || ""); // Ticket as vezes tem o ano embutido
-                    // Filtra na memória para simular query rápida e preservar limites visuais
+                    const dStr = String(d['Data Abertura'] || d['Ticket'] || ""); 
                     if (forcarCompleto || dStr.includes(anoAtualStr) || dStr.includes(anoAtualStr.substring(2))) {
                         dadosGlobais.push(d);
                     }
@@ -417,20 +418,15 @@
                 
                 if(dadosGlobais.length > 0) {
                     definirStatus('<i class="fa-solid fa-check-circle"></i> Sincronizado', 'bg-green-500');
-                    document.getElementById('txt-ficheiros').innerText = `Base ligada: ${dadosGlobais.length} registros.`;
-                    
                     document.getElementById('tag-ano-atual').innerText = forcarCompleto ? "Visualizando: Todo o Histórico" : `Visualizando: Ano ${anoAtualStr}`;
                     document.getElementById('tag-ano-atual').className = forcarCompleto ? "ml-2 text-[10px] bg-purple-100 text-purple-800 font-bold px-2 py-1 rounded border border-purple-200" : "ml-2 text-[10px] bg-green-100 text-green-800 font-bold px-2 py-1 rounded border border-green-200";
-                    
                     preencherFiltros(); atualizarDashboard();
                 } else {
                     definirStatus('<i class="fa-solid fa-triangle-exclamation"></i> Vazio', 'bg-red-500');
-                    document.getElementById('txt-ficheiros').innerText = "Nenhum dado encontrado para o ano atual.";
                 }
                 historicoCompletoCarregado = forcarCompleto;
             } catch (e) { 
-                definirStatus('<i class="fa-solid fa-xmark"></i> Erro', 'bg-red-600');
-                document.getElementById('txt-ficheiros').innerText = "Erro ao conectar."; console.error(e); 
+                definirStatus('<i class="fa-solid fa-xmark"></i> Erro', 'bg-red-600'); console.error(e); 
             }
         }
 
@@ -446,7 +442,6 @@
         document.getElementById('file-upload').addEventListener('change', (e) => {
             const file = e.target.files[0]; if (!file) return;
             document.getElementById('loader-upload').classList.remove('hidden');
-            document.getElementById('txt-ficheiros').innerText = "Importando e mesclando com a nuvem...";
             
             const reader = new FileReader();
             reader.onload = async function(ev) {
@@ -461,10 +456,9 @@
                         }
                     });
                     for (const batch of batchArray) await batch.commit();
-                    
                     document.getElementById('loader-upload').classList.add('hidden'); e.target.value = ""; 
-                    await carregarDadosNuvem(historicoCompletoCarregado); // Mantém o estado atual
-                } catch (err) { document.getElementById('loader-upload').classList.add('hidden'); document.getElementById('txt-ficheiros').innerText = "Falha ao gravar no Firebase."; }
+                    await carregarDadosNuvem(historicoCompletoCarregado); 
+                } catch (err) { document.getElementById('loader-upload').classList.add('hidden'); }
             };
             reader.readAsArrayBuffer(file);
         });
@@ -476,52 +470,40 @@
 
         inputSenha.addEventListener('input', (e) => {
             if(e.target.value === 'setic2026') {
-                btnReset.disabled = false;
-                btnReset.className = "bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded text-sm transition shadow shadow-red-200 animate-pulse";
+                btnReset.disabled = false; btnReset.className = "bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded text-sm transition shadow animate-pulse";
             } else {
-                btnReset.disabled = true;
-                btnReset.className = "bg-gray-300 text-white font-bold py-2 px-4 rounded text-sm cursor-not-allowed transition";
+                btnReset.disabled = true; btnReset.className = "bg-gray-300 text-white font-bold py-2 px-4 rounded text-sm cursor-not-allowed transition";
             }
         });
 
         btnReset.addEventListener('click', async () => {
-            if(!confirm("TEM A CERTEZA ABSOLUTA? Esta ação irá deletar TODOS os documentos da coleção. Isso pode demorar vários minutos se a base for grande.")) return;
-            
+            if(!confirm("TEM A CERTEZA ABSOLUTA? Esta ação irá deletar TODOS os documentos da base.")) return;
             btnReset.disabled = true; inputSenha.disabled = true;
             btnReset.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Excluindo...';
-            msgAdmin.className = "text-xs font-bold mt-2 text-center text-blue-600 block";
-            msgAdmin.innerText = "Iniciando exclusão em lote...";
+            msgAdmin.className = "text-xs font-bold mt-2 text-center text-blue-600 block"; msgAdmin.innerText = "Apagando lotes...";
 
             try {
                 const querySnapshot = await getDocs(collection(db, "chamados"));
                 const docsLength = querySnapshot.size;
                 
-                let b = writeBatch(db); let c = 0; let loops = 0;
-                const promessas = [];
-                
+                let b = writeBatch(db); let c = 0; const promessas = [];
                 querySnapshot.docs.forEach((docSnap) => {
                     b.delete(docSnap.ref); c++;
-                    if(c === 490) { promessas.push(b.commit()); b = writeBatch(db); c = 0; loops++; }
+                    if(c === 490) { promessas.push(b.commit()); b = writeBatch(db); c = 0; }
                 });
                 if(c > 0) promessas.push(b.commit());
-                
                 await Promise.all(promessas);
                 
-                msgAdmin.className = "text-xs font-bold mt-2 text-center text-green-600 block";
-                msgAdmin.innerText = `Sucesso: ${docsLength} documentos deletados permanentemente.`;
+                msgAdmin.className = "text-xs font-bold mt-2 text-center text-green-600 block"; msgAdmin.innerText = `Sucesso: ${docsLength} documentos apagados.`;
                 btnReset.innerHTML = '<i class="fa-solid fa-check"></i> Concluído';
-                
                 dadosGlobais = []; atualizarDashboard();
             } catch(e) {
-                console.error(e);
-                msgAdmin.className = "text-xs font-bold mt-2 text-center text-red-600 block";
-                msgAdmin.innerText = "Falha crítica ao excluir documentos.";
+                msgAdmin.className = "text-xs font-bold mt-2 text-center text-red-600 block"; msgAdmin.innerText = "Erro ao excluir.";
                 btnReset.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Erro';
             }
         });
 
-
-        // === LÓGICA DE DADOS & FILTRAGEM (TMA / DATAS) ===
+        // === PROCESSAMENTO E CÁLCULOS ===
         function parseHoras(tempoStr) {
             if(!tempoStr) return 0;
             const p = String(tempoStr).split(':');
@@ -565,14 +547,18 @@
             tabelaPaginaAtual = 1; atualizarDashboard();
         });
 
-        // Paginação Tabela Controles
         document.getElementById('btn-tab-prev').addEventListener('click', () => { if(tabelaPaginaAtual > 1) { tabelaPaginaAtual--; desenharTabela(); }});
         document.getElementById('btn-tab-next').addEventListener('click', () => { if(tabelaPaginaAtual < Math.ceil(dadosFiltradosCache.length / tabelaItensPorPagina)) { tabelaPaginaAtual++; desenharTabela(); }});
 
         let tmaGlobalTexto = "0.0h"; let slaGlobalTexto = "0%"; let incGlobalTexto = "0%";
 
         function atualizarDashboard() {
-            if (dadosGlobais.length === 0) return;
+            if (dadosGlobais.length === 0) {
+                document.getElementById('kpi-total').innerText = '0'; document.getElementById('kpi-filtrado').innerText = '0';
+                document.getElementById('kpi-tma').innerText = '0.0h'; document.getElementById('kpi-sla').innerText = '0%'; document.getElementById('kpi-incidentes').innerText = '0%';
+                desenharTabela(); return;
+            }
+
             const fM = document.getElementById('filtro-mes').value; const fA = document.getElementById('filtro-analista').value;
             const fP = document.getElementById('filtro-prioridade').value;
             const dIn = document.getElementById('filtro-data-inicio').value; const dFim = document.getElementById('filtro-data-fim').value;
@@ -580,19 +566,14 @@
             const filtrados = dadosGlobais.filter(d => {
                 let match = (fM === "Todos" || obterMesAno(d['Data Abertura']) === fM) && (fA === "Todos" || d['Analista'] === fA) && (fP === "Todos" || d['Prioridade'] === fP);
                 if(match && (dIn || dFim) && d['Data Abertura']) {
-                    const dObjStr = d['Data Abertura'].split(' ')[0]; // YYYY-MM-DD
+                    const dObjStr = d['Data Abertura'].split(' ')[0]; 
                     const dNum = parseInt(dObjStr.replace(/-/g, ''));
                     if(dIn && dNum < parseInt(dIn.replace(/-/g, ''))) match = false;
                     if(dFim && dNum > parseInt(dFim.replace(/-/g, ''))) match = false;
                 }
                 return match;
             });
-            // Ordenar decrescente por data para a tabela
-            filtrados.sort((a,b) => {
-                const da = a['Data Abertura'] || ""; const db = b['Data Abertura'] || "";
-                return da > db ? -1 : (da < db ? 1 : 0);
-            });
-            
+            filtrados.sort((a,b) => { const da = a['Data Abertura'] || ""; const db = b['Data Abertura'] || ""; return da > db ? -1 : (da < db ? 1 : 0); });
             dadosFiltradosCache = filtrados;
 
             // KPIs
@@ -608,15 +589,12 @@
             
             slaGlobalTexto = total > 0 ? ((atend / total) * 100).toFixed(1) + '%' : '0%';
             incGlobalTexto = total > 0 ? ((incid / total) * 100).toFixed(1) + '%' : '0%';
-            document.getElementById('kpi-sla').innerText = slaGlobalTexto;
-            document.getElementById('kpi-incidentes').innerText = incGlobalTexto;
+            document.getElementById('kpi-sla').innerText = slaGlobalTexto; document.getElementById('kpi-incidentes').innerText = incGlobalTexto;
 
-            // Dados Gráfico Meses
             let dMes = agruparPor(filtrados, d => obterMesAno(d['Data Abertura']));
             const indOrd = dMes.labels.map((val, ind) => ({val, ind})).sort((a,b) => cvDtOrd(a.val) - cvDtOrd(b.val));
             dMes.labels = indOrd.map(i => i.val); dMes.values = indOrd.map(i => dMes.values[i.ind]);
 
-            // Analistas Foco
             const eqArray = equipeFocoStr.split(',').map(s=>s.trim().toLowerCase());
             let dAnaBruto = agruparPor(filtrados, 'Analista');
             let dAna = { labels: [], values: [] };
@@ -624,12 +602,10 @@
 
             const dAss = agruparPor(filtrados, 'Categoria', 15); const dReq = agruparPor(filtrados, 'Requerente', 10);
             
-            // NOVO: SLA por Prioridade (Barra Dupla)
             let dPrioBruto = agruparPor(filtrados, 'Prioridade');
             const mapOrdP = {'Muito Alto': 1, 'Alto': 2, 'Médio': 3, 'Baixo': 4, 'Muito Baixo': 5};
             let arrP = dPrioBruto.labels.map((l, i) => ({l, v: dPrioBruto.values[i]})).sort((a,b) => (mapOrdP[a.l] || 99) - (mapOrdP[b.l] || 99));
             
-            // Conta os no Prazo vs Fora do Prazo para cada prioridade
             let prioSLA_Atendido = []; let prioSLA_Estourado = [];
             arrP.forEach(item => {
                 const noPrazo = filtrados.filter(d => d['Prioridade'] === item.l && d['SLA Atendido'] === 'Sim').length;
@@ -644,7 +620,7 @@
             renderizarG('chart-analistas', 'bar', dAna, corPrincipal, false, true, (l) => { document.getElementById('filtro-analista').value = l; tabelaPaginaAtual=1; atualizarDashboard(); });
             renderizarGMulti('chart-assuntos', 'bar', dAss, paletaAssuntos, true);
             renderizarG('chart-requerentes', 'bar', dReq, '#2e2b7a', true, false);
-            renderizarSLAStack('chart-prioridade', dadosSlaPrio); // Novo Gráfico
+            renderizarSLAStack('chart-prioridade', dadosSlaPrio);
             renderizarCirc('chart-tipo', 'pie', dTipo, coresTipo);
 
             desenharTabela();
@@ -657,11 +633,11 @@
             return { labels: arr.map(i=>i.label), values: arr.map(i=>i.value) };
         }
 
-        // === RENDERIZADORES DO CHART.JS ===
+        // === RENDERIZADORES CHART.JS ===
         function renderizarG(id, tipo, dAgr, cor, horizontal, showLabels=false, onClickCallback=null) {
             const ctx = document.getElementById(id).getContext('2d'); if (graficos[id]) graficos[id].destroy();
             const options = { 
-                responsive: true, maintainAspectRatio: false,
+                responsive: true, maintainAspectRatio: true,
                 plugins: { legend: { display: false }, datalabels: { display: showLabels, color: '#fff', font: {weight: 'bold'}, anchor: 'end', align: 'start', offset: 4 } },
                 onClick: (e, act) => { if(onClickCallback && act.length>0) onClickCallback(dAgr.labels[act[0].index]); }
             };
@@ -676,7 +652,7 @@
             const ctx = document.getElementById(id).getContext('2d'); if (graficos[id]) graficos[id].destroy();
             graficos[id] = new Chart(ctx, {
                 type: tipo, data: { labels: dAgr.labels, datasets: [{ data: dAgr.values, backgroundColor: cores, borderRadius: 2 }] },
-                options: { indexAxis: horizontal ? 'y' : 'x', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, datalabels: { display: false } } }
+                options: { indexAxis: horizontal ? 'y' : 'x', responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, datalabels: { display: false } } }
             });
         }
 
@@ -685,11 +661,10 @@
             const bgC = dAgr.labels.map(l => mapCores[l] || '#9ca3af');
             graficos[id] = new Chart(ctx, {
                 type: tipo, data: { labels: dAgr.labels, datasets: [{ data: dAgr.values, backgroundColor: bgC, borderWidth: 1 }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' }, datalabels: { display: false } } }
+                options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'right' }, datalabels: { display: false } } }
             });
         }
 
-        // Gráfico Duplo (Stacked Bar) para Prioridade vs SLA
         function renderizarSLAStack(id, objDados) {
             const ctx = document.getElementById(id).getContext('2d'); if (graficos[id]) graficos[id].destroy();
             graficos[id] = new Chart(ctx, {
@@ -697,45 +672,35 @@
                 data: {
                     labels: objDados.labels,
                     datasets: [
-                        { label: 'SLA Cumprido', data: objDados.atendido, backgroundColor: '#22c55e', borderRadius: 2 },
-                        { label: 'SLA Violado', data: objDados.estourado, backgroundColor: '#ef4444', borderRadius: 2 }
+                        { label: 'No Prazo', data: objDados.atendido, backgroundColor: '#22c55e', borderRadius: 2 },
+                        { label: 'Estourado', data: objDados.estourado, backgroundColor: '#ef4444', borderRadius: 2 }
                     ]
                 },
                 options: {
-                    responsive: true, maintainAspectRatio: false,
+                    responsive: true, maintainAspectRatio: true,
                     scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } },
                     plugins: { legend: { position: 'top', labels: { boxWidth: 12, font: {size: 10} } }, datalabels: { display: false } }
                 }
             });
         }
 
-        // === TABELA INTERATIVA EM TELA ===
+        // === TABELA DATA GRID ===
         function desenharTabela() {
-            const tbody = document.getElementById('tabela-corpo');
-            const total = dadosFiltradosCache.length;
+            const tbody = document.getElementById('tabela-corpo'); const total = dadosFiltradosCache.length;
             document.getElementById('txt-tabela-count').innerText = `Exibindo ${total} registros.`;
             
             if (total === 0) {
                 tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-gray-500 font-semibold bg-gray-50">Nenhum chamado corresponde aos filtros.</td></tr>';
-                document.getElementById('paginacao-tabela').classList.add('hidden');
-                return;
+                document.getElementById('paginacao-tabela').classList.add('hidden'); return;
             }
 
-            const totalPaginas = Math.ceil(total / tabelaItensPorPagina);
-            if(tabelaPaginaAtual > totalPaginas) tabelaPaginaAtual = totalPaginas;
-
-            const inicio = (tabelaPaginaAtual - 1) * tabelaItensPorPagina;
-            const fim = inicio + tabelaItensPorPagina;
-            const fatia = dadosFiltradosCache.slice(inicio, fim);
+            const totalP = Math.ceil(total / tabelaItensPorPagina); if(tabelaPaginaAtual > totalP) tabelaPaginaAtual = totalP;
+            const fatia = dadosFiltradosCache.slice((tabelaPaginaAtual - 1) * tabelaItensPorPagina, ((tabelaPaginaAtual - 1) * tabelaItensPorPagina) + tabelaItensPorPagina);
 
             tbody.innerHTML = '';
             fatia.forEach(d => {
-                const isSlaOk = d['SLA Atendido'] === 'Sim';
-                const badgeSLA = isSlaOk ? `<span class="bg-green-100 text-green-700 px-2 py-0.5 rounded text-[10px] font-bold">Sim</span>` 
-                                         : `<span class="bg-red-100 text-red-700 px-2 py-0.5 rounded text-[10px] font-bold">Não</span>`;
-                
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-blue-50 transition";
+                const badgeSLA = d['SLA Atendido'] === 'Sim' ? `<span class="bg-green-100 text-green-700 px-2 py-0.5 rounded text-[10px] font-bold">Sim</span>` : `<span class="bg-red-100 text-red-700 px-2 py-0.5 rounded text-[10px] font-bold">Não</span>`;
+                const tr = document.createElement('tr'); tr.className = "hover:bg-blue-50 transition";
                 tr.innerHTML = `
                     <td class="px-4 py-2 font-mono text-xs font-semibold text-gray-700">${d['Ticket'] || '-'}</td>
                     <td class="px-4 py-2 text-xs">${(d['Data Abertura']||'').substring(0, 10)}</td>
@@ -747,14 +712,11 @@
                 tbody.appendChild(tr);
             });
 
-            document.getElementById('paginacao-tabela').classList.remove('hidden');
-            document.getElementById('txt-paginacao').innerText = `Página ${tabelaPaginaAtual} de ${totalPaginas}`;
-            document.getElementById('btn-tab-prev').disabled = tabelaPaginaAtual === 1;
-            document.getElementById('btn-tab-next').disabled = tabelaPaginaAtual === totalPaginas;
+            document.getElementById('paginacao-tabela').classList.remove('hidden'); document.getElementById('txt-paginacao').innerText = `Página ${tabelaPaginaAtual} de ${totalP}`;
+            document.getElementById('btn-tab-prev').disabled = tabelaPaginaAtual === 1; document.getElementById('btn-tab-next').disabled = tabelaPaginaAtual === totalP;
         }
 
-
-        // === EMISSÃO DE RELATÓRIOS (EXCEL E PDF) ===
+        // === RELATÓRIOS ===
         document.getElementById('btn-gerar-excel').addEventListener('click', () => {
             const fM = document.getElementById('relatorio-mes').value; const fA = document.getElementById('relatorio-analista').value;
             const dadosExp = dadosGlobais.filter(d => (fM === "Todos" || obterMesAno(d['Data Abertura']) === fM) && (fA === "Todos" || d['Analista'] === fA));
@@ -763,13 +725,12 @@
             XLSX.writeFile(wb, `Base_Extraida_SETIC.xlsx`);
         });
 
-        // Logo genérica PRF Base64 (Escudo contorno para dar estética oficial sem pesar)
+        // Logo genérica (Placeholder PRF)
         const prfLogoBase64 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAQAAAD9CzEMAAAAc0lEQVR4Ae3XwQ3AIAxDUTX7r8wM0AE6AA2/R/B4wZJ8S7Ik17g0GhoNDY2GhkZDQ6OhoVnX/ZxzHkOaphmGcQ7O+TzPC8swzIsr0/O8lGUZU0q/0/M855xzHMf1vPd+HMfnnHPXdR3HcTxPRkOjoaHR0ND4v1f8AgU3Z02YAAAAAElFTkSuQmCC";
 
         document.getElementById('btn-gerar-pdf').addEventListener('click', () => {
             const fM = document.getElementById('relatorio-mes').value; const fA = document.getElementById('relatorio-analista').value;
             
-            // Força atualização da tela para capturar as imagens com os filtros do relatório
             document.getElementById('filtro-mes').value = fM; document.getElementById('filtro-analista').value = fA;
             document.getElementById('filtro-prioridade').value = 'Todos'; document.getElementById('filtro-data-inicio').value = ''; document.getElementById('filtro-data-fim').value = '';
             atualizarDashboard(); 
@@ -779,9 +740,8 @@
             
             const { jsPDF } = window.jspdf; const doc = new jsPDF('p', 'pt', 'a4'); const w = doc.internal.pageSize.width;
             
-            // Cabeçalho Oficial
             doc.setFillColor(26, 25, 65); doc.rect(0, 0, w, 80, 'F');
-            doc.addImage(prfLogoBase64, 'PNG', 40, 20, 40, 40); // Placeholder Logo PRF
+            doc.addImage(prfLogoBase64, 'PNG', 40, 20, 40, 40); 
             doc.setTextColor(255, 255, 255); doc.setFontSize(16); doc.setFont("helvetica", "bold");
             doc.text(`MINISTÉRIO DA JUSTIÇA E SEGURANÇA PÚBLICA`, 90, 35);
             doc.setFontSize(11); doc.setFont("helvetica", "normal");
@@ -789,14 +749,12 @@
             doc.setFontSize(12); doc.setFont("helvetica", "bold");
             doc.text(`Relatório Gerencial Analítico - ${localStorage.getItem('dashTitulo') || 'Painel de Suporte'}`, 90, 68);
 
-            // Resumo Inteligente
             doc.setTextColor(26, 25, 65); doc.setFontSize(12); doc.text("Suma Executiva", 40, 110);
             doc.setTextColor(60, 60, 60); doc.setFontSize(10); doc.setFont("helvetica", "normal");
             
             const txtIA = `Documento gerado em ${new Date().toLocaleDateString('pt-BR')} (Filtro Aplicado: Mês ${fM} | Analista: ${fA}). O período de extração processou um total de ${dadosExp.length} tickets de suporte técnico. A eficiência operacional da equipe registrou um Tempo Médio de Atendimento (TMA) de ${tmaGlobalTexto}, garantindo que ${slaGlobalTexto} das demandas fossem solucionadas dentro dos Acordos de Nível de Serviço (SLA) estabelecidos. A taxa de indisponibilidade ou falhas ativas (Incidentes) correspondeu a ${incGlobalTexto} do volume operado.`;
             doc.text(doc.splitTextToSize(txtIA, w - 80), 40, 130);
             
-            // KPIs
             doc.setFillColor(245, 247, 250); doc.rect(40, 180, 160, 50, 'F'); doc.rect(215, 180, 160, 50, 'F'); doc.rect(390, 180, 160, 50, 'F');
             doc.setFontSize(9); doc.setTextColor(120, 120, 120); doc.setFont("helvetica", "bold");
             doc.text("VOLUME PROCESSADO", 120, 200, {align: 'center'}); doc.text("TMA (MÉDIA GLOBAL)", 295, 200, {align: 'center'}); doc.text("EFICIÊNCIA DE SLA", 470, 200, {align: 'center'});
@@ -804,7 +762,6 @@
             doc.text(dadosExp.length.toString(), 120, 220, {align: 'center'}); doc.text(tmaGlobalTexto, 295, 220, {align: 'center'});
             doc.setTextColor(22, 163, 74); doc.text(slaGlobalTexto, 470, 220, {align: 'center'});
 
-            // Gráficos 
             doc.setFontSize(12); doc.setTextColor(26, 25, 65); doc.text("Caderno Visual (Diagnóstico)", 40, 260);
             doc.setFontSize(9); doc.setTextColor(100, 100, 100);
             
@@ -814,13 +771,12 @@
             doc.text("Categorização Temática (Top 15)", 40, 440); doc.addImage(getImg('chart-assuntos'), 'JPEG', 40, 445, 240, 135);
             doc.text("Análise de Gargalos: Eficiência vs Criticidade", 305, 440); doc.addImage(getImg('chart-prioridade'), 'JPEG', 305, 445, 240, 135);
 
-            // Tabela
             doc.addPage();
             doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.setTextColor(26, 25, 65); doc.text("Apêndice Operacional (Detalhamento)", 40, 40);
 
             const linhas = dadosExp.map(d => [ d['Ticket']||'-', (d['Data Abertura']||'').split(' ')[0], (d['Analista']||'-').split('.')[0], (d['Assunto']||'').substring(0, 35), d['Prioridade']||'-', d['Tempo Solução']||'-' ]);
             doc.autoTable({
-                startY: 55, head: [["Ticket Oficial", "Data Registro", "Agente Resolutor", "Objeto (Resumo)", "Criticidade", "T. Solução"]], body: linhas,
+                startY: 55, head: [["Ticket", "Data Registro", "Agente Resolutor", "Objeto (Resumo)", "Criticidade", "T. Solução"]], body: linhas,
                 theme: 'striped', headStyles: { fillColor: [26, 25, 65] }, styles: { fontSize: 8 }, alternateRowStyles: { fillColor: [247, 248, 250] },
                 margin: { top: 30, right: 40, bottom: 40, left: 40 },
                 didDrawPage: function (dt) { doc.setFontSize(8); doc.setTextColor(150, 150, 150); doc.text(`Documento Restrito | Pág ${doc.internal.getNumberOfPages()}`, w/2, doc.internal.pageSize.height - 20, {align:'center'}); }
