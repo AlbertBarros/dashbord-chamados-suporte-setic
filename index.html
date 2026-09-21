@@ -135,7 +135,7 @@
                 <canvas id="chart-meses" height="120"></canvas>
             </div>
             <div class="card">
-                <h3 class="font-bold text-gray-700 mb-4">Volume por Analista</h3>
+                <h3 class="font-bold text-gray-700 mb-4">Volume por Analista (Equipe Foco)</h3>
                 <canvas id="chart-analistas" height="120"></canvas>
             </div>
         </div>
@@ -208,7 +208,7 @@
                         <i class="fa-solid fa-file-excel"></i> Excel (Bruto)
                     </button>
                     <button id="btn-gerar-pdf" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-3 rounded transition flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-file-pdf"></i> PDF (Resumo)
+                        <i class="fa-solid fa-file-pdf"></i> PDF com Gráficos
                     </button>
                 </div>
             </div>
@@ -224,6 +224,20 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
         import { getFirestore, collection, getDocs, doc, writeBatch } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+        // Plugin Global para garantir fundo branco nos gráficos (Evita fundo preto no PDF)
+        const bgPlugin = {
+            id: 'customCanvasBackgroundColor',
+            beforeDraw: (chart, args, options) => {
+                const {ctx} = chart;
+                ctx.save();
+                ctx.globalCompositeOperation = 'destination-over';
+                ctx.fillStyle = options.color || '#ffffff';
+                ctx.fillRect(0, 0, chart.width, chart.height);
+                ctx.restore();
+            }
+        };
+        Chart.register(bgPlugin);
 
         // Configuração Firebase da SETIC
         const firebaseConfig = {
@@ -245,6 +259,14 @@
         const paletaAssuntos = ['#4f46e5', '#3b82f6', '#0ea5e9', '#06b6d4', '#14b8a6', '#10b981', '#22c55e', '#84cc16', '#eab308', '#f59e0b', '#f97316', '#ef4444', '#f43f5e', '#d946ef', '#a855f7'];
         const coresPrioridade = { 'Baixo': '#22c55e', 'Alto': '#f97316', 'Muito Baixo': '#94a3b8', 'Muito Alto': '#ef4444', 'Médio': '#eab308' };
         const coresTipo = { 'Requisição': '#6366f1', 'Incidente': '#f43f5e' };
+
+        // Analistas Foco (Para o filtro do gráfico de barras)
+        const analistasAlvos = [
+            'fabio.palma.prestador', 
+            'edison.neto.prestador', 
+            'antonio.muniz.prestador', 
+            'jose.andrade.prestador'
+        ];
 
         // === CONTROLO DO MODAL ===
         const modal = document.getElementById('modal-config');
@@ -388,15 +410,14 @@
             XLSX.writeFile(workbook, `Relatorio_Chamados_${fMes}_${fAnalista}.xlsx`.replace(/[\/\s]/g, '_'));
         });
 
-        // === GERAÇÃO PDF SOFISTICADA ===
+        // === GERAÇÃO PDF COM GRÁFICOS ===
         document.getElementById('btn-gerar-pdf').addEventListener('click', () => {
             if(dadosGlobais.length === 0) return alert("Não há dados.");
             const { fMes, fAnalista, dadosFiltrados } = formatarFiltrosRelatorio();
             if (dadosFiltrados.length === 0) return alert("Nenhum chamado encontrado com estes filtros.");
 
-            // Inicializa jsPDF
             const { jsPDF } = window.jspdf;
-            const doc = new jsPDF('p', 'pt', 'a4'); // A4 Portrait
+            const doc = new jsPDF('p', 'pt', 'a4'); // A4 Portrait (largura ~595pt)
 
             // 1. CABEÇALHO SOFISTICADO (Banda Azul)
             doc.setFillColor(26, 25, 65); // #1a1941
@@ -416,7 +437,6 @@
             doc.text(`Mês Referência: ${fMes}`, 220, 100);
             doc.text(`Analista Responsável: ${fAnalista}`, 380, 100);
 
-            // Linha divisória
             doc.setDrawColor(200, 200, 200);
             doc.line(40, 115, doc.internal.pageSize.width - 40, 115);
 
@@ -438,25 +458,61 @@
             doc.setTextColor(80, 80, 80);
             doc.text(`Volume Total: ${total} chamados`, 40, 160);
             
-            doc.setTextColor(22, 163, 74); // Verde para SLA
+            doc.setTextColor(22, 163, 74); 
             doc.text(`SLA Atendido: ${slaPct}`, 220, 160);
             
-            doc.setTextColor(220, 38, 38); // Vermelho para Incidente
+            doc.setTextColor(220, 38, 38); 
             doc.text(`Índice Incidentes: ${incPct}`, 380, 160);
 
-            // 4. TABELA DE DADOS RESUMIDA (jsPDF-AutoTable)
+            // 4. INSERÇÃO DAS IMAGENS DOS GRÁFICOS (Página 1)
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(12);
+            doc.setTextColor(26, 25, 65);
+            doc.text("Análise Visual", 40, 195);
+            
+            doc.setFontSize(9);
+            doc.setTextColor(100, 100, 100);
+            
+            // Transformar Canvas em JPEG (usa o bgPlugin criado acima para fundo branco)
+            const getImg = (id) => document.getElementById(id).toDataURL('image/jpeg', 1.0);
+            
+            // Linha 1 de Gráficos (Y: 220)
+            doc.text("Evolução de Chamados por Mês", 40, 215);
+            doc.text("Volume por Analista (Equipe Foco)", 305, 215);
+            doc.addImage(getImg('chart-meses'), 'JPEG', 40, 220, 240, 125);
+            doc.addImage(getImg('chart-analistas'), 'JPEG', 305, 220, 240, 125);
+            
+            // Linha 2 de Gráficos (Y: 375)
+            doc.text("Top Assuntos Mais Solicitados", 40, 370);
+            doc.text("Top Maiores Requerentes", 305, 370);
+            doc.addImage(getImg('chart-assuntos'), 'JPEG', 40, 375, 240, 125);
+            doc.addImage(getImg('chart-requerentes'), 'JPEG', 305, 375, 240, 125);
+            
+            // Linha 3 de Gráficos (Y: 530)
+            doc.text("Distribuição por Prioridade", 40, 525);
+            doc.text("Tipo de Chamado", 305, 525);
+            doc.addImage(getImg('chart-prioridade'), 'JPEG', 40, 530, 240, 125);
+            doc.addImage(getImg('chart-tipo'), 'JPEG', 305, 530, 240, 125);
+
+            // 5. TABELA DE DADOS RESUMIDA (Página 2 em diante)
+            doc.addPage();
+            doc.setFontSize(12);
+            doc.setFont("helvetica", "bold");
+            doc.setTextColor(26, 25, 65);
+            doc.text("Detalhamento dos Chamados", 40, 40);
+
             const colunas = ["Ticket", "Abertura", "Analista", "Assunto", "Prioridade", "SLA"];
             const linhas = dadosFiltrados.map(d => [
                 d['Ticket'] || '-',
-                (d['Data Abertura'] || '').split(' ')[0], // Apenas a data, remove a hora
+                (d['Data Abertura'] || '').split(' ')[0], 
                 d['Analista'] || '-',
-                (d['Assunto'] || '').substring(0, 35) + ((d['Assunto'] || '').length > 35 ? '...' : ''), // Trunca assunto
+                (d['Assunto'] || '').substring(0, 35) + ((d['Assunto'] || '').length > 35 ? '...' : ''), 
                 d['Prioridade'] || '-',
                 d['SLA Atendido'] || '-'
             ]);
 
             doc.autoTable({
-                startY: 190,
+                startY: 55,
                 head: [colunas],
                 body: linhas,
                 theme: 'striped',
@@ -465,19 +521,12 @@
                 alternateRowStyles: { fillColor: [247, 248, 250] },
                 margin: { top: 30, right: 40, bottom: 40, left: 40 },
                 didDrawPage: function (data) {
-                    // Rodapé (Paginação)
                     doc.setFontSize(8);
                     doc.setTextColor(150, 150, 150);
-                    doc.text(
-                        `Página ${doc.internal.getNumberOfPages()}`, 
-                        doc.internal.pageSize.width / 2, 
-                        doc.internal.pageSize.height - 20, 
-                        { align: 'center' }
-                    );
+                    doc.text(`Página ${doc.internal.getNumberOfPages()}`, doc.internal.pageSize.width / 2, doc.internal.pageSize.height - 20, { align: 'center' });
                 }
             });
 
-            // Gerar Arquivo
             const nomeArquivo = `Relatorio_SETIC_${fMes}_${fAnalista}.pdf`.replace(/[\/\s]/g, '_');
             doc.save(nomeArquivo);
         });
@@ -493,7 +542,7 @@
         function converteParaDataOrdem(mesAnoStr) {
             if(!mesAnoStr || mesAnoStr==="Desconhecido") return 0;
             const p = mesAnoStr.split('/');
-            return parseInt(p[1]) * 100 + parseInt(p[0]); // YYYYMM
+            return parseInt(p[1]) * 100 + parseInt(p[0]); 
         }
 
         // Dropdowns
@@ -551,18 +600,29 @@
             document.getElementById('kpi-sla').innerText = filtrados.length > 0 ? ((atendidos / filtrados.length) * 100).toFixed(1) + '%' : '0%';
             document.getElementById('kpi-incidentes').innerText = filtrados.length > 0 ? ((incidentes / filtrados.length) * 100).toFixed(1) + '%' : '0%';
 
-            // Preparar Dados Gráficos
+            // Dados Gráfico Meses
             let dadosMes = agruparPor(filtrados, d => obterMesAno(d['Data Abertura']));
             const indicesOrdenados = dadosMes.labels.map((val, ind) => ({val, ind})).sort((a,b) => converteParaDataOrdem(a.val) - converteParaDataOrdem(b.val));
             dadosMes.labels = indicesOrdenados.map(i => i.val);
             dadosMes.values = indicesOrdenados.map(i => dadosMes.values[i.ind]);
 
-            const dadosAna = agruparPor(filtrados, 'Analista');
+            // Dados Gráfico Analista (FILTRO APLICADO APENAS PARA OS 4 ALVOS)
+            let dadosAnaBruto = agruparPor(filtrados, 'Analista');
+            let dadosAna = { labels: [], values: [] };
+            dadosAnaBruto.labels.forEach((lbl, idx) => {
+                if(analistasAlvos.includes(lbl)) {
+                    dadosAna.labels.push(lbl);
+                    dadosAna.values.push(dadosAnaBruto.values[idx]);
+                }
+            });
+
+            // Demais Dados
             const dadosAss = agruparPor(filtrados, 'Categoria', 15);
             const dadosReq = agruparPor(filtrados, 'Requerente', 10);
             const dadosPrio = agruparPor(filtrados, 'Prioridade');
             const dadosTipo = agruparPor(filtrados, 'Tipo');
 
+            // Renderizar
             renderizarGrafico('chart-meses', 'line', dadosMes, corPrincipal);
             renderizarGrafico('chart-analistas', 'bar', dadosAna, corPrincipal);
             renderizarGraficoMultiCor('chart-assuntos', 'bar', dadosAss, paletaAssuntos, true);
