@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Suporte - TI</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- SheetJS (Excel Parser) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Configuração de fontes e estilos personalizados -->
+    <style>
+        :root {
+            --theme-main: #4338ca; /* indigo-700 base */
+            --theme-dark: #3730a3; /* indigo-800 base */
+            --theme-light: #e0e7ff; /* indigo-100 base */
+            --theme-text: #4f46e5; /* indigo-600 base */
+        }
+        
+        /* Classes utilitárias usando as variáveis dinâmicas */
+        .bg-theme-main { background-color: var(--theme-main); }
+        .bg-theme-dark { background-color: var(--theme-dark); }
+        .bg-theme-light { background-color: var(--theme-light); }
+        .text-theme { color: var(--theme-text); }
+        .border-theme { border-color: var(--theme-main); }
+        
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+        .chart-container.tall {
+            height: 400px;
+        }
+        /* Custom scrollbar para tabelas/listas */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+    </style>
+</head>
+<body class="text-gray-800 antialiased min-h-screen flex flex-col">
+
+    <header class="bg-theme-main text-white shadow-lg sticky top-0 z-50 transition-colors duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <img id="custom-logo" src="" alt="Logo" class="h-10 w-auto hidden object-contain bg-white rounded p-1">
+                <i id="default-logo-icon" class="fa-solid fa-chart-line text-2xl"></i>
+                <h1 id="dashboard-title-display" class="text-xl font-bold tracking-tight">IT Support Analytics</h1>
+            </div>
+            
+            <div class="flex items-center gap-3">
+                <div class="flex items-center gap-3 bg-theme-dark p-2 rounded-lg border border-theme w-full sm:w-auto transition-colors duration-300">
+                    <label for="excel-upload" class="cursor-pointer bg-white text-theme hover:bg-gray-50 px-4 py-2 rounded font-medium text-sm transition shadow-sm flex items-center gap-2 w-full sm:w-auto justify-center">
+                        <i class="fa-solid fa-file-import"></i> Importar Planilha (.xlsx)
+                    </label>
+                    <input type="file" id="excel-upload" accept=".xlsx, .xls" class="hidden" multiple>
+                    <span id="file-status" class="text-sm text-white opacity-80 hidden sm:block whitespace-nowrap">Aguardando arquivo...</span>
+                </div>
+                <button id="btn-open-settings" class="bg-theme-dark hover:bg-opacity-80 text-white p-2 px-3 rounded-lg border border-theme transition shadow-sm flex items-center justify-center" title="Personalizar Dashboard">
+                    <i class="fa-solid fa-gear"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full hidden" id="dashboard-content">
+        
+        <section class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 mb-8">
+            <div class="flex items-center gap-2 mb-4 border-b pb-3">
+                <i class="fa-solid fa-filter text-theme"></i>
+                <h2 class="font-semibold text-gray-700">Filtros Dinâmicos</h2>
+                <button id="btn-clear-filters" class="ml-auto text-xs text-red-500 hover:text-red-700 font-medium bg-red-50 px-2 py-1 rounded">Limpar Filtros</button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Mês de Abertura</label>
+                    <select id="filter-month" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block p-2.5">
+                        <option value="ALL">Todos os Meses</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Analista</label>
+                    <select id="filter-analyst" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block p-2.5">
+                        <option value="ALL">Todos os Analistas</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Criticidade / Prioridade</label>
+                    <select id="filter-priority" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block p-2.5">
+                        <option value="ALL">Todas as Prioridades</option>
+                    </select>
+                </div>
+            </div>
+        </section>
+
+        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <!-- Total Cards -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex items-center">
+                <div class="p-3 rounded-full bg-blue-100 text-blue-600 mr-4 text-xl h-12 w-12 flex items-center justify-center">
+                    <i class="fa-solid fa-ticket"></i>
+                </div>
+                <div>
+                    <p class="text-sm font-medium text-gray-500">Total de Chamados</p>
+                    <p class="text-2xl font-bold text-gray-800" id="kpi-total">0</p>
+                </div>
+            </div>
+
+            <!-- Total Filtered/Month -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex items-center">
+                <div class="p-3 rounded-full bg-theme-light text-theme mr-4 text-xl h-12 w-12 flex items-center justify-center transition-colors duration-300">
+                    <i class="fa-solid fa-calendar-check"></i>
+                </div>
+                <div>
+                    <p class="text-sm font-medium text-gray-500">Filtrados / Mês Selecionado</p>
+                    <p class="text-2xl font-bold text-gray-800" id="kpi-filtered">0</p>
+                </div>
+            </div>
+
+            <!-- SLA Compliance -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex items-center">
+                <div class="p-3 rounded-full bg-emerald-100 text-emerald-600 mr-4 text-xl h-12 w-12 flex items-center justify-center">
+                    <i class="fa-solid fa-stopwatch"></i>
+                </div>
+                <div>
+                    <p class="text-sm font-medium text-gray-500">SLA Atendido</p>
+                    <p class="text-2xl font-bold text-gray-800" id="kpi-sla">0%</p>
+                </div>
+            </div>
+
+            <!-- Type: Request vs Incident -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex items-center">
+                <div class="p-3 rounded-full bg-purple-100 text-purple-600 mr-4 text-xl h-12 w-12 flex items-center justify-center">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+                <div>
+                    <p class="text-sm font-medium text-gray-500">Índice de Incidentes</p>
+                    <p class="text-2xl font-bold text-gray-800" id="kpi-incidents">0%</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <!-- Timeline Chart -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+                <h3 class="text-base font-semibold text-gray-700 mb-4">Evolução de Chamados por Mês</h3>
+                <div class="chart-container">
+                    <canvas id="chart-timeline"></canvas>
+                </div>
+            </div>
+
+            <!-- Analyst Chart -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+                <h3 class="text-base font-semibold text-gray-700 mb-4">Volume por Analista</h3>
+                <div class="chart-container">
+                    <canvas id="chart-analysts"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <section class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <!-- Top Subjects Chart -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+                <h3 class="text-base font-semibold text-gray-700 mb-4">Top 15 Assuntos (Categorias) Mais Solicitados</h3>
+                <div class="chart-container tall">
+                    <canvas id="chart-subjects"></canvas>
+                </div>
+            </div>
+
+            <!-- Top Requesters Chart -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex flex-col">
+                <h3 class="text-base font-semibold text-gray-700 mb-4">Top Requerentes</h3>
+                <div class="chart-container tall flex-grow">
+                    <canvas id="chart-requesters"></canvas>
+                </div>
+            </div>
+        </section>
+        
+        <section class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+             <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+                <h3 class="text-base font-semibold text-gray-700 mb-4">Distribuição por Prioridade</h3>
+                <div class="chart-container" style="height: 250px;">
+                    <canvas id="chart-priority"></canvas>
+                </div>
+            </div>
+             <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+                <h3 class="text-base font-semibold text-gray-700 mb-4">Tipo de Chamado (Requisição vs Incidente)</h3>
+                <div class="chart-container" style="height: 250px;">
+                    <canvas id="chart-type"></canvas>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Estado Inicial / Empty State -->
+    <div id="empty-state" class="flex-grow flex flex-col items-center justify-center p-8 text-center h-full mt-20">
+        <div class="bg-theme-light p-6 rounded-full mb-6 text-theme transition-colors duration-300">
+            <i class="fa-solid fa-file-excel text-6xl"></i>
+        </div>
+        <h2 class="text-2xl font-bold text-gray-700 mb-2">Nenhum dado carregado</h2>
+        <p class="text-gray-500 max-w-md">Faça o upload de uma ou mais planilhas (arquivos .xlsx ou .xls) contendo o relatório de faturamento/chamados para gerar o dashboard interativo.</p>
+        <p class="text-gray-400 text-sm mt-4"><i class="fa-solid fa-lightbulb text-yellow-500"></i> Dica: Você pode selecionar vários arquivos quadrimestrais de uma vez.</p>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="fixed inset-0 bg-gray-900 bg-opacity-50 z-[100] flex flex-col items-center justify-center hidden">
+        <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-theme mb-4" style="border-top-color: var(--theme-main); border-bottom-color: var(--theme-main);"></div>
+        <p class="text-white font-medium text-lg">Processando dados, por favor aguarde...</p>
+    </div>
+
+    <!-- Modal de Configurações -->
+    <div id="settings-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 z-[200] flex items-center justify-center hidden backdrop-blur-sm">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
+            <div class="bg-gray-50 px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                <h3 class="text-lg font-semibold text-gray-800"><i class="fa-solid fa-palette text-theme mr-2"></i> Personalizar Dashboard</h3>
+                <button id="btn-close-settings" class="text-gray-400 hover:text-gray-600 transition">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6 space-y-5">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nome do Dashboard</label>
+                    <input type="text" id="input-dash-title" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-gray-200 outline-none transition" placeholder="Ex: IT Support Analytics">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Logo (Imagem)</label>
+                    <div class="flex items-center gap-3">
+                        <label for="input-dash-logo" class="cursor-pointer bg-gray-100 border border-gray-300 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium transition w-full text-center">
+                            <i class="fa-solid fa-upload mr-1"></i> Escolher Imagem
+                        </label>
+                        <input type="file" id="input-dash-logo" accept="image/*" class="hidden">
+                        <button id="btn-remove-logo" class="text-red-500 hover:text-red-700 hidden px-2" title="Remover Logo">
+                            <i class="fa-solid fa-trash text-lg"></i>
+                        </button>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">Formatos suportados: PNG, JPG, SVG.</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Cor Principal do Tema</label>
+                    <div class="flex items-center gap-3">
+                        <input type="color" id="input-dash-color" value="#4338ca" class="h-10 w-14 p-1 rounded border border-gray-300 cursor-pointer">
+                        <span class="text-sm text-gray-500">Selecione a cor de destaque do painel.</span>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-gray-50 px-6 py-4 border-t border-gray-100 flex justify-between items-center">
+                <button id="btn-reset-settings" class="text-sm text-gray-500 hover:text-gray-800 font-medium transition">
+                    Restaurar Padrões
+                </button>
+                <button id="btn-save-settings" class="bg-theme-main hover:bg-theme-dark text-white px-5 py-2 rounded-lg font-medium text-sm transition-colors duration-300 shadow-sm">
+                    Salvar Alterações
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDocs, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Variáveis globais para integração em nuvem
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfigStr = typeof __firebase_config !== 'undefined' ? __firebase_config : '{}';
+        
+        let app, db, auth, userId = null;
+
+        // Cores padrão para os gráficos (Tailwind base)
+        const chartColors = [
+            '#4f46e5', '#3b82f6', '#0ea5e9', '#06b6d4', '#14b8a6', 
+            '#10b981', '#22c55e', '#84cc16', '#eab308', '#f59e0b',
+            '#f97316', '#ef4444', '#f43f5e', '#ec4899', '#d946ef'
+        ];
+
+        // Estado da aplicação
+        let allTickets = []; // Todos os dados carregados da nuvem + planilhas novas
+        let filteredTickets = []; // Dados atualmente filtrados
+        let charts = {}; // Instâncias dos gráficos
+
+        // Elementos DOM
+        const fileInput = document.getElementById('excel-upload');
+        const fileStatus = document.getElementById('file-status');
+        const emptyState = document.getElementById('empty-state');
+        const dashboardContent = document.getElementById('dashboard-content');
+        const loadingOverlay = document.getElementById('loading-overlay');
+
+        // Elementos de Configuração
+        const btnOpenSettings = document.getElementById('btn-open-settings');
+        const btnCloseSettings = document.getElementById('btn-close-settings');
+        const settingsModal = document.getElementById('settings-modal');
+        const inputDashTitle = document.getElementById('input-dash-title');
+        const inputDashLogo = document.getElementById('input-dash-logo');
+        const btnRemoveLogo = document.getElementById('btn-remove-logo');
+        const inputDashColor = document.getElementById('input-dash-color');
+        const btnSaveSettings = document.getElementById('btn-save-settings');
+        const btnResetSettings = document.getElementById('btn-reset-settings');
+        
+        const displayTitle = document.getElementById('dashboard-title-display');
+        const defaultIcon = document.getElementById('default-logo-icon');
+        const customLogo = document.getElementById('custom-logo');
+
+        // Filtros DOM
+        const filterMonth = document.getElementById('filter-month');
+        const filterAnalyst = document.getElementById('filter-analyst');
+        const filterPriority = document.getElementById('filter-priority');
+        const btnClearFilters = document.getElementById('btn-clear-filters');
+
+        async function initCloudStorage() {
+            try {
+                const config = JSON.parse(firebaseConfigStr);
+                if (Object.keys(config).length > 0) {
+                    app = initializeApp(config);
+                    db = getFirestore(app);
+                    auth = getAuth(app);
+
+                    const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+                    if (initialAuthToken) {
+                        await signInWithCustomToken(auth, initialAuthToken);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                    userId = auth.currentUser?.uid;
+                    
+                    if (userId) {
+                        await loadDataFromCloud();
+                    }
+                }
+            } catch (error) {
+                console.error("Erro ao conectar à nuvem:", error);
+            }
+        }
+
+        // Puxa os dados que já foram salvos anteriormente
+        async function loadDataFromCloud() {
+            if (!userId || !db) return;
+            
+            showLoading(true, "Sincronizando banco de dados salvo na nuvem...");
+            try {
+                const ticketsRef = collection(db, 'artifacts', appId, 'users', userId, 'tickets');
+                const snapshot = await getDocs(ticketsRef);
+                
+                if (!snapshot.empty) {
+                    allTickets = [];
+                    snapshot.forEach(docSnap => {
+                        const data = docSnap.data();
+                        // Refazer o objeto Date que estava em formato texto (ISO) no banco
+                        if (data.DataFormatada) {
+                            data.DataFormatada = new Date(data.DataFormatada);
+                        }
+                        allTickets.push(data);
+                    });
+                    
+                    emptyState.classList.add('hidden');
+                    dashboardContent.classList.remove('hidden');
+                    
+                    allTickets.sort((a, b) => new Date(a.DataFormatada) - new Date(b.DataFormatada));
+                    populateFilters();
+                    applyFilters();
+                }
+            } catch (error) {
+                console.error("Erro ao buscar dados na nuvem:", error);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Inicia banco ao carregar a página
+        initCloudStorage();
+
+        function showLoading(show, message = "Processando dados, por favor aguarde...") {
+            const textElement = loadingOverlay.querySelector('p');
+            if (textElement) textElement.textContent = message;
+            
+            if (show) loadingOverlay.classList.remove('hidden');
+            else loadingOverlay.classList.add('hidden');
+        }
+
+        function processExcelFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+                        const firstSheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[firstSheetName];
+                        
+                        let json = XLSX.utils.sheet_to_json(worksheet, { raw: false, dateNF: 'yyyy-mm-dd hh:mm:ss' });
+                        
+                        const processedData = json.map(row => {
+                            let dateStr = row['Data Abertura'];
+                            let parsedDate = null;
+                            let monthYear = 'Desconhecido';
+                            
+                            if (dateStr) {
+                                parsedDate = new Date(dateStr);
+                                if (!isNaN(parsedDate.getTime())) {
+                                    const m = String(parsedDate.getMonth() + 1).padStart(2, '0');
+                                    const y = parsedDate.getFullYear();
+                                    monthYear = `${y}-${m}`;
+                                }
+                            }
+
+                            return {
+                                ...row,
+                                MesAno: monthYear,
+                                DataFormatada: parsedDate,
+                                Analista: row['Analista'] || 'Não Informado',
+                                Prioridade: row['Prioridade'] || 'Não Informado',
+                                Categoria: row['Categoria'] || 'Não Informado',
+                                Requerente: row['Requerente'] || 'Não Informado',
+                                SLA_Atendido: row['SLA Atendido'] || row['SLA Atendido '] || 'Não',
+                                Tipo: row['Tipo'] || 'Não Informado'
+                            };
+                        });
+                        resolve(processedData);
+                    } catch (error) {
+                        reject(error);
+                    }
+                };
+                reader.onerror = (error) => reject(error);
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        fileInput.addEventListener('change', async (e) => {
+            const files = e.target.files;
+            if (!files || files.length === 0) return;
+
+            showLoading(true, "Lendo arquivo(s) localmente...");
+            fileStatus.textContent = `${files.length} arquivo(s) selecionado(s)`;
+            
+            try {
+                // Processa a leitura do excel para JSON
+                let newTickets = [];
+                for (let i = 0; i < files.length; i++) {
+                    const data = await processExcelFile(files[i]);
+                    newTickets = [...newTickets, ...data];
+                }
+                
+                // Se conectado ao Firebase, salva os tickets novos individualmente
+                if (db && userId) {
+                    let progress = 0;
+                    for (const ticket of newTickets) {
+                        progress++;
+                        // Atualiza status na tela a cada 50 salvamentos para o usuário saber que não travou
+                        if (progress % 50 === 0) {
+                            showLoading(true, `Salvando na nuvem (${progress} de ${newTickets.length} registros)...`);
+                        }
+                        
+                        // ID será o número do ticket para evitar duplicidade caso envie o mesmo arquivo
+                        const ticketId = String(ticket['Ticket'] || crypto.randomUUID());
+                        
+                        // JSON stringify limpa propriedades inválidas e converte data para formato suportado
+                        const ticketToSave = JSON.parse(JSON.stringify(ticket));
+                        
+                        const docRef = doc(db, 'artifacts', appId, 'users', userId, 'tickets', ticketId);
+                        await setDoc(docRef, ticketToSave);
+                        
+                        // Retorna Date object para uso local em memória
+                        if (ticketToSave.DataFormatada) {
+                            ticketToSave.DataFormatada = new Date(ticketToSave.DataFormatada);
+                        }
+                        
+                        // Atualiza no array em memória, substituindo caso o ticket já exista
+                        const existingIndex = allTickets.findIndex(t => t.Ticket === ticketToSave.Ticket);
+                        if (existingIndex !== -1) {
+                            allTickets[existingIndex] = ticketToSave;
+                        } else {
+                            allTickets.push(ticketToSave);
+                        }
+                    }
+                } else {
+                    // Fallback para memória caso algo falhe na conexão
+                    allTickets = [...allTickets, ...newTickets];
+                }
+                
+                // Renderiza gráficos atualizados
+                if (allTickets.length > 0) {
+                    emptyState.classList.add('hidden');
+                    dashboardContent.classList.remove('hidden');
+                    
+                    allTickets.sort((a, b) => new Date(a.DataFormatada) - new Date(b.DataFormatada));
+                    populateFilters();
+                    applyFilters(); 
+                }
+                
+            } catch (error) {
+                console.error("Erro ao processar e salvar arquivo:", error);
+            } finally {
+                showLoading(false);
+                e.target.value = ''; // Permite clicar e adicionar outro arquivo logo em seguida
+            }
+        });
+
+        function populateFilters() {
+            const months = [...new Set(allTickets.map(t => t.MesAno))].filter(m => m !== 'Desconhecido').sort();
+            const analysts = [...new Set(allTickets.map(t => t.Analista))].sort();
+            const priorities = [...new Set(allTickets.map(t => t.Prioridade))].sort();
+
+            fillSelect(filterMonth, months);
+            fillSelect(filterAnalyst, analysts);
+            fillSelect(filterPriority, priorities);
+        }
+
+        function fillSelect(selectElement, options) {
+            while (selectElement.options.length > 1) {
+                selectElement.remove(1);
+            }
+            options.forEach(opt => {
+                const option = document.createElement('option');
+                option.value = opt;
+                if (selectElement.id === 'filter-month' && opt.includes('-')) {
+                    const [y, m] = opt.split('-');
+                    option.textContent = `${m}/${y}`;
+                } else {
+                    option.textContent = opt;
+                }
+                selectElement.appendChild(option);
+            });
+        }
+
+        filterMonth.addEventListener('change', applyFilters);
+        filterAnalyst.addEventListener('change', applyFilters);
+        filterPriority.addEventListener('change', applyFilters);
+
+        btnClearFilters.addEventListener('click', () => {
+            filterMonth.value = 'ALL';
+            filterAnalyst.value = 'ALL';
+            filterPriority.value = 'ALL';
+            applyFilters();
+        });
+
+        const DEFAULT_SETTINGS = { title: 'IT Support Analytics', color: '#4338ca', logo: null };
+        let userSettings = { ...DEFAULT_SETTINGS };
+
+        function loadSettings() {
+            const saved = localStorage.getItem('dashboard_settings');
+            if (saved) userSettings = { ...DEFAULT_SETTINGS, ...JSON.parse(saved) };
+            applySettingsToUI();
+        }
+
+        function saveSettings() {
+            localStorage.setItem('dashboard_settings', JSON.stringify(userSettings));
+            applySettingsToUI();
+            if (filteredTickets.length > 0) renderCharts(); 
+        }
+
+        function adjustColor(color, amount) {
+            return '#' + color.replace(/^#/, '').replace(/../g, color => ('0'+Math.min(255, Math.max(0, parseInt(color, 16) + amount)).toString(16)).substr(-2));
+        }
+
+        function hexToRgba(hex, alpha) {
+            let r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        }
+
+        function applySettingsToUI() {
+            displayTitle.textContent = userSettings.title;
+            inputDashTitle.value = userSettings.title;
+
+            const mainColor = userSettings.color;
+            inputDashColor.value = mainColor;
+            document.documentElement.style.setProperty('--theme-main', mainColor);
+            document.documentElement.style.setProperty('--theme-dark', adjustColor(mainColor, -25));
+            document.documentElement.style.setProperty('--theme-light', hexToRgba(mainColor, 0.15));
+            document.documentElement.style.setProperty('--theme-text', mainColor);
+
+            if (userSettings.logo) {
+                customLogo.src = userSettings.logo;
+                customLogo.classList.remove('hidden');
+                defaultIcon.classList.add('hidden');
+                btnRemoveLogo.classList.remove('hidden');
+            } else {
+                customLogo.src = '';
+                customLogo.classList.add('hidden');
+                defaultIcon.classList.remove('hidden');
+                btnRemoveLogo.classList.add('hidden');
+            }
+        }
+
+        btnOpenSettings.addEventListener('click', () => {
+            inputDashTitle.value = userSettings.title;
+            inputDashColor.value = userSettings.color;
+            settingsModal.classList.remove('hidden');
+        });
+
+        btnCloseSettings.addEventListener('click', () => settingsModal.classList.add('hidden'));
+
+        inputDashLogo.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    userSettings.logo = event.target.result;
+                    applySettingsToUI();
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        btnRemoveLogo.addEventListener('click', () => {
+            userSettings.logo = null;
+            inputDashLogo.value = '';
+            applySettingsToUI();
+        });
+
+        btnResetSettings.addEventListener('click', () => {
+            userSettings = { ...DEFAULT_SETTINGS };
+            saveSettings();
+            applySettingsToUI();
+            settingsModal.classList.add('hidden');
+        });
+
+        btnSaveSettings.addEventListener('click', () => {
+            userSettings.title = inputDashTitle.value.trim() || DEFAULT_SETTINGS.title;
+            userSettings.color = inputDashColor.value;
+            saveSettings();
+            settingsModal.classList.add('hidden');
+        });
+
+        loadSettings();
+
+        function applyFilters() {
+            const mFilter = filterMonth.value;
+            const aFilter = filterAnalyst.value;
+            const pFilter = filterPriority.value;
+
+            filteredTickets = allTickets.filter(t => {
+                const matchM = mFilter === 'ALL' || t.MesAno === mFilter;
+                const matchA = aFilter === 'ALL' || t.Analista === aFilter;
+                const matchP = pFilter === 'ALL' || t.Prioridade === pFilter;
+                return matchM && matchA && matchP;
+            });
+
+            updateKPIs();
+            renderCharts();
+        }
+
+        function updateKPIs() {
+            document.getElementById('kpi-total').textContent = allTickets.length.toLocaleString('pt-BR');
+            document.getElementById('kpi-filtered').textContent = filteredTickets.length.toLocaleString('pt-BR');
+
+            if (filteredTickets.length > 0) {
+                const slaMet = filteredTickets.filter(t => {
+                    const val = String(t.SLA_Atendido).toLowerCase().trim();
+                    return val === 'sim' || val === 'true';
+                }).length;
+                const slaPercent = ((slaMet / filteredTickets.length) * 100).toFixed(1);
+                document.getElementById('kpi-sla').textContent = `${slaPercent}%`;
+                
+                const incidents = filteredTickets.filter(t => String(t.Tipo).toLowerCase().includes('incidente')).length;
+                const incPercent = ((incidents / filteredTickets.length) * 100).toFixed(1);
+                document.getElementById('kpi-incidents').textContent = `${incPercent}%`;
+            } else {
+                document.getElementById('kpi-sla').textContent = '0%';
+                document.getElementById('kpi-incidents').textContent = '0%';
+            }
+        }
+
+        function renderCharts() {
+            const groupBy = (array, keyFn) => {
+                return array.reduce((result, item) => {
+                    const key = keyFn(item);
+                    if (!result[key]) result[key] = 0;
+                    result[key]++;
+                    return result;
+                }, {});
+            };
+
+            const sortObject = (obj, limit = null) => {
+                let entries = Object.entries(obj).sort((a, b) => b[1] - a[1]);
+                if (limit) entries = entries.slice(0, limit);
+                return {
+                    labels: entries.map(e => e[0]),
+                    data: entries.map(e => e[1])
+                };
+            };
+
+            Object.keys(charts).forEach(key => {
+                if(charts[key]) charts[key].destroy();
+            });
+
+            Chart.defaults.font.family = "'Inter', sans-serif";
+            Chart.defaults.color = '#64748b';
+
+            // 1. Timeline
+            const groupedByMonth = groupBy(filteredTickets, t => t.MesAno);
+            const sortedMonths = Object.keys(groupedByMonth).sort();
+            const timelineData = sortedMonths.map(m => groupedByMonth[m]);
+            const timelineLabels = sortedMonths.map(m => {
+                if(m==='Desconhecido') return m;
+                const [y, mm] = m.split('-');
+                return `${mm}/${y}`;
+            });
+
+            charts.timeline = new Chart(document.getElementById('chart-timeline'), {
+                type: 'line',
+                data: {
+                    labels: timelineLabels,
+                    datasets: [{
+                        label: 'Qtd de Chamados',
+                        data: timelineData,
+                        borderColor: userSettings.color,
+                        backgroundColor: hexToRgba(userSettings.color, 0.1),
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: true,
+                        pointBackgroundColor: userSettings.color
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+
+            // 2. Volume por Analista
+            const analystGroup = sortObject(groupBy(filteredTickets, t => t.Analista), 10);
+            charts.analysts = new Chart(document.getElementById('chart-analysts'), {
+                type: 'bar',
+                data: {
+                    labels: analystGroup.labels,
+                    datasets: [{ label: 'Chamados Atendidos', data: analystGroup.data, backgroundColor: userSettings.color, borderRadius: 4 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+
+            // 3. Top Assuntos
+            const subjectGroup = sortObject(groupBy(filteredTickets, t => t.Categoria), 15);
+            const shortSubjectLabels = subjectGroup.labels.map(l => {
+                const parts = l.split('>');
+                return parts.length > 2 ? parts.slice(-2).join(' > ').trim() : l;
+            });
+            charts.subjects = new Chart(document.getElementById('chart-subjects'), {
+                type: 'bar',
+                data: { labels: shortSubjectLabels, datasets: [{ label: 'Quantidade', data: subjectGroup.data, backgroundColor: chartColors, borderRadius: 4 }] },
+                options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+
+            // 4. Top Requerentes
+            const requestersGroup = sortObject(groupBy(filteredTickets, t => t.Requerente), 10);
+            charts.requesters = new Chart(document.getElementById('chart-requesters'), {
+                type: 'bar',
+                data: { labels: requestersGroup.labels, datasets: [{ label: 'Chamados Abertos', data: requestersGroup.data, backgroundColor: userSettings.color, borderRadius: 4 }] },
+                options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+
+            // 5. Prioridade
+            const priorityGroup = sortObject(groupBy(filteredTickets, t => t.Prioridade));
+            const pColors = priorityGroup.labels.map(l => {
+                const lab = l.toLowerCase();
+                if(lab.includes('muito alto')) return '#ef4444';
+                if(lab.includes('alto')) return '#f97316';
+                if(lab.includes('médio') || lab.includes('medio')) return '#eab308';
+                if(lab.includes('muito baixo')) return '#94a3b8';
+                return '#22c55e';
+            });
+            charts.priority = new Chart(document.getElementById('chart-priority'), {
+                type: 'doughnut',
+                data: { labels: priorityGroup.labels, datasets: [{ data: priorityGroup.data, backgroundColor: pColors, borderWidth: 2 }] },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'right' } } }
+            });
+
+            // 6. Tipo
+            const typeGroup = sortObject(groupBy(filteredTickets, t => t.Tipo));
+            charts.type = new Chart(document.getElementById('chart-type'), {
+                type: 'pie',
+                data: { labels: typeGroup.labels, datasets: [{ data: typeGroup.data, backgroundColor: ['#6366f1', '#f43f5e', '#84cc16', '#a855f7'], borderWidth: 2 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+            });
+        }
+    </script>
+</body>
+</html>
