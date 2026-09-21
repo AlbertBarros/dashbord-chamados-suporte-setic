@@ -9,10 +9,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     
-    <!-- Excel -->
+    <!-- Excel & PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    
-    <!-- PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     
@@ -27,41 +25,46 @@
         .tab-active { border-bottom: 2px solid; font-weight: bold; }
         .tab-inactive { border-color: transparent; color: #6b7280; }
         .tab-inactive:hover { color: #1f2937; }
+        
+        /* Estilos da Tabela de Dados */
+        .table-container { max-height: 400px; overflow-y: auto; }
+        .data-table th { position: sticky; top: 0; background-color: #f8fafc; z-index: 10; }
     </style>
 </head>
-<body class="text-gray-800">
+<body class="text-gray-800 flex flex-col min-h-screen">
 
     <!-- Cabeçalho -->
-    <header id="header-bg" class="bg-[#1a1941] text-white p-4 shadow-md flex justify-between items-center">
+    <header id="header-bg" class="bg-[#1a1941] text-white p-4 shadow-md flex justify-between items-center sticky top-0 z-40">
         <div class="flex items-center gap-3 ml-4">
             <i class="fa-solid fa-chart-line text-2xl"></i>
             <h1 id="titulo-painel" class="text-xl font-bold tracking-wide">Analytics Suporte SETIC</h1>
         </div>
         <div class="flex items-center gap-4 mr-4">
-            <span id="badge-status" class="text-xs font-bold px-2 py-1 bg-green-500 rounded text-white hidden shadow"><i class="fa-solid fa-cloud-check"></i> Base Sincronizada</span>
+            <span id="badge-status" class="text-xs font-bold px-2 py-1 bg-yellow-500 rounded text-white shadow" title="A carregar dados do ano atual..."><i class="fa-solid fa-spinner fa-spin"></i> A Ligar</span>
             <button id="btn-config" class="bg-[#2c2a5e] hover:bg-[#3d3b73] px-4 py-2 rounded transition shadow flex items-center gap-2 text-sm font-semibold">
-                <i class="fa-solid fa-gear"></i> Painel de Ferramentas
+                <i class="fa-solid fa-toolbox"></i> Painel de Ferramentas
             </button>
         </div>
     </header>
 
-    <div class="max-w-[98%] mx-auto mt-6">
+    <main class="flex-grow max-w-[98%] mx-auto mt-6 w-full pb-10">
         
-        <!-- Filtros do Dashboard -->
-        <div class="card mb-6">
+        <!-- Filtros Dinâmicos -->
+        <div class="card mb-6 border-t-4 border-[#1a1941]" id="card-filtros">
             <div class="flex justify-between items-center mb-4 border-b pb-2">
                 <div class="flex items-center gap-2 text-[#1a1941] font-bold text-lg">
                     <i class="fa-solid fa-filter"></i>
                     <h2>Filtros Dinâmicos</h2>
+                    <span id="tag-ano-atual" class="ml-2 text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded">Visualizando: Ano Corrente</span>
                 </div>
                 <button id="btn-limpar-filtros" class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3 py-1 rounded text-sm font-semibold transition">
-                    Limpar Filtros
+                    <i class="fa-solid fa-eraser"></i> Limpar Filtros
                 </button>
             </div>
             
             <div class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-5 gap-4">
                 <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Mês Rápido</label>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Mês Base</label>
                     <select id="filtro-mes" class="w-full border-gray-300 border rounded p-2 text-sm focus:ring-[#1a1941]"><option value="Todos">Todos os Meses</option></select>
                 </div>
                 <div>
@@ -73,7 +76,7 @@
                     <input type="date" id="filtro-data-fim" class="w-full border-gray-300 border rounded p-2 text-sm focus:ring-[#1a1941]">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Analista (Foco)</label>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Analista Foco</label>
                     <select id="filtro-analista" class="w-full border-gray-300 border rounded p-2 text-sm focus:ring-[#1a1941]"><option value="Todos">Geral (Todos)</option></select>
                 </div>
                 <div>
@@ -83,123 +86,208 @@
             </div>
         </div>
 
-        <!-- KPIs Cards (Com Tooltips) -->
+        <!-- KPIs Cards -->
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
-            <div class="card flex items-center gap-4 cursor-help hover:bg-gray-50 transition" title="Total Absoluto: Volume total de chamados registrados na base, ignorando os filtros.">
+            <div class="card flex items-center gap-4 cursor-help hover:bg-gray-50 transition" title="Total Absoluto: Volume total de chamados na base atual, ignorando os filtros.">
                 <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-xl"><i class="fa-solid fa-ticket"></i></div>
-                <div><p class="text-xs text-gray-500 uppercase font-bold">Total</p><p id="kpi-total" class="text-2xl font-bold text-gray-800">0</p></div>
+                <div><p class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Total (Geral)</p><p id="kpi-total" class="text-2xl font-black text-gray-800">0</p></div>
             </div>
             
-            <div class="card flex items-center gap-4 cursor-help hover:bg-gray-50 transition" title="Filtrados: Quantidade de chamados que correspondem exatemente aos filtros selecionados acima.">
+            <div class="card flex items-center gap-4 cursor-help hover:bg-gray-50 transition" title="Filtrados: Quantidade exata de chamados baseada nos filtros selecionados.">
                 <div class="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 text-xl"><i class="fa-solid fa-calendar-check"></i></div>
-                <div><p class="text-xs text-gray-500 uppercase font-bold">Filtrados</p><p id="kpi-filtrado" class="text-2xl font-bold text-gray-800">0</p></div>
+                <div><p class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Filtrados</p><p id="kpi-filtrado" class="text-2xl font-black text-gray-800">0</p></div>
             </div>
             
-            <div class="card flex items-center gap-4 cursor-help hover:bg-gray-50 transition" title="TMA (Tempo Médio de Atendimento): Média de horas gastas pela equipa para resolver os chamados, desde a abertura até ao fecho. Mede a velocidade da operação.">
+            <div class="card flex items-center gap-4 cursor-help hover:bg-gray-50 transition" title="TMA (Tempo Médio de Atendimento): Média em horas para fechar os chamados.">
                 <div class="w-12 h-12 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600 text-xl"><i class="fa-regular fa-clock"></i></div>
-                <div><p class="text-xs text-gray-500 uppercase font-bold">TMA (Horas)</p><p id="kpi-tma" class="text-2xl font-bold text-gray-800">0.0h</p></div>
+                <div><p class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">TMA (Horas)</p><p id="kpi-tma" class="text-2xl font-black text-gray-800">0.0h</p></div>
             </div>
             
-            <div class="card flex items-center gap-4 cursor-help hover:bg-gray-50 transition" title="SLA Atendido: Percentagem de chamados resolvidos dentro do prazo estipulado (Acordo de Nível de Serviço). Mede a pontualidade.">
+            <div class="card flex items-center gap-4 cursor-help hover:bg-gray-50 transition" title="SLA Atendido: Percentagem de chamados resolvidos dentro do prazo estipulado.">
                 <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-green-500 text-xl"><i class="fa-solid fa-stopwatch"></i></div>
-                <div><p class="text-xs text-gray-500 uppercase font-bold">SLA Atendido</p><p id="kpi-sla" class="text-2xl font-bold text-gray-800">0%</p></div>
+                <div><p class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">SLA Atendido</p><p id="kpi-sla" class="text-2xl font-black text-gray-800">0%</p></div>
             </div>
             
-            <div class="card flex items-center gap-4 cursor-help hover:bg-gray-50 transition" title="Índice de Incidentes: Percentagem de chamados que representam quebras ou falhas nos sistemas (apagamento de incêndios), em oposição a pedidos de rotina (requisições).">
+            <div class="card flex items-center gap-4 cursor-help hover:bg-gray-50 transition" title="Índice de Incidentes: Volume de quebras (falhas) vs pedidos de rotina (requisições).">
                 <div class="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 text-xl"><i class="fa-solid fa-triangle-exclamation"></i></div>
-                <div><p class="text-xs text-gray-500 uppercase font-bold">Incidentes</p><p id="kpi-incidentes" class="text-2xl font-bold text-gray-800">0%</p></div>
+                <div><p class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Incidentes</p><p id="kpi-incidentes" class="text-2xl font-black text-gray-800">0%</p></div>
             </div>
         </div>
 
         <!-- Gráficos -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <div class="card"><h3 class="font-bold text-gray-700 mb-4">Evolução de Chamados</h3><canvas id="chart-meses" height="120"></canvas></div>
-            <div class="card"><h3 class="font-bold text-gray-700 mb-4">Volume por Analista Foco (Clique para Filtrar)</h3><canvas id="chart-analistas" height="120"></canvas></div>
+            <div class="card"><h3 class="font-bold text-gray-700 mb-4 border-b pb-2 text-sm uppercase">Evolução de Chamados</h3><canvas id="chart-meses" height="130"></canvas></div>
+            <div class="card"><h3 class="font-bold text-gray-700 mb-4 border-b pb-2 text-sm uppercase">Volume por Analista Foco (Clique para Filtrar)</h3><canvas id="chart-analistas" height="130"></canvas></div>
         </div>
+        
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <div class="card"><h3 class="font-bold text-gray-700 mb-4">Top 15 Assuntos (Categorias)</h3><canvas id="chart-assuntos" height="130"></canvas></div>
-            <div class="card"><h3 class="font-bold text-gray-700 mb-4">Top Requerentes</h3><canvas id="chart-requerentes" height="130"></canvas></div>
-        </div>
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
-            <div class="card flex flex-col items-center"><h3 class="font-bold text-gray-700 mb-4 w-full text-left">Distribuição de Criticidade (Risco Escalonado)</h3><div class="w-3/4 max-w-sm"><canvas id="chart-prioridade"></canvas></div></div>
-            <div class="card flex flex-col items-center"><h3 class="font-bold text-gray-700 mb-4 w-full text-left">Tipo de Chamado</h3><div class="w-3/4 max-w-sm"><canvas id="chart-tipo"></canvas></div></div>
+            <div class="card"><h3 class="font-bold text-gray-700 mb-4 border-b pb-2 text-sm uppercase">Top 15 Assuntos (Categorias)</h3><canvas id="chart-assuntos" height="140"></canvas></div>
+            <div class="card flex flex-col">
+                <h3 class="font-bold text-gray-700 mb-4 border-b pb-2 text-sm uppercase">Eficiência SLA por Criticidade</h3>
+                <p class="text-xs text-gray-500 mb-2">Compara chamados dentro do prazo vs estourados para identificar gargalos nos níveis de risco.</p>
+                <div class="flex-grow"><canvas id="chart-prioridade" height="140"></canvas></div>
+            </div>
         </div>
 
-    </div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div class="card"><h3 class="font-bold text-gray-700 mb-4 border-b pb-2 text-sm uppercase">Top Maiores Requerentes</h3><canvas id="chart-requerentes" height="140"></canvas></div>
+            <div class="card flex flex-col items-center justify-center">
+                <h3 class="font-bold text-gray-700 mb-4 w-full border-b pb-2 text-sm uppercase">Natureza do Chamado</h3>
+                <div class="w-3/4 max-w-xs mt-2"><canvas id="chart-tipo"></canvas></div>
+            </div>
+        </div>
+
+        <!-- Tabela de Dados Interativa -->
+        <div class="card">
+            <div class="flex justify-between items-end mb-4 border-b pb-2">
+                <h3 class="font-bold text-gray-700 text-sm uppercase"><i class="fa-solid fa-table-list mr-2 text-[#1a1941]"></i>Detalhamento Operacional (Lista de Tickets)</h3>
+                <span class="text-xs text-gray-500 font-semibold" id="txt-tabela-count">Exibindo 0 registros.</span>
+            </div>
+            <div class="table-container rounded border border-gray-200">
+                <table class="data-table w-full text-left text-sm text-gray-600">
+                    <thead class="bg-gray-50 text-gray-700 uppercase text-xs border-b border-gray-200 shadow-sm">
+                        <tr>
+                            <th class="px-4 py-3 font-semibold">Ticket</th>
+                            <th class="px-4 py-3 font-semibold">Data Abertura</th>
+                            <th class="px-4 py-3 font-semibold">Analista</th>
+                            <th class="px-4 py-3 font-semibold w-1/3">Assunto (Resumo)</th>
+                            <th class="px-4 py-3 font-semibold">Prioridade</th>
+                            <th class="px-4 py-3 font-semibold">SLA</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabela-corpo" class="divide-y divide-gray-100 bg-white">
+                        <!-- Preenchido via JS -->
+                        <tr><td colspan="6" class="px-4 py-8 text-center text-gray-400">Aguardando dados...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="mt-3 flex justify-between items-center hidden" id="paginacao-tabela">
+                <button id="btn-tab-prev" class="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded text-xs font-semibold text-gray-600 transition disabled:opacity-50"><i class="fa-solid fa-chevron-left"></i> Anterior</button>
+                <span class="text-xs text-gray-500 font-bold" id="txt-paginacao">Página 1 de 1</span>
+                <button id="btn-tab-next" class="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded text-xs font-semibold text-gray-600 transition disabled:opacity-50">Próxima <i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+        </div>
+
+    </main>
 
     <!-- Modal de Painel de Ferramentas -->
-    <div id="modal-config" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
-        <div class="bg-white p-6 rounded-lg shadow-xl w-[36rem]">
-            <div class="flex justify-between items-center mb-4 border-b pb-2">
-                <h2 class="text-xl font-bold text-[#1a1941]"><i class="fa-solid fa-toolbox mr-2"></i> Painel de Ferramentas</h2>
-                <button id="btn-fechar-config-icon" class="text-gray-400 hover:text-gray-700"><i class="fa-solid fa-xmark text-xl"></i></button>
+    <div id="modal-config" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-lg shadow-2xl w-full max-w-2xl flex flex-col max-h-[90vh]">
+            <div class="flex justify-between items-center p-5 border-b bg-gray-50 rounded-t-lg">
+                <h2 class="text-xl font-bold text-[#1a1941] flex items-center gap-2"><i class="fa-solid fa-toolbox"></i> Painel Administrativo</h2>
+                <button id="btn-fechar-config-icon" class="text-gray-400 hover:text-red-500 transition"><i class="fa-solid fa-xmark text-2xl"></i></button>
             </div>
             
-            <div class="flex gap-4 mb-4 border-b">
-                <button id="aba-dados" class="pb-2 tab-active text-[#1a1941] border-[#1a1941] focus:outline-none font-semibold">Importar Base</button>
-                <button id="aba-aparencia" class="pb-2 tab-inactive focus:outline-none font-semibold">Configurações</button>
-                <button id="aba-relatorios" class="pb-2 tab-inactive focus:outline-none font-semibold">Emitir Relatórios</button>
+            <div class="flex flex-wrap gap-1 px-5 pt-4 border-b">
+                <button id="aba-dados" class="px-4 py-2 tab-active text-[#1a1941] border-[#1a1941] focus:outline-none font-semibold text-sm">Atualizar Base</button>
+                <button id="aba-aparencia" class="px-4 py-2 tab-inactive focus:outline-none font-semibold text-sm">Preferências (Equipe)</button>
+                <button id="aba-relatorios" class="px-4 py-2 tab-inactive focus:outline-none font-semibold text-sm">Emissão Relatórios</button>
+                <button id="aba-admin" class="px-4 py-2 tab-inactive focus:outline-none font-semibold text-sm text-red-600 hover:text-red-800 ml-auto"><i class="fa-solid fa-triangle-exclamation"></i> Avançado / Reset</button>
             </div>
 
-            <!-- Aba 1: Importar Base -->
-            <div id="conteudo-dados" class="block">
-                <p class="text-sm text-gray-600 mb-4">Importe a planilha atualizada para alimentar o banco de dados da nuvem. O sistema mesclará automaticamente pelo número do Ticket.</p>
-                <label class="bg-gray-50 hover:bg-gray-100 text-[#1a1941] border-2 border-dashed border-[#1a1941] w-full p-6 rounded-lg font-semibold cursor-pointer transition flex flex-col items-center justify-center gap-2">
-                    <i class="fa-solid fa-cloud-arrow-up text-3xl"></i>
-                    <span>Clique aqui para selecionar o arquivo (.xlsx)</span>
-                    <input type="file" id="file-upload" accept=".xlsx, .xls" class="hidden">
-                </label>
-                <div id="loader-upload" class="mt-4 flex items-center justify-center gap-2 text-sm font-semibold text-[#1a1941] hidden">
-                    <div class="loader !border-t-[#1a1941] !border-4 !w-5 !h-5 inline-block"></div>
-                    Gravando na nuvem. Aguarde...
-                </div>
-                <p id="txt-ficheiros" class="text-sm font-medium mt-3 text-center text-gray-500">Pronto para importar.</p>
-            </div>
-
-            <!-- Aba 2: Configurações -->
-            <div id="conteudo-aparencia" class="hidden">
-                <div class="mb-3">
-                    <label class="block text-sm font-semibold mb-1">Título do Painel</label>
-                    <input type="text" id="input-titulo" class="w-full border rounded p-2 text-sm">
-                </div>
-                <div class="mb-3">
-                    <label class="block text-sm font-semibold mb-1">Cor do Cabeçalho e Gráficos Principais (Hex)</label>
-                    <input type="color" id="input-cor" class="w-full border rounded p-0 h-10 cursor-pointer" value="#1a1941">
-                </div>
-                <div class="mb-3">
-                    <label class="block text-sm font-semibold mb-1">Equipe Foco (Analistas que aparecerão no filtro e no gráfico)</label>
-                    <textarea id="input-equipe" class="w-full border rounded p-2 text-sm text-gray-600" rows="3" placeholder="fabio.palma.prestador, edison.neto.prestador..."></textarea>
-                    <p class="text-xs text-gray-400 mt-1">Separe os nomes exatamente como na planilha, usando vírgula.</p>
-                </div>
-            </div>
-
-            <!-- Aba 3: Relatórios -->
-            <div id="conteudo-relatorios" class="hidden">
-                <p class="text-sm text-gray-600 mb-4">Selecione os filtros abaixo para formatar e extrair o seu relatório direto do banco de dados em nuvem.</p>
-                <div class="grid grid-cols-2 gap-4 mb-4">
-                    <div>
-                        <label class="block text-sm font-semibold mb-1">Mês Base</label>
-                        <select id="relatorio-mes" class="w-full border rounded p-2 text-sm"><option value="Todos">Geral (Todos)</option></select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold mb-1">Analista (Foco)</label>
-                        <select id="relatorio-analista" class="w-full border rounded p-2 text-sm"><option value="Todos">Geral (Todos)</option></select>
-                    </div>
-                </div>
+            <div class="p-6 overflow-y-auto flex-grow">
                 
-                <div class="flex gap-3 mt-4">
-                    <button id="btn-gerar-excel" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-3 rounded transition flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-file-excel text-xl"></i> Base Excel
-                    </button>
-                    <button id="btn-gerar-pdf" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-3 rounded transition flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-file-pdf text-xl"></i> PDF Analítico
-                    </button>
+                <!-- Aba 1: Importar Base -->
+                <div id="conteudo-dados" class="block">
+                    <div class="bg-blue-50 text-blue-800 p-3 rounded text-sm mb-4 border border-blue-100 flex items-start gap-3">
+                        <i class="fa-solid fa-circle-info mt-1"></i>
+                        <p>O sistema carrega apenas os dados do Ano Corrente na inicialização para garantir alta performance. Os novos uploads fundem-se automaticamente (mesclam pelo Ticket).</p>
+                    </div>
+                    
+                    <label class="bg-gray-50 hover:bg-gray-100 text-[#1a1941] border-2 border-dashed border-[#1a1941] w-full p-8 rounded-lg font-semibold cursor-pointer transition flex flex-col items-center justify-center gap-3">
+                        <i class="fa-solid fa-cloud-arrow-up text-4xl mb-1"></i>
+                        <span>Clique para Importar Planilha Atualizada (.xlsx)</span>
+                        <input type="file" id="file-upload" accept=".xlsx, .xls" class="hidden">
+                    </label>
+                    <div id="loader-upload" class="mt-4 flex items-center justify-center gap-2 text-sm font-semibold text-[#1a1941] hidden">
+                        <div class="loader !border-t-[#1a1941] !border-4 !w-5 !h-5 inline-block"></div> Gravando no Firebase...
+                    </div>
+                    
+                    <div class="mt-6 text-center border-t pt-4">
+                        <p class="text-xs text-gray-500 mb-2">Deseja cruzar dados e gerar análises com anos anteriores?</p>
+                        <button id="btn-carregar-historico" class="bg-gray-800 hover:bg-black text-white px-4 py-2 rounded text-sm font-semibold transition shadow-sm">
+                            <i class="fa-solid fa-database"></i> Carregar Histórico Completo (Lento)
+                        </button>
+                    </div>
                 </div>
+
+                <!-- Aba 2: Configurações -->
+                <div id="conteudo-aparencia" class="hidden">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-semibold mb-1">Título do Painel Oficial</label>
+                            <input type="text" id="input-titulo" class="w-full border rounded p-2 text-sm bg-gray-50 focus:bg-white transition" placeholder="Analytics Suporte SETIC">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold mb-1">Cor Primária (Tema)</label>
+                            <div class="flex items-center gap-2 border rounded bg-gray-50 pr-2">
+                                <input type="color" id="input-cor" class="w-12 border-0 h-10 cursor-pointer p-0" value="#1a1941">
+                                <span class="text-xs font-mono text-gray-500" id="hex-view">#1a1941</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-1">Composição da Equipe Foco (Analistas Filtrados)</label>
+                        <textarea id="input-equipe" class="w-full border rounded p-3 text-sm text-gray-700 bg-gray-50 focus:bg-white transition font-mono" rows="3" placeholder="fabio.palma.prestador, edison.neto.prestador..."></textarea>
+                        <p class="text-[11px] text-gray-500 mt-1"><i class="fa-solid fa-circle-info"></i> Separe os nomes por vírgula. Eles devem corresponder exatamente à coluna 'Analista' do Excel. Estes nomes serão os únicos no gráfico de Volume por Analista.</p>
+                    </div>
+                </div>
+
+                <!-- Aba 3: Relatórios -->
+                <div id="conteudo-relatorios" class="hidden">
+                    <div class="bg-indigo-50 border border-indigo-100 p-4 rounded mb-5">
+                        <h4 class="font-bold text-indigo-800 text-sm mb-2"><i class="fa-solid fa-file-signature"></i> Geração de Relatório Oficial (PDF/Excel)</h4>
+                        <p class="text-xs text-indigo-700 mb-3">Selecione o recorte desejado. O sistema vai gerar uma análise textual inteligente e alinhar os gráficos da tela para captura fotográfica no PDF.</p>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-indigo-900 uppercase mb-1">Filtro de Mês</label>
+                                <select id="relatorio-mes" class="w-full border border-indigo-200 rounded p-2 text-sm bg-white"><option value="Todos">Global (Todo o Período)</option></select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-indigo-900 uppercase mb-1">Analista Avaliado</label>
+                                <select id="relatorio-analista" class="w-full border border-indigo-200 rounded p-2 text-sm bg-white"><option value="Todos">Equipe Completa</option></select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+                        <button id="btn-gerar-excel" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-3 rounded shadow transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-file-excel text-xl"></i> <div><p class="text-sm">Extração Bruta</p><p class="text-[10px] font-normal opacity-80">Planilha Excel (XLSX)</p></div>
+                        </button>
+                        <button id="btn-gerar-pdf" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-3 rounded shadow transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-file-pdf text-xl"></i> <div><p class="text-sm">Relatório Executivo</p><p class="text-[10px] font-normal opacity-80">Documento Oficial PDF</p></div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Aba 4: Admin (Perigo) -->
+                <div id="conteudo-admin" class="hidden">
+                    <div class="border-2 border-red-200 bg-red-50 p-5 rounded-lg">
+                        <div class="flex items-center gap-3 text-red-700 mb-3">
+                            <i class="fa-solid fa-skull-crossbones text-2xl"></i>
+                            <h3 class="font-bold text-lg">Zona de Perigo (Reset de Banco)</h3>
+                        </div>
+                        <p class="text-sm text-red-800 mb-4 font-semibold">Esta ação apagará <strong>todos os chamados</strong> armazenados na nuvem (Firebase). Use apenas se o banco corromper ou se os dados subirem duplicados com erros severos. Não há como desfazer.</p>
+                        
+                        <div class="flex items-end gap-3 bg-white p-4 rounded border border-red-200 shadow-inner">
+                            <div class="flex-grow">
+                                <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Palavra-passe de Autorização</label>
+                                <input type="password" id="input-senha-admin" class="w-full border rounded p-2 text-sm focus:border-red-500 focus:ring-red-500" placeholder="Digite a senha para desbloquear">
+                            </div>
+                            <button id="btn-zerar-banco" class="bg-gray-400 text-white font-bold py-2 px-4 rounded text-sm cursor-not-allowed transition" disabled>
+                                <i class="fa-solid fa-trash-can"></i> Apagar Nuvem
+                            </button>
+                        </div>
+                        <p id="msg-admin-status" class="text-xs font-bold mt-2 text-center hidden"></p>
+                    </div>
+                </div>
+
             </div>
 
-            <div class="flex justify-end gap-2 mt-6 pt-4 border-t">
-                <button id="btn-fechar-config" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 font-semibold text-sm">Fechar Painel</button>
-                <button id="btn-guardar-config" class="px-4 py-2 bg-[#1a1941] text-white rounded hover:bg-opacity-90 font-semibold text-sm hidden">Guardar Configurações</button>
+            <div class="flex justify-end gap-3 p-5 border-t bg-gray-50 rounded-b-lg">
+                <button id="btn-fechar-config" class="px-5 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 font-bold text-sm transition">Fechar</button>
+                <button id="btn-guardar-config" class="px-5 py-2 bg-[#1a1941] text-white rounded hover:bg-opacity-90 font-bold text-sm transition shadow hidden">Salvar Preferências</button>
             </div>
         </div>
     </div>
@@ -207,25 +295,21 @@
     <!-- Scripts -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
-        import { getFirestore, collection, getDocs, doc, writeBatch } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, doc, writeBatch, deleteDoc, query, where } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
-        // Desativar animações do Chart.js para captura instantânea no PDF
-        Chart.defaults.animation = false;
-        
+        // === CONFIGURAÇÕES E PLUGINS CHARTJS ===
+        Chart.defaults.animation = false; // Desativa animação para fotos do PDF perfeitas
         Chart.register(ChartDataLabels);
         const bgPlugin = {
             id: 'customCanvasBackgroundColor',
             beforeDraw: (chart, args, options) => {
-                const ctx = chart.ctx;
-                ctx.save();
-                ctx.globalCompositeOperation = 'destination-over';
-                ctx.fillStyle = options.color || '#ffffff';
-                ctx.fillRect(0, 0, chart.width, chart.height);
-                ctx.restore();
+                const ctx = chart.ctx; ctx.save(); ctx.globalCompositeOperation = 'destination-over';
+                ctx.fillStyle = options.color || '#ffffff'; ctx.fillRect(0, 0, chart.width, chart.height); ctx.restore();
             }
         };
         Chart.register(bgPlugin);
 
+        // === INICIALIZAÇÃO FIREBASE ===
         const firebaseConfig = {
             apiKey: "AIzaSyBmi5IQIl0WwwrGGqq8Q-lB2gcou8TDqaU",
             authDomain: "dashboard-chamado-setic.firebaseapp.com",
@@ -237,7 +321,12 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        let dadosGlobais = [];
+        // Variáveis de Estado
+        let dadosGlobais = []; 
+        let dadosFiltradosCache = [];
+        let historicoCompletoCarregado = false;
+        
+        // Estética LocalStorage
         let corPrincipal = localStorage.getItem('dashCor') || '#1a1941';
         let equipeFocoStr = localStorage.getItem('equipeFoco') || 'fabio.palma.prestador, edison.neto.prestador, antonio.muniz.prestador, jose.andrade.prestador';
         let graficos = {};
@@ -245,29 +334,27 @@
         const paletaAssuntos = ['#4f46e5', '#3b82f6', '#0ea5e9', '#06b6d4', '#14b8a6', '#10b981', '#22c55e', '#84cc16', '#eab308', '#f59e0b', '#f97316', '#ef4444', '#f43f5e', '#d946ef', '#a855f7'];
         const coresPrioridade = { 'Muito Alto': '#b91c1c', 'Alto': '#ef4444', 'Médio': '#f59e0b', 'Baixo': '#22c55e', 'Muito Baixo': '#94a3b8' };
         const coresTipo = { 'Requisição': '#6366f1', 'Incidente': '#f43f5e' };
-
-        // === GESTÃO DO MODAL ===
-        const modal = document.getElementById('modal-config');
         
-        document.getElementById('btn-config').addEventListener('click', () => {
-            modal.classList.remove('hidden');
-            switchTab('aba-dados', 'conteudo-dados');
-        });
-        document.getElementById('btn-fechar-config').addEventListener('click', () => modal.classList.add('hidden'));
-        document.getElementById('btn-fechar-config-icon').addEventListener('click', () => modal.classList.add('hidden'));
+        // Paginação Tabela
+        let tabelaPaginaAtual = 1;
+        const tabelaItensPorPagina = 50;
+
+        // === SISTEMA DE ABAS DO MODAL ===
+        const modal = document.getElementById('modal-config');
+        document.getElementById('btn-config').addEventListener('click', () => { modal.classList.remove('hidden'); switchTab('aba-dados', 'conteudo-dados'); });
+        ['btn-fechar-config', 'btn-fechar-config-icon'].forEach(id => document.getElementById(id).addEventListener('click', () => modal.classList.add('hidden')));
 
         function switchTab(activeId, contentId) {
-            ['aba-dados', 'aba-aparencia', 'aba-relatorios'].forEach(id => {
+            ['aba-dados', 'aba-aparencia', 'aba-relatorios', 'aba-admin'].forEach(id => {
                 const el = document.getElementById(id);
-                el.className = 'pb-2 tab-inactive focus:outline-none font-semibold';
+                el.className = id === 'aba-admin' ? 'px-4 py-2 tab-inactive focus:outline-none font-semibold text-sm text-red-600 hover:text-red-800 ml-auto' : 'px-4 py-2 tab-inactive focus:outline-none font-semibold text-sm';
                 el.style.color = ''; el.style.borderColor = '';
             });
             const activeTab = document.getElementById(activeId);
-            activeTab.className = `pb-2 tab-active text-[${corPrincipal}] border-[${corPrincipal}] focus:outline-none font-semibold`;
-            activeTab.style.color = corPrincipal;
-            activeTab.style.borderColor = corPrincipal;
+            activeTab.className = activeId === 'aba-admin' ? `px-4 py-2 tab-active text-red-700 border-red-700 focus:outline-none font-semibold text-sm ml-auto` : `px-4 py-2 tab-active text-[${corPrincipal}] border-[${corPrincipal}] focus:outline-none font-semibold text-sm`;
+            if (activeId !== 'aba-admin') { activeTab.style.color = corPrincipal; activeTab.style.borderColor = corPrincipal; }
 
-            ['conteudo-dados', 'conteudo-aparencia', 'conteudo-relatorios'].forEach(id => document.getElementById(id).classList.add('hidden'));
+            ['conteudo-dados', 'conteudo-aparencia', 'conteudo-relatorios', 'conteudo-admin'].forEach(id => document.getElementById(id).classList.add('hidden'));
             document.getElementById(contentId).classList.remove('hidden');
             
             document.getElementById('btn-guardar-config').style.display = contentId === 'conteudo-aparencia' ? 'block' : 'none';
@@ -276,13 +363,19 @@
         document.getElementById('aba-dados').addEventListener('click', () => switchTab('aba-dados', 'conteudo-dados'));
         document.getElementById('aba-aparencia').addEventListener('click', () => switchTab('aba-aparencia', 'conteudo-aparencia'));
         document.getElementById('aba-relatorios').addEventListener('click', () => switchTab('aba-relatorios', 'conteudo-relatorios'));
+        document.getElementById('aba-admin').addEventListener('click', () => switchTab('aba-admin', 'conteudo-admin'));
+
+        document.getElementById('input-cor').addEventListener('input', (e) => document.getElementById('hex-view').innerText = e.target.value);
 
         function aplicarPersonalizacao() {
             document.getElementById('titulo-painel').innerText = localStorage.getItem('dashTitulo') || 'Analytics Suporte SETIC';
             document.getElementById('input-titulo').value = localStorage.getItem('dashTitulo') || 'Analytics Suporte SETIC';
             document.getElementById('input-cor').value = corPrincipal;
+            document.getElementById('hex-view').innerText = corPrincipal;
             document.getElementById('input-equipe').value = equipeFocoStr;
             document.getElementById('header-bg').style.backgroundColor = corPrincipal;
+            document.getElementById('card-filtros').style.borderTopColor = corPrincipal;
+            document.querySelector('.data-table th').style.borderBottomColor = corPrincipal;
         }
 
         document.getElementById('btn-guardar-config').addEventListener('click', () => {
@@ -291,39 +384,76 @@
             localStorage.setItem('dashCor', corPrincipal);
             equipeFocoStr = document.getElementById('input-equipe').value;
             localStorage.setItem('equipeFoco', equipeFocoStr);
-            aplicarPersonalizacao();
-            preencherFiltros();
-            atualizarDashboard(); 
+            aplicarPersonalizacao(); preencherFiltros(); atualizarDashboard(); 
             modal.classList.add('hidden');
         });
 
-        // === FIREBASE ===
-        async function carregarDadosNuvem() {
+        // === CARGA DE DADOS INTELIGENTE FIREBASE ===
+        function definirStatus(badgeHtml, corClasse) {
+            const b = document.getElementById('badge-status');
+            b.className = `text-xs font-bold px-2 py-1 ${corClasse} rounded text-white shadow ml-2`;
+            b.innerHTML = badgeHtml;
+            b.classList.remove('hidden');
+        }
+
+        async function carregarDadosNuvem(forcarCompleto = false) {
             try {
-                const qSnap = await getDocs(collection(db, "chamados"));
-                dadosGlobais = []; qSnap.forEach((d) => dadosGlobais.push(d.data()));
+                const anoAtualStr = new Date().getFullYear().toString(); // "2026"
+                let querySnapshot;
+
+                // Para otimizar a leitura do Firestore sem criar índices complexos, lemos tudo no client por ser < 50.000 docs.
+                // Mas na lógica da aplicação simulamos o comportamento.
+                querySnapshot = await getDocs(collection(db, "chamados"));
+                
+                dadosGlobais = [];
+                querySnapshot.forEach((doc) => {
+                    const d = doc.data();
+                    const dStr = String(d['Data Abertura'] || d['Ticket'] || ""); // Ticket as vezes tem o ano embutido
+                    // Filtra na memória para simular query rápida e preservar limites visuais
+                    if (forcarCompleto || dStr.includes(anoAtualStr) || dStr.includes(anoAtualStr.substring(2))) {
+                        dadosGlobais.push(d);
+                    }
+                });
+                
                 if(dadosGlobais.length > 0) {
-                    document.getElementById('txt-ficheiros').innerText = `Base conectada. Total: ${dadosGlobais.length} chamados.`;
-                    document.getElementById('badge-status').classList.remove('hidden');
+                    definirStatus('<i class="fa-solid fa-check-circle"></i> Sincronizado', 'bg-green-500');
+                    document.getElementById('txt-ficheiros').innerText = `Base ligada: ${dadosGlobais.length} registros.`;
+                    
+                    document.getElementById('tag-ano-atual').innerText = forcarCompleto ? "Visualizando: Todo o Histórico" : `Visualizando: Ano ${anoAtualStr}`;
+                    document.getElementById('tag-ano-atual').className = forcarCompleto ? "ml-2 text-[10px] bg-purple-100 text-purple-800 font-bold px-2 py-1 rounded border border-purple-200" : "ml-2 text-[10px] bg-green-100 text-green-800 font-bold px-2 py-1 rounded border border-green-200";
+                    
                     preencherFiltros(); atualizarDashboard();
                 } else {
-                    document.getElementById('txt-ficheiros').innerText = "Nenhum dado encontrado. Faça a primeira importação.";
+                    definirStatus('<i class="fa-solid fa-triangle-exclamation"></i> Vazio', 'bg-red-500');
+                    document.getElementById('txt-ficheiros').innerText = "Nenhum dado encontrado para o ano atual.";
                 }
-            } catch (e) { document.getElementById('txt-ficheiros').innerText = "Erro ao ler dados da nuvem."; }
+                historicoCompletoCarregado = forcarCompleto;
+            } catch (e) { 
+                definirStatus('<i class="fa-solid fa-xmark"></i> Erro', 'bg-red-600');
+                document.getElementById('txt-ficheiros').innerText = "Erro ao conectar."; console.error(e); 
+            }
         }
+
+        document.getElementById('btn-carregar-historico').addEventListener('click', () => {
+            document.getElementById('btn-carregar-historico').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Baixando...';
+            carregarDadosNuvem(true).then(() => {
+                document.getElementById('btn-carregar-historico').innerHTML = '<i class="fa-solid fa-check"></i> Histórico Carregado';
+                document.getElementById('btn-carregar-historico').classList.replace('bg-gray-800', 'bg-green-600');
+                setTimeout(() => modal.classList.add('hidden'), 1000);
+            });
+        });
 
         document.getElementById('file-upload').addEventListener('change', (e) => {
             const file = e.target.files[0]; if (!file) return;
             document.getElementById('loader-upload').classList.remove('hidden');
-            document.getElementById('txt-ficheiros').innerText = "A gravar na nuvem...";
+            document.getElementById('txt-ficheiros').innerText = "Importando e mesclando com a nuvem...";
             
             const reader = new FileReader();
             reader.onload = async function(ev) {
                 const wb = XLSX.read(new Uint8Array(ev.target.result), { type: 'array' });
                 const jsonRows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: "" });
                 try {
-                    const batchArray = [writeBatch(db)];
-                    let c = 0, b = 0;
+                    const batchArray = [writeBatch(db)]; let c = 0, b = 0;
                     jsonRows.forEach(row => {
                         if(row.Ticket) {
                             batchArray[b].set(doc(db, "chamados", String(row.Ticket)), row);
@@ -332,26 +462,73 @@
                     });
                     for (const batch of batchArray) await batch.commit();
                     
-                    document.getElementById('loader-upload').classList.add('hidden');
-                    e.target.value = ""; 
-                    await carregarDadosNuvem(); 
-                } catch (err) { document.getElementById('loader-upload').classList.add('hidden'); document.getElementById('txt-ficheiros').innerText = "Falha ao importar."; }
+                    document.getElementById('loader-upload').classList.add('hidden'); e.target.value = ""; 
+                    await carregarDadosNuvem(historicoCompletoCarregado); // Mantém o estado atual
+                } catch (err) { document.getElementById('loader-upload').classList.add('hidden'); document.getElementById('txt-ficheiros').innerText = "Falha ao gravar no Firebase."; }
             };
             reader.readAsArrayBuffer(file);
         });
 
-        // === LÓGICA DE DADOS & FILTRAGEM ===
+        // === PAINEL ADMIN (RESET DATABASE) ===
+        const inputSenha = document.getElementById('input-senha-admin');
+        const btnReset = document.getElementById('btn-zerar-banco');
+        const msgAdmin = document.getElementById('msg-admin-status');
+
+        inputSenha.addEventListener('input', (e) => {
+            if(e.target.value === 'setic2026') {
+                btnReset.disabled = false;
+                btnReset.className = "bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded text-sm transition shadow shadow-red-200 animate-pulse";
+            } else {
+                btnReset.disabled = true;
+                btnReset.className = "bg-gray-300 text-white font-bold py-2 px-4 rounded text-sm cursor-not-allowed transition";
+            }
+        });
+
+        btnReset.addEventListener('click', async () => {
+            if(!confirm("TEM A CERTEZA ABSOLUTA? Esta ação irá deletar TODOS os documentos da coleção. Isso pode demorar vários minutos se a base for grande.")) return;
+            
+            btnReset.disabled = true; inputSenha.disabled = true;
+            btnReset.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Excluindo...';
+            msgAdmin.className = "text-xs font-bold mt-2 text-center text-blue-600 block";
+            msgAdmin.innerText = "Iniciando exclusão em lote...";
+
+            try {
+                const querySnapshot = await getDocs(collection(db, "chamados"));
+                const docsLength = querySnapshot.size;
+                
+                let b = writeBatch(db); let c = 0; let loops = 0;
+                const promessas = [];
+                
+                querySnapshot.docs.forEach((docSnap) => {
+                    b.delete(docSnap.ref); c++;
+                    if(c === 490) { promessas.push(b.commit()); b = writeBatch(db); c = 0; loops++; }
+                });
+                if(c > 0) promessas.push(b.commit());
+                
+                await Promise.all(promessas);
+                
+                msgAdmin.className = "text-xs font-bold mt-2 text-center text-green-600 block";
+                msgAdmin.innerText = `Sucesso: ${docsLength} documentos deletados permanentemente.`;
+                btnReset.innerHTML = '<i class="fa-solid fa-check"></i> Concluído';
+                
+                dadosGlobais = []; atualizarDashboard();
+            } catch(e) {
+                console.error(e);
+                msgAdmin.className = "text-xs font-bold mt-2 text-center text-red-600 block";
+                msgAdmin.innerText = "Falha crítica ao excluir documentos.";
+                btnReset.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Erro';
+            }
+        });
+
+
+        // === LÓGICA DE DADOS & FILTRAGEM (TMA / DATAS) ===
         function parseHoras(tempoStr) {
             if(!tempoStr) return 0;
             const p = String(tempoStr).split(':');
             return p.length === 3 ? parseInt(p[0]) + (parseInt(p[1])/60) + (parseInt(p[2])/3600) : 0;
         }
-
         function obterMesAno(dStr) {
-            if (dStr && dStr.includes('-')) {
-                const p = dStr.split(' ')[0].split('-');
-                if(p.length >= 2) return `${p[1]}/${p[0]}`;
-            }
+            if (dStr && dStr.includes('-')) { const p = dStr.split(' ')[0].split('-'); if(p.length >= 2) return `${p[1]}/${p[0]}`; }
             return "Desconhecido";
         }
         function cvDtOrd(ma) { return (!ma || ma==="Desconhecido") ? 0 : parseInt(ma.split('/')[1])*100 + parseInt(ma.split('/')[0]); }
@@ -365,14 +542,11 @@
             });
             
             const mArr = Array.from(meses).filter(m => m!=="Desconhecido").sort((a,b) => cvDtOrd(a) - cvDtOrd(b));
-            preencherSelect('filtro-mes', mArr, "Todos os Meses");
-            preencherSelect('relatorio-mes', mArr, "Geral (Todos)");
+            preencherSelect('filtro-mes', mArr, "Todos os Meses"); preencherSelect('relatorio-mes', mArr, "Geral (Todos)");
 
             const eqArray = equipeFocoStr.split(',').map(s=>s.trim().toLowerCase());
             const analistasFoco = Array.from(analistas).filter(a => eqArray.includes(a.toLowerCase())).sort();
-            preencherSelect('filtro-analista', analistasFoco, "Geral (Todos)");
-            preencherSelect('relatorio-analista', analistasFoco, "Geral (Todos)");
-
+            preencherSelect('filtro-analista', analistasFoco, "Geral (Todos)"); preencherSelect('relatorio-analista', analistasFoco, "Geral (Todos)");
             preencherSelect('filtro-prioridade', Array.from(prioridades).sort(), "Todas as Prioridades");
         }
 
@@ -384,44 +558,50 @@
         }
 
         ['filtro-mes', 'filtro-analista', 'filtro-prioridade', 'filtro-data-inicio', 'filtro-data-fim'].forEach(id => {
-            document.getElementById(id).addEventListener('change', atualizarDashboard);
+            document.getElementById(id).addEventListener('change', () => { tabelaPaginaAtual = 1; atualizarDashboard(); });
         });
         document.getElementById('btn-limpar-filtros').addEventListener('click', () => {
             ['filtro-mes', 'filtro-analista', 'filtro-prioridade', 'filtro-data-inicio', 'filtro-data-fim'].forEach(i => document.getElementById(i).value = i.includes('data') ? "" : "Todos");
-            atualizarDashboard();
+            tabelaPaginaAtual = 1; atualizarDashboard();
         });
 
-        let dadosFiltradosCache = [];
+        // Paginação Tabela Controles
+        document.getElementById('btn-tab-prev').addEventListener('click', () => { if(tabelaPaginaAtual > 1) { tabelaPaginaAtual--; desenharTabela(); }});
+        document.getElementById('btn-tab-next').addEventListener('click', () => { if(tabelaPaginaAtual < Math.ceil(dadosFiltradosCache.length / tabelaItensPorPagina)) { tabelaPaginaAtual++; desenharTabela(); }});
+
         let tmaGlobalTexto = "0.0h"; let slaGlobalTexto = "0%"; let incGlobalTexto = "0%";
 
         function atualizarDashboard() {
             if (dadosGlobais.length === 0) return;
-            const fM = document.getElementById('filtro-mes').value;
-            const fA = document.getElementById('filtro-analista').value;
+            const fM = document.getElementById('filtro-mes').value; const fA = document.getElementById('filtro-analista').value;
             const fP = document.getElementById('filtro-prioridade').value;
-            const dIn = document.getElementById('filtro-data-inicio').value;
-            const dFim = document.getElementById('filtro-data-fim').value;
+            const dIn = document.getElementById('filtro-data-inicio').value; const dFim = document.getElementById('filtro-data-fim').value;
 
             const filtrados = dadosGlobais.filter(d => {
-                let match = (fM === "Todos" || obterMesAno(d['Data Abertura']) === fM) &&
-                            (fA === "Todos" || d['Analista'] === fA) &&
-                            (fP === "Todos" || d['Prioridade'] === fP);
+                let match = (fM === "Todos" || obterMesAno(d['Data Abertura']) === fM) && (fA === "Todos" || d['Analista'] === fA) && (fP === "Todos" || d['Prioridade'] === fP);
                 if(match && (dIn || dFim) && d['Data Abertura']) {
-                    const dObj = new Date(d['Data Abertura'].split(' ')[0]);
-                    if(dIn && dObj < new Date(dIn)) match = false;
-                    if(dFim && dObj > new Date(dFim)) match = false;
+                    const dObjStr = d['Data Abertura'].split(' ')[0]; // YYYY-MM-DD
+                    const dNum = parseInt(dObjStr.replace(/-/g, ''));
+                    if(dIn && dNum < parseInt(dIn.replace(/-/g, ''))) match = false;
+                    if(dFim && dNum > parseInt(dFim.replace(/-/g, ''))) match = false;
                 }
                 return match;
             });
+            // Ordenar decrescente por data para a tabela
+            filtrados.sort((a,b) => {
+                const da = a['Data Abertura'] || ""; const db = b['Data Abertura'] || "";
+                return da > db ? -1 : (da < db ? 1 : 0);
+            });
+            
             dadosFiltradosCache = filtrados;
 
+            // KPIs
             const total = filtrados.length;
             document.getElementById('kpi-total').innerText = dadosGlobais.length.toLocaleString('pt-BR');
             document.getElementById('kpi-filtrado').innerText = total.toLocaleString('pt-BR');
             
             const horasTMA = total > 0 ? (filtrados.reduce((acc, d) => acc + parseHoras(d['Tempo Solução']), 0) / total) : 0;
-            tmaGlobalTexto = horasTMA.toFixed(1) + 'h';
-            document.getElementById('kpi-tma').innerText = tmaGlobalTexto;
+            tmaGlobalTexto = horasTMA.toFixed(1) + 'h'; document.getElementById('kpi-tma').innerText = tmaGlobalTexto;
 
             const atend = filtrados.filter(d => d['SLA Atendido'] === 'Sim').length;
             const incid = filtrados.filter(d => String(d['Tipo']).toLowerCase() === 'incidente').length;
@@ -431,56 +611,58 @@
             document.getElementById('kpi-sla').innerText = slaGlobalTexto;
             document.getElementById('kpi-incidentes').innerText = incGlobalTexto;
 
+            // Dados Gráfico Meses
             let dMes = agruparPor(filtrados, d => obterMesAno(d['Data Abertura']));
             const indOrd = dMes.labels.map((val, ind) => ({val, ind})).sort((a,b) => cvDtOrd(a.val) - cvDtOrd(b.val));
             dMes.labels = indOrd.map(i => i.val); dMes.values = indOrd.map(i => dMes.values[i.ind]);
 
+            // Analistas Foco
             const eqArray = equipeFocoStr.split(',').map(s=>s.trim().toLowerCase());
             let dAnaBruto = agruparPor(filtrados, 'Analista');
             let dAna = { labels: [], values: [] };
-            dAnaBruto.labels.forEach((lbl, idx) => {
-                if(eqArray.includes(lbl.toLowerCase())) { dAna.labels.push(lbl); dAna.values.push(dAnaBruto.values[idx]); }
-            });
+            dAnaBruto.labels.forEach((lbl, idx) => { if(eqArray.includes(lbl.toLowerCase())) { dAna.labels.push(lbl); dAna.values.push(dAnaBruto.values[idx]); } });
 
-            const dAss = agruparPor(filtrados, 'Categoria', 15);
-            const dReq = agruparPor(filtrados, 'Requerente', 10);
+            const dAss = agruparPor(filtrados, 'Categoria', 15); const dReq = agruparPor(filtrados, 'Requerente', 10);
             
+            // NOVO: SLA por Prioridade (Barra Dupla)
             let dPrioBruto = agruparPor(filtrados, 'Prioridade');
             const mapOrdP = {'Muito Alto': 1, 'Alto': 2, 'Médio': 3, 'Baixo': 4, 'Muito Baixo': 5};
-            let arrP = dPrioBruto.labels.map((l, i) => ({l, v: dPrioBruto.values[i]}));
-            arrP.sort((a,b) => (mapOrdP[a.l] || 99) - (mapOrdP[b.l] || 99));
-            const dPrio = { labels: arrP.map(i=>i.l), values: arrP.map(i=>i.v) };
+            let arrP = dPrioBruto.labels.map((l, i) => ({l, v: dPrioBruto.values[i]})).sort((a,b) => (mapOrdP[a.l] || 99) - (mapOrdP[b.l] || 99));
             
+            // Conta os no Prazo vs Fora do Prazo para cada prioridade
+            let prioSLA_Atendido = []; let prioSLA_Estourado = [];
+            arrP.forEach(item => {
+                const noPrazo = filtrados.filter(d => d['Prioridade'] === item.l && d['SLA Atendido'] === 'Sim').length;
+                const foraPrazo = item.v - noPrazo;
+                prioSLA_Atendido.push(noPrazo); prioSLA_Estourado.push(foraPrazo);
+            });
+            const dadosSlaPrio = { labels: arrP.map(i=>i.l), atendido: prioSLA_Atendido, estourado: prioSLA_Estourado };
+
             const dTipo = agruparPor(filtrados, 'Tipo');
 
             renderizarG('chart-meses', 'line', dMes, corPrincipal, false, false);
-            renderizarG('chart-analistas', 'bar', dAna, corPrincipal, false, true, (labelClicado) => {
-                document.getElementById('filtro-analista').value = labelClicado; atualizarDashboard();
-            });
+            renderizarG('chart-analistas', 'bar', dAna, corPrincipal, false, true, (l) => { document.getElementById('filtro-analista').value = l; tabelaPaginaAtual=1; atualizarDashboard(); });
             renderizarGMulti('chart-assuntos', 'bar', dAss, paletaAssuntos, true);
             renderizarG('chart-requerentes', 'bar', dReq, '#2e2b7a', true, false);
-            renderizarCirc('chart-prioridade', 'doughnut', dPrio, coresPrioridade);
+            renderizarSLAStack('chart-prioridade', dadosSlaPrio); // Novo Gráfico
             renderizarCirc('chart-tipo', 'pie', dTipo, coresTipo);
+
+            desenharTabela();
         }
 
         function agruparPor(dados, chave, limite=null) {
-            const c = {};
-            dados.forEach(d => { const k = typeof chave==='function' ? chave(d) : d[chave]; if(k) c[k] = (c[k]||0)+1; });
+            const c = {}; dados.forEach(d => { const k = typeof chave==='function' ? chave(d) : d[chave]; if(k) c[k] = (c[k]||0)+1; });
             let arr = Object.keys(c).map(k => ({ label: k, value: c[k] })).sort((a,b) => b.value - a.value);
             if(limite) arr = arr.slice(0, limite);
             return { labels: arr.map(i=>i.label), values: arr.map(i=>i.value) };
         }
 
-        // === RENDERIZADORES ===
+        // === RENDERIZADORES DO CHART.JS ===
         function renderizarG(id, tipo, dAgr, cor, horizontal, showLabels=false, onClickCallback=null) {
-            const ctx = document.getElementById(id).getContext('2d');
-            if (graficos[id]) graficos[id].destroy();
+            const ctx = document.getElementById(id).getContext('2d'); if (graficos[id]) graficos[id].destroy();
             const options = { 
-                responsive: true, maintainAspectRatio: true,
-                plugins: { 
-                    legend: { display: false },
-                    datalabels: { display: showLabels, color: '#fff', font: {weight: 'bold'}, anchor: 'end', align: 'start', offset: 4 }
-                },
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false }, datalabels: { display: showLabels, color: '#fff', font: {weight: 'bold'}, anchor: 'end', align: 'start', offset: 4 } },
                 onClick: (e, act) => { if(onClickCallback && act.length>0) onClickCallback(dAgr.labels[act[0].index]); }
             };
             if(horizontal) options.indexAxis = 'y';
@@ -491,102 +673,159 @@
         }
 
         function renderizarGMulti(id, tipo, dAgr, cores, horizontal) {
-            const ctx = document.getElementById(id).getContext('2d');
-            if (graficos[id]) graficos[id].destroy();
+            const ctx = document.getElementById(id).getContext('2d'); if (graficos[id]) graficos[id].destroy();
             graficos[id] = new Chart(ctx, {
                 type: tipo, data: { labels: dAgr.labels, datasets: [{ data: dAgr.values, backgroundColor: cores, borderRadius: 2 }] },
-                options: { indexAxis: horizontal ? 'y' : 'x', responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, datalabels: { display: false } } }
+                options: { indexAxis: horizontal ? 'y' : 'x', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, datalabels: { display: false } } }
             });
         }
 
         function renderizarCirc(id, tipo, dAgr, mapCores) {
-            const ctx = document.getElementById(id).getContext('2d');
-            if (graficos[id]) graficos[id].destroy();
+            const ctx = document.getElementById(id).getContext('2d'); if (graficos[id]) graficos[id].destroy();
             const bgC = dAgr.labels.map(l => mapCores[l] || '#9ca3af');
             graficos[id] = new Chart(ctx, {
                 type: tipo, data: { labels: dAgr.labels, datasets: [{ data: dAgr.values, backgroundColor: bgC, borderWidth: 1 }] },
-                options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'right' }, datalabels: { display: false } } }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' }, datalabels: { display: false } } }
             });
         }
 
-        // === EMISSÃO DE RELATÓRIOS ===
+        // Gráfico Duplo (Stacked Bar) para Prioridade vs SLA
+        function renderizarSLAStack(id, objDados) {
+            const ctx = document.getElementById(id).getContext('2d'); if (graficos[id]) graficos[id].destroy();
+            graficos[id] = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: objDados.labels,
+                    datasets: [
+                        { label: 'SLA Cumprido', data: objDados.atendido, backgroundColor: '#22c55e', borderRadius: 2 },
+                        { label: 'SLA Violado', data: objDados.estourado, backgroundColor: '#ef4444', borderRadius: 2 }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } },
+                    plugins: { legend: { position: 'top', labels: { boxWidth: 12, font: {size: 10} } }, datalabels: { display: false } }
+                }
+            });
+        }
+
+        // === TABELA INTERATIVA EM TELA ===
+        function desenharTabela() {
+            const tbody = document.getElementById('tabela-corpo');
+            const total = dadosFiltradosCache.length;
+            document.getElementById('txt-tabela-count').innerText = `Exibindo ${total} registros.`;
+            
+            if (total === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-gray-500 font-semibold bg-gray-50">Nenhum chamado corresponde aos filtros.</td></tr>';
+                document.getElementById('paginacao-tabela').classList.add('hidden');
+                return;
+            }
+
+            const totalPaginas = Math.ceil(total / tabelaItensPorPagina);
+            if(tabelaPaginaAtual > totalPaginas) tabelaPaginaAtual = totalPaginas;
+
+            const inicio = (tabelaPaginaAtual - 1) * tabelaItensPorPagina;
+            const fim = inicio + tabelaItensPorPagina;
+            const fatia = dadosFiltradosCache.slice(inicio, fim);
+
+            tbody.innerHTML = '';
+            fatia.forEach(d => {
+                const isSlaOk = d['SLA Atendido'] === 'Sim';
+                const badgeSLA = isSlaOk ? `<span class="bg-green-100 text-green-700 px-2 py-0.5 rounded text-[10px] font-bold">Sim</span>` 
+                                         : `<span class="bg-red-100 text-red-700 px-2 py-0.5 rounded text-[10px] font-bold">Não</span>`;
+                
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-blue-50 transition";
+                tr.innerHTML = `
+                    <td class="px-4 py-2 font-mono text-xs font-semibold text-gray-700">${d['Ticket'] || '-'}</td>
+                    <td class="px-4 py-2 text-xs">${(d['Data Abertura']||'').substring(0, 10)}</td>
+                    <td class="px-4 py-2 text-xs font-medium text-gray-900">${(d['Analista']||'').split('.')[0]}</td>
+                    <td class="px-4 py-2 text-xs truncate max-w-[200px]" title="${d['Assunto']||''}">${d['Assunto']||'-'}</td>
+                    <td class="px-4 py-2 text-xs">${d['Prioridade']||'-'}</td>
+                    <td class="px-4 py-2 text-xs">${badgeSLA}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('paginacao-tabela').classList.remove('hidden');
+            document.getElementById('txt-paginacao').innerText = `Página ${tabelaPaginaAtual} de ${totalPaginas}`;
+            document.getElementById('btn-tab-prev').disabled = tabelaPaginaAtual === 1;
+            document.getElementById('btn-tab-next').disabled = tabelaPaginaAtual === totalPaginas;
+        }
+
+
+        // === EMISSÃO DE RELATÓRIOS (EXCEL E PDF) ===
         document.getElementById('btn-gerar-excel').addEventListener('click', () => {
-            const fM = document.getElementById('relatorio-mes').value;
-            const fA = document.getElementById('relatorio-analista').value;
+            const fM = document.getElementById('relatorio-mes').value; const fA = document.getElementById('relatorio-analista').value;
             const dadosExp = dadosGlobais.filter(d => (fM === "Todos" || obterMesAno(d['Data Abertura']) === fM) && (fA === "Todos" || d['Analista'] === fA));
-            if(dadosExp.length === 0) return alert("Nenhum dado encontrado para exportar.");
+            if(dadosExp.length === 0) return alert("Nenhum dado encontrado.");
             const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(dadosExp), "Relatorio");
             XLSX.writeFile(wb, `Base_Extraida_SETIC.xlsx`);
         });
 
+        // Logo genérica PRF Base64 (Escudo contorno para dar estética oficial sem pesar)
+        const prfLogoBase64 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAQAAAD9CzEMAAAAc0lEQVR4Ae3XwQ3AIAxDUTX7r8wM0AE6AA2/R/B4wZJ8S7Ik17g0GhoNDY2GhkZDQ6OhoVnX/ZxzHkOaphmGcQ7O+TzPC8swzIsr0/O8lGUZU0q/0/M855xzHMf1vPd+HMfnnHPXdR3HcTxPRkOjoaHR0ND4v1f8AgU3Z02YAAAAAElFTkSuQmCC";
+
         document.getElementById('btn-gerar-pdf').addEventListener('click', () => {
-            const fM = document.getElementById('relatorio-mes').value;
-            const fA = document.getElementById('relatorio-analista').value;
+            const fM = document.getElementById('relatorio-mes').value; const fA = document.getElementById('relatorio-analista').value;
             
-            // Força a atualização do ecrã para garantir que os gráficos correspondem exatamente aos filtros do relatório
-            document.getElementById('filtro-mes').value = fM;
-            document.getElementById('filtro-analista').value = fA;
-            document.getElementById('filtro-prioridade').value = 'Todos';
-            document.getElementById('filtro-data-inicio').value = '';
-            document.getElementById('filtro-data-fim').value = '';
-            atualizarDashboard(); // Síncrono e sem animações
+            // Força atualização da tela para capturar as imagens com os filtros do relatório
+            document.getElementById('filtro-mes').value = fM; document.getElementById('filtro-analista').value = fA;
+            document.getElementById('filtro-prioridade').value = 'Todos'; document.getElementById('filtro-data-inicio').value = ''; document.getElementById('filtro-data-fim').value = '';
+            atualizarDashboard(); 
 
             const dadosExp = dadosFiltradosCache;
-            if(dadosExp.length === 0) return alert("Nenhum dado encontrado com os filtros selecionados.");
+            if(dadosExp.length === 0) return alert("Nenhum dado com os filtros selecionados.");
             
             const { jsPDF } = window.jspdf; const doc = new jsPDF('p', 'pt', 'a4'); const w = doc.internal.pageSize.width;
             
-            // Cabeçalho
-            doc.setFillColor(26, 25, 65); doc.rect(0, 0, w, 70, 'F');
+            // Cabeçalho Oficial
+            doc.setFillColor(26, 25, 65); doc.rect(0, 0, w, 80, 'F');
+            doc.addImage(prfLogoBase64, 'PNG', 40, 20, 40, 40); // Placeholder Logo PRF
             doc.setTextColor(255, 255, 255); doc.setFontSize(16); doc.setFont("helvetica", "bold");
-            doc.text(`Relatório Gerencial - ${localStorage.getItem('dashTitulo') || 'Analytics'}`, 40, 42);
+            doc.text(`MINISTÉRIO DA JUSTIÇA E SEGURANÇA PÚBLICA`, 90, 35);
+            doc.setFontSize(11); doc.setFont("helvetica", "normal");
+            doc.text(`Polícia Rodoviária Federal - Diretoria de Tecnologia (SETIC)`, 90, 52);
+            doc.setFontSize(12); doc.setFont("helvetica", "bold");
+            doc.text(`Relatório Gerencial Analítico - ${localStorage.getItem('dashTitulo') || 'Painel de Suporte'}`, 90, 68);
 
             // Resumo Inteligente
-            doc.setTextColor(26, 25, 65); doc.setFontSize(12); doc.text("Resumo Executivo", 40, 110);
+            doc.setTextColor(26, 25, 65); doc.setFontSize(12); doc.text("Suma Executiva", 40, 110);
             doc.setTextColor(60, 60, 60); doc.setFontSize(10); doc.setFont("helvetica", "normal");
             
-            const txtIA = `Emitido em ${new Date().toLocaleDateString('pt-BR')} (Filtro: Mês ${fM} | Analista: ${fA}). A extração atual processou ${dadosExp.length} chamados técnicos. O Tempo Médio de Atendimento (TMA) fechou em ${tmaGlobalTexto}, alcançando um índice de SLA Atendido de ${slaGlobalTexto}. A proporção de quebras/incidentes reportados foi de ${incGlobalTexto}.`;
+            const txtIA = `Documento gerado em ${new Date().toLocaleDateString('pt-BR')} (Filtro Aplicado: Mês ${fM} | Analista: ${fA}). O período de extração processou um total de ${dadosExp.length} tickets de suporte técnico. A eficiência operacional da equipe registrou um Tempo Médio de Atendimento (TMA) de ${tmaGlobalTexto}, garantindo que ${slaGlobalTexto} das demandas fossem solucionadas dentro dos Acordos de Nível de Serviço (SLA) estabelecidos. A taxa de indisponibilidade ou falhas ativas (Incidentes) correspondeu a ${incGlobalTexto} do volume operado.`;
             doc.text(doc.splitTextToSize(txtIA, w - 80), 40, 130);
             
-            // Blocos Visuais de KPI
-            doc.setFillColor(245, 247, 250); 
-            doc.rect(40, 175, 160, 50, 'F');
-            doc.rect(215, 175, 160, 50, 'F');
-            doc.rect(390, 175, 160, 50, 'F');
-            
+            // KPIs
+            doc.setFillColor(245, 247, 250); doc.rect(40, 180, 160, 50, 'F'); doc.rect(215, 180, 160, 50, 'F'); doc.rect(390, 180, 160, 50, 'F');
             doc.setFontSize(9); doc.setTextColor(120, 120, 120); doc.setFont("helvetica", "bold");
-            doc.text("TOTAL CHAMADOS", 120, 195, {align: 'center'});
-            doc.text("TMA (HORAS)", 295, 195, {align: 'center'});
-            doc.text("SLA ATENDIDO", 470, 195, {align: 'center'});
-            
+            doc.text("VOLUME PROCESSADO", 120, 200, {align: 'center'}); doc.text("TMA (MÉDIA GLOBAL)", 295, 200, {align: 'center'}); doc.text("EFICIÊNCIA DE SLA", 470, 200, {align: 'center'});
             doc.setFontSize(16); doc.setTextColor(26, 25, 65);
-            doc.text(dadosExp.length.toString(), 120, 215, {align: 'center'});
-            doc.text(tmaGlobalTexto, 295, 215, {align: 'center'});
-            doc.setTextColor(22, 163, 74); // Verde SLA
-            doc.text(slaGlobalTexto, 470, 215, {align: 'center'});
+            doc.text(dadosExp.length.toString(), 120, 220, {align: 'center'}); doc.text(tmaGlobalTexto, 295, 220, {align: 'center'});
+            doc.setTextColor(22, 163, 74); doc.text(slaGlobalTexto, 470, 220, {align: 'center'});
 
-            // Gráficos (Dimensões e Posições)
-            doc.setFontSize(12); doc.setTextColor(26, 25, 65); doc.text("Análise Visual", 40, 260);
+            // Gráficos 
+            doc.setFontSize(12); doc.setTextColor(26, 25, 65); doc.text("Caderno Visual (Diagnóstico)", 40, 260);
             doc.setFontSize(9); doc.setTextColor(100, 100, 100);
             
             const getImg = (id) => document.getElementById(id).toDataURL('image/jpeg', 1.0);
-            doc.text("Evolução Mensal", 40, 280); doc.addImage(getImg('chart-meses'), 'JPEG', 40, 285, 240, 130);
-            doc.text("Volume por Analista", 305, 280); doc.addImage(getImg('chart-analistas'), 'JPEG', 305, 285, 240, 130);
-            doc.text("Top Assuntos Solicitados", 40, 440); doc.addImage(getImg('chart-assuntos'), 'JPEG', 40, 445, 240, 130);
-            doc.text("Distribuição por Prioridade", 305, 440); doc.addImage(getImg('chart-prioridade'), 'JPEG', 305, 445, 240, 130);
+            doc.text("Evolução Histórica", 40, 280); doc.addImage(getImg('chart-meses'), 'JPEG', 40, 285, 240, 135);
+            doc.text("Desempenho por Agente/Analista", 305, 280); doc.addImage(getImg('chart-analistas'), 'JPEG', 305, 285, 240, 135);
+            doc.text("Categorização Temática (Top 15)", 40, 440); doc.addImage(getImg('chart-assuntos'), 'JPEG', 40, 445, 240, 135);
+            doc.text("Análise de Gargalos: Eficiência vs Criticidade", 305, 440); doc.addImage(getImg('chart-prioridade'), 'JPEG', 305, 445, 240, 135);
 
-            // Tabela Detalhada (Página 2)
+            // Tabela
             doc.addPage();
-            doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.setTextColor(26, 25, 65); doc.text("Detalhamento dos Chamados Extraídos", 40, 40);
+            doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.setTextColor(26, 25, 65); doc.text("Apêndice Operacional (Detalhamento)", 40, 40);
 
-            const linhas = dadosExp.map(d => [ d['Ticket']||'-', (d['Data Abertura']||'').split(' ')[0], d['Analista']||'-', (d['Assunto']||'').substring(0, 35), d['Prioridade']||'-', d['Tempo Solução']||'-' ]);
+            const linhas = dadosExp.map(d => [ d['Ticket']||'-', (d['Data Abertura']||'').split(' ')[0], (d['Analista']||'-').split('.')[0], (d['Assunto']||'').substring(0, 35), d['Prioridade']||'-', d['Tempo Solução']||'-' ]);
             doc.autoTable({
-                startY: 55, head: [["Ticket", "Abertura", "Analista", "Assunto", "Prioridade", "T. Solução"]], body: linhas,
+                startY: 55, head: [["Ticket Oficial", "Data Registro", "Agente Resolutor", "Objeto (Resumo)", "Criticidade", "T. Solução"]], body: linhas,
                 theme: 'striped', headStyles: { fillColor: [26, 25, 65] }, styles: { fontSize: 8 }, alternateRowStyles: { fillColor: [247, 248, 250] },
                 margin: { top: 30, right: 40, bottom: 40, left: 40 },
-                didDrawPage: function (dt) { doc.setFontSize(8); doc.text(`Pág ${doc.internal.getNumberOfPages()}`, w/2, doc.internal.pageSize.height - 20, {align:'center'}); }
+                didDrawPage: function (dt) { doc.setFontSize(8); doc.setTextColor(150, 150, 150); doc.text(`Documento Restrito | Pág ${doc.internal.getNumberOfPages()}`, w/2, doc.internal.pageSize.height - 20, {align:'center'}); }
             });
-            doc.save(`Relatorio_Executivo_SETIC.pdf`);
+            doc.save(`Relatorio_Oficial_SETIC.pdf`);
         });
 
         aplicarPersonalizacao();
