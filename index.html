@@ -36,8 +36,9 @@
 
     <header id="header-bg" class="bg-[#1a1941] text-white p-4 shadow-md flex justify-between items-center sticky top-0 z-40 transition-colors">
         <div class="flex items-center gap-3 ml-4">
-            <!-- Espaço reservado para a Logo no Cabeçalho -->
+            <!-- Logo sem fundo branco -->
             <div id="header-logo-container" class="flex items-center"></div>
+            <!-- Ícone de Gráfico restaurado -->
             <i class="fa-solid fa-chart-line text-2xl" id="header-default-icon"></i>
             <h1 id="titulo-painel" class="text-xl font-bold tracking-wide">Analytics Suporte SETIC</h1>
         </div>
@@ -179,7 +180,6 @@
                             </div>
                         </div>
                     </div>
-                    <!-- CAMPO DE UPLOAD DE LOGO ADICIONADO AQUI -->
                     <div class="mb-4">
                         <label class="block text-sm font-semibold mb-1">Logótipo Institucional (Cabeçalho e PDF)</label>
                         <input type="file" id="input-logo-file" accept="image/*" class="w-full border dark:border-gray-600 rounded p-2 text-sm bg-gray-50 dark:bg-gray-700 cursor-pointer">
@@ -321,12 +321,12 @@
             document.getElementById('header-bg').style.backgroundColor = isDark ? '#111827' : corPrincipal;
             document.getElementById('card-filtros').style.borderTopColor = corPrincipal;
 
-            // Renderiza a Logo no cabeçalho se houver upload
             const savedLogo = localStorage.getItem('dashLogo');
             const logoContainer = document.getElementById('header-logo-container');
             const defaultIcon = document.getElementById('header-default-icon');
             if (savedLogo) {
-                logoContainer.innerHTML = `<img src="${savedLogo}" alt="Logo" class="h-9 w-9 object-contain rounded bg-white p-0.5 shadow">`;
+                // Removido bg-white e p-0.5 shadow para a imagem PNG ficar sem fundo branco
+                logoContainer.innerHTML = `<img src="${savedLogo}" alt="Logo" class="h-9 w-9 object-contain">`;
                 defaultIcon.style.display = 'none';
             } else {
                 logoContainer.innerHTML = '';
@@ -582,11 +582,12 @@
                     doc.setFontSize(9.5); doc.setFont("helvetica", "normal"); doc.text("Polícia Rodoviária Federal - Diretoria de Tecnologia da Informação e Comunicação (DTIC)", 40, 52);
                     doc.setFontSize(10.5); doc.setFont("helvetica", "bold"); doc.text("Relatório Gerencial Analítico - Suporte N2 - Serviço de Pronto Atendimento (SETIC)", 40, 74);
                     
-                    // Insere a logo customizada salva pelo usuário ou oculta se não houver
-                    const savedLogoPdf = localStorage.getItem('dashLogo');
-                    if (savedLogoPdf) {
-                        try { doc.addImage(savedLogoPdf, 'PNG', w - 80, 20, 40, 40); } catch(e) {}
-                    }
+                    // --- BRASÃO VIA LINK DIRETO DO GITHUB (SEM FUNDO BRANCO) ---
+                    try { 
+                        const savedLogoPdf = localStorage.getItem('dashLogo');
+                        const urlLogo = savedLogoPdf || 'https://raw.githubusercontent.com/AlbertBarros/dashbord-chamados-suporte-setic/main/bras%C3%A3o.png'; 
+                        doc.addImage(urlLogo, 'PNG', w - 80, 20, 40, 40); 
+                    } catch(e) {}
 
                     const agora = new Date();
                     const dataForm = agora.toLocaleDateString('pt-BR');
@@ -645,5 +646,3 @@
     </script>
 </body>
 </html>
-
-
