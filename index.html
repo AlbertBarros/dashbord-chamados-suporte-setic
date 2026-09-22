@@ -168,7 +168,7 @@
         </main>
     </div>
 
-    <!-- Modal Painel de Ferramentas - COM ABA FISCALIZAÇÃO -->
+    <!-- Modal Painel de Ferramentas -->
     <div id="modal-config" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-2xl w-full max-w-4xl flex flex-col max-h-[90vh]">
             <div class="flex justify-between items-center p-5 border-b dark:border-gray-700 bg-gray-50 dark:bg-gray-900 rounded-t-lg">
@@ -233,7 +233,7 @@
                         <h4 class="font-bold text-indigo-800 dark:text-indigo-300 text-sm mb-2"><i class="fa-solid fa-file-signature"></i> Geração de Relatório Oficial</h4>
                         <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-xs font-bold text-indigo-900 dark:text-indigo-200 uppercase mb-1">Meses (Múltipla Seleção)</label>
+                                <label class="block text-xs font-bold text-indigo-900 dark:text-indigo-200 uppercase mb-1">Mês Calendário (Múltipla Seleção)</label>
                                 <div id="relatorio-mes-container" class="w-full border dark:border-gray-600 rounded p-2 text-sm bg-white dark:bg-gray-700 h-24 overflow-y-auto flex flex-col gap-2 shadow-inner">
                                     <label class="flex items-center gap-2 cursor-pointer text-gray-700 dark:text-gray-200"><input type="checkbox" value="Todos" checked class="accent-indigo-600 w-4 h-4"> <span>Global (Todos)</span></label>
                                 </div>
@@ -262,14 +262,14 @@
                             <div class="w-full">
                                 <h3 class="font-bold text-lg text-green-800 dark:text-green-400 mb-2">Auditoria e Fiscalização de Contrato (IMR)</h3>
                                 <p class="text-sm text-green-700 dark:text-green-300 mb-4 leading-relaxed">
-                                    O sistema atuará como fiscal virtual: ele lerá todos os chamados da base correspondentes ao período selecionado, processará a matemática linha a linha e verificará se a empresa cumpriu os <strong>Níveis Mínimos de Serviços (INS1 ao INS7)</strong> estipulados no contrato.
+                                    O sistema atuará como fiscal virtual: ele lerá todos os chamados da base correspondentes ao <strong>ciclo de medição fiscal</strong> selecionado (do dia 04 ao dia 03 do mês subsequente), processará a matemática linha a linha e verificará se a empresa cumpriu os Níveis Mínimos de Serviços (INS1 ao INS7).
                                 </p>
                                 
                                 <div class="flex flex-col sm:flex-row gap-3 items-end mt-2 pt-4 border-t border-green-200 dark:border-green-800">
                                     <div class="w-full sm:w-1/3">
-                                        <label class="block text-xs font-bold text-green-800 dark:text-green-400 uppercase mb-1">Mês de Apuração</label>
+                                        <label class="block text-xs font-bold text-green-800 dark:text-green-400 uppercase mb-1">Ciclo Fiscal</label>
                                         <select id="fiscal-mes" class="w-full border border-green-300 dark:border-green-700 rounded p-3 text-sm bg-white dark:bg-gray-800 focus:outline-none focus:border-green-500 transition">
-                                            <option value="Todos">Todos os Meses</option>
+                                            <option value="Todos">Todos os Ciclos</option>
                                         </select>
                                     </div>
                                     <button id="btn-gerar-fiscal-pdf" class="w-full sm:w-2/3 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded shadow transition flex items-center justify-center gap-2">
@@ -445,7 +445,6 @@
         function switchTab(activeId, contentId) {
             ['aba-dados', 'aba-aparencia', 'aba-relatorios', 'aba-fiscal', 'aba-admin'].forEach(id => {
                 const el = document.getElementById(id); 
-                
                 if (id === 'aba-admin') {
                     el.className = 'px-3 py-2 tab-inactive focus:outline-none font-semibold text-sm text-red-600 hover:text-red-500 ml-auto flex items-center gap-2 whitespace-nowrap';
                 } else if (id === 'aba-fiscal') {
@@ -684,11 +683,11 @@
             
             let dadosAuditoria = dadosGlobais;
             if(mesSelecionado !== 'Todos') {
-                dadosAuditoria = dadosGlobais.filter(d => obterMesAno(d['Data Abertura']) === mesSelecionado);
+                dadosAuditoria = dadosGlobais.filter(d => obterMesAnoFiscal(d['Data Abertura']) === mesSelecionado);
             }
 
             const total = dadosAuditoria.length;
-            if(total === 0) return alert("Nenhum dado encontrado para o mês selecionado.");
+            if(total === 0) return alert("Nenhum dado encontrado para o ciclo selecionado.");
 
             const btn = document.getElementById('btn-gerar-fiscal-pdf'); 
             const conteudoOriginal = btn.innerHTML; 
@@ -783,9 +782,8 @@
                     doc.setTextColor(60, 60, 60); doc.setFontSize(10); doc.setFont("helvetica", "normal");
                     
                     const mesTexto = mesSelecionado === 'Todos' ? 'Base Completa' : mesSelecionado;
-                    const textoParecer = `A presente medição avaliou o universo bruto de ${total} chamados registrados na base referentes ao período selecionado (${mesTexto}). Os indicadores matemáticos foram processados de forma automatizada linha a linha, em estrita conformidade com as regras do Instrumento de Medição de Resultados (IMR). O indicador INS1 assumiu nota 5 automática na ausência de avaliações manuais (conforme prevê a regra contratual). Os índices INS4, INS5 e INS7 não se aplicam à fila/grupo em questão.\n\nDocumento processado eletronicamente em ${dataForm} às ${horaForm}.`;
+                    const textoParecer = `A presente medição avaliou o universo bruto de ${total} chamados registrados na base referentes ao ciclo de medição selecionado (${mesTexto}, que compreende do dia 04 ao dia 03 do mês subsequente). Os indicadores matemáticos foram processados de forma automatizada linha a linha, em estrita conformidade com as regras do Instrumento de Medição de Resultados (IMR). O indicador INS1 assumiu nota 5 automática na ausência de avaliações manuais (conforme prevê a regra contratual). Os índices INS4, INS5 e INS7 não se aplicam à fila/grupo em questão.\n\nDocumento processado eletronicamente em ${dataForm} às ${horaForm}.`;
                     
-                    // Tratamento dinamico de altura para evitar bugs de sobreposição
                     const splitText = doc.splitTextToSize(textoParecer, w - 80);
                     doc.text(splitText, 40, 145);
                     
@@ -847,8 +845,39 @@
             }, 800); 
         });
 
+        // -----------------------------------------------------
+        // FUNÇÕES DE TEMPO E FILTROS (REVERTIDAS E SEPARADAS)
+        // -----------------------------------------------------
+        
         function parseHoras(str) { if(!str) return 0; const p = String(str).split(':'); return p.length === 3 ? parseInt(p[0]) + (parseInt(p[1])/60) + (parseInt(p[2])/3600) : 0; }
-        function obterMesAno(str) { if (str && str.includes('-')) { const p = str.split(' ')[0].split('-'); if(p.length >= 2) return `${p[1]}/${p[0]}`; } return "Desc"; }
+        
+        // 1. MÊS CIVIL (Calendário normal 01 a 31) - Usado no Painel Operacional e Gerencial
+        function obterMesAno(str) { 
+            if (str && str.includes('-')) { 
+                const p = str.split(' ')[0].split('-'); 
+                if(p.length >= 2) return `${p[1]}/${p[0]}`;
+            } 
+            return "Desc"; 
+        }
+
+        // 2. CICLO FISCAL IMR (Dia 04 a 03) - Usado EXCLUSIVAMENTE na aba Fiscalização
+        function obterMesAnoFiscal(str) {
+            if (str && str.includes('-')) {
+                const p = str.split(' ')[0].split('-');
+                if(p.length >= 3) {
+                    let ano = parseInt(p[0]); let mes = parseInt(p[1]); let dia = parseInt(p[2]);
+                    
+                    if (dia <= 3) {
+                        mes = mes - 1;
+                        if (mes === 0) { mes = 12; ano = ano - 1; }
+                    }
+                    const mesStr = mes < 10 ? '0' + mes : mes;
+                    return `${mesStr}/${ano}`;
+                }
+            }
+            return "Desc";
+        }
+
         function cvDtOrd(m) { return (!m || m==="Desc") ? 0 : parseInt(m.split('/')[1])*100 + parseInt(m.split('/')[0]); }
 
         function preencherCheckboxes(id, arr) {
@@ -875,21 +904,25 @@
         }
 
         function preencherFiltros() {
-            const m = new Set(), a = new Set(), p = new Set(), ass = new Set(), tp = new Set();
+            const m = new Set(), mFiscal = new Set(), a = new Set(), p = new Set(), ass = new Set(), tp = new Set();
+            
             dadosGlobais.forEach(d => { 
-                m.add(obterMesAno(d['Data Abertura'])); 
+                m.add(obterMesAno(d['Data Abertura'])); // Lê civil
+                mFiscal.add(obterMesAnoFiscal(d['Data Abertura'])); // Lê fiscal
                 if(d['Analista']) a.add(d['Analista']); if(d['Prioridade']) p.add(d['Prioridade']); 
                 if(d['Categoria']) ass.add(d['Categoria']); if(d['Tipo']) tp.add(d['Tipo']);
             });
             
             const mArr = Array.from(m).filter(x => x!=="Desc").sort((x,y) => cvDtOrd(x) - cvDtOrd(y));
-            preencherS('filtro-mes', mArr, "Todos"); 
-            preencherS('fiscal-mes', mArr, "Todos os Meses"); 
+            const mFiscalArr = Array.from(mFiscal).filter(x => x!=="Desc").sort((x,y) => cvDtOrd(x) - cvDtOrd(y));
+            
+            preencherS('filtro-mes', mArr, "Todos os Meses"); 
+            preencherS('fiscal-mes', mFiscalArr, "Todos os Ciclos"); 
             preencherCheckboxes('relatorio-mes-container', mArr); 
             
             preencherS('filtro-analista', Array.from(a).filter(x => equipeFocoStr.toLowerCase().includes(x.toLowerCase())).sort(), "Todos"); 
             preencherS('relatorio-analista', Array.from(a).filter(x => equipeFocoStr.toLowerCase().includes(x.toLowerCase())).sort(), "Todos");
-            preencherS('filtro-prioridade', Array.from(p).sort(), "Todos");
+            preencherS('filtro-prioridade', Array.from(p).sort(), "Todas");
             preencherS('filtro-assunto', Array.from(ass).sort(), "Todos");
             preencherS('filtro-tipo', Array.from(tp).sort(), "Todos");
         }
