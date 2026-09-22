@@ -257,7 +257,16 @@
             setChartColors(); atualizarDashboard();
         });
 
-        const firebaseConfig = { apiKey: "AIzaSyBmi5IQIl0WwwrGGqq8Q-lB2gcou8TDqaU", authDomain: "dashboard-chamado-setic.firebaseapp.com", projectId: "dashboard-chamado-setic", storageBucket: "dashboard-chamado-setic.firebasestorage.app", messagingSenderId: "502847512745", appId: "1:502847512745:web:2941e763621ecc0af509b8" };
+        // Configurações do Firebase SETIC
+        const firebaseConfig = { 
+            apiKey: "AIzaSyBmi5IQIl0WwwrGGqq8Q-lB2gcou8TDqaU", 
+            authDomain: "dashboard-chamado-setic.firebaseapp.com", 
+            projectId: "dashboard-chamado-setic", 
+            storageBucket: "dashboard-chamado-setic.firebasestorage.app", 
+            messagingSenderId: "502847512745", 
+            appId: "1:502847512745:web:2941e763621ecc0af509b8" 
+        };
+        
         let app, db; try { app = initializeApp(firebaseConfig); db = getFirestore(app); } catch (e) { console.error(e); }
 
         let dadosGlobais = []; let dadosFiltradosCache = []; let historicoCompletoCarregado = false;
@@ -321,7 +330,7 @@
                     document.getElementById('tag-ano-atual').innerText = forcar ? "Histórico Completo" : `Ano ${anoAtual}`;
                     preencherFiltros(); atualizarDashboard();
                 } else { definirStatus('<i class="fa-solid fa-triangle-exclamation"></i> Vazio', 'bg-red-500'); } historicoCompletoCarregado = forcar;
-            } catch (e) { definirStatus('<i class="fa-solid fa-xmark"></i> Erro', 'bg-red-600'); }
+            } catch (e) { definirStatus('<i class="fa-solid fa-xmark"></i> Erro', 'bg-red-600'); console.error("Erro Firebase:", e); }
         }
 
         document.getElementById('btn-carregar-historico').addEventListener('click', () => { document.getElementById('btn-carregar-historico').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>...'; carregarDadosNuvem(true).then(() => { document.getElementById('btn-carregar-historico').innerHTML = 'Concluído'; setTimeout(() => modal.classList.add('hidden'), 1000); }); });
@@ -346,9 +355,10 @@
             try { const q = await getDocs(collection(db, "chamados")); let b = writeBatch(db); let c = 0; const pr = []; q.docs.forEach((d) => { b.delete(d.ref); c++; if(c === 490) { pr.push(b.commit()); b = writeBatch(db); c = 0; } }); if(c > 0) pr.push(b.commit()); await Promise.all(pr); alert("Excluído."); dadosGlobais = []; atualizarDashboard(); } catch(e) { alert("Erro."); }
         });
 
-        function pHoras(str) { if(!str) return 0; const p = String(str).split(':'); return p.length === 3 ? parseInt(p[0]) + (parseInt(p[1])/60) + (parseInt(p[2])/3600) : 0; }
-        function oMes(str) { if (str && str.includes('-')) { const p = str.split(' ')[0].split('-'); if(p.length >= 2) return `${p[1]}/${p[0]}`; } return "Desc"; }
-        function cOrd(m) { return (!m || m==="Desc") ? 0 : parseInt(m.split('/')[1])*100 + parseInt(m.split('/')[0]); }
+        // Funções de formatação corrigidas e descritivas
+        function parseHoras(str) { if(!str) return 0; const p = String(str).split(':'); return p.length === 3 ? parseInt(p[0]) + (parseInt(p[1])/60) + (parseInt(p[2])/3600) : 0; }
+        function obterMesAno(str) { if (str && str.includes('-')) { const p = str.split(' ')[0].split('-'); if(p.length >= 2) return `${p[1]}/${p[0]}`; } return "Desc"; }
+        function cvDtOrd(m) { return (!m || m==="Desc") ? 0 : parseInt(m.split('/')[1])*100 + parseInt(m.split('/')[0]); }
 
         function descobreChave(obj, arrPossiveis) { for(let k of arrPossiveis) { if(obj.hasOwnProperty(k)) return k; } return null; }
 
@@ -357,13 +367,13 @@
             let kSt = null; if(dadosGlobais.length>0) kSt = descobreChave(dadosGlobais[0], colsStatus);
 
             dadosGlobais.forEach(d => { 
-                m.add(oMes(d['Data Abertura'])); 
+                m.add(obterMesAno(d['Data Abertura'])); 
                 if(d['Analista']) a.add(d['Analista']); if(d['Prioridade']) p.add(d['Prioridade']); 
                 if(d['Categoria']) ass.add(d['Categoria']); if(d['Tipo']) tp.add(d['Tipo']);
                 if(kSt && d[kSt]) st.add(d[kSt]);
             });
             
-            const mArr = Array.from(m).filter(x => x!=="Desc").sort((x,y) => cOrd(x) - cOrd(y));
+            const mArr = Array.from(m).filter(x => x!=="Desc").sort((x,y) => cvDtOrd(x) - cvDtOrd(y));
             preencherS('filtro-mes', mArr, "Todos"); preencherS('relatorio-mes', mArr, "Todos");
             preencherS('filtro-analista', Array.from(a).filter(x => equipeFocoStr.toLowerCase().includes(x.toLowerCase())).sort(), "Todos"); 
             preencherS('relatorio-analista', Array.from(a).filter(x => equipeFocoStr.toLowerCase().includes(x.toLowerCase())).sort(), "Todos");
@@ -372,6 +382,7 @@
             preencherS('filtro-assunto', Array.from(ass).sort(), "Todos");
             preencherS('filtro-tipo', Array.from(tp).sort(), "Todos");
         }
+        
         function preencherS(id, arr, def) { const s = document.getElementById(id); const at = s.value; s.innerHTML = `<option value="Todos">${def}</option>`; arr.forEach(i => { const op = document.createElement('option'); op.value = i; op.innerText = i; s.appendChild(op); }); if (arr.includes(at)) s.value = at; }
 
         ['filtro-mes', 'filtro-analista', 'filtro-prioridade', 'filtro-data-inicio', 'filtro-data-fim', 'filtro-status', 'filtro-assunto', 'filtro-tipo'].forEach(id => { document.getElementById(id).addEventListener('change', () => { tabelaPaginaAtual = 1; atualizarDashboard(); }); });
@@ -385,10 +396,14 @@
             const fS = document.getElementById('filtro-status').value, fAss = document.getElementById('filtro-assunto').value, fTp = document.getElementById('filtro-tipo').value;
             const dIn = document.getElementById('filtro-data-inicio').value, dFim = document.getElementById('filtro-data-fim').value;
 
-            let kSt = descobreChave(dadosGlobais[0], colsStatus); let kCsat = descobreChave(dadosGlobais[0], colsCSAT);
+            let kSt = null; let kCsat = null;
+            if(dadosGlobais.length > 0) {
+                kSt = descobreChave(dadosGlobais[0], colsStatus);
+                kCsat = descobreChave(dadosGlobais[0], colsCSAT);
+            }
 
             const filtrados = dadosGlobais.filter(d => {
-                let match = (fM === "Todos" || oMes(d['Data Abertura']) === fM) && (fA === "Todos" || d['Analista'] === fA) && (fP === "Todos" || d['Prioridade'] === fP) &&
+                let match = (fM === "Todos" || obterMesAno(d['Data Abertura']) === fM) && (fA === "Todos" || d['Analista'] === fA) && (fP === "Todos" || d['Prioridade'] === fP) &&
                             (fAss === "Todos" || d['Categoria'] === fAss) && (fTp === "Todos" || d['Tipo'] === fTp) && (!kSt || fS === "Todos" || d[kSt] === fS);
                 if(match && (dIn || dFim) && d['Data Abertura']) {
                     const n = parseInt(d['Data Abertura'].split(' ')[0].replace(/-/g, ''));
@@ -400,7 +415,7 @@
 
             const total = filtrados.length; document.getElementById('kpi-total').innerText = dadosGlobais.length; document.getElementById('kpi-filtrado').innerText = total;
             
-            const hT = total > 0 ? (filtrados.reduce((acc, d) => acc + pHoras(d['Tempo Solução']), 0) / total) : 0; tmaGlobalTexto = hT.toFixed(1); document.getElementById('kpi-tma').innerText = tmaGlobalTexto;
+            const hT = total > 0 ? (filtrados.reduce((acc, d) => acc + parseHoras(d['Tempo Solução']), 0) / total) : 0; tmaGlobalTexto = hT.toFixed(1); document.getElementById('kpi-tma').innerText = tmaGlobalTexto;
             const at = filtrados.filter(d => d['SLA Atendido'] === 'Sim').length; const inc = filtrados.filter(d => String(d['Tipo']).toLowerCase() === 'incidente').length;
             slaGlobalTexto = total > 0 ? ((at / total) * 100).toFixed(1) + '%' : '0%'; incGlobalTexto = total > 0 ? ((inc / total) * 100).toFixed(1) + '%' : '0%';
             document.getElementById('kpi-sla').innerText = slaGlobalTexto; document.getElementById('kpi-incidentes').innerText = incGlobalTexto;
@@ -412,14 +427,14 @@
             if(kSt && total > 0) {
                 const abertos = filtrados.filter(d => valAbertos.includes(String(d[kSt]).toLowerCase()));
                 if(abertos.length > 0) {
-                    const hj = new Date('2026-09-21T00:00:00'); // Data simulada base, substitua para new Date() em prod
+                    const hj = new Date(); // Usa a data real de hoje
                     let dias = 0;
                     abertos.forEach(d => { if(d['Data Abertura']) { const dtStr = d['Data Abertura'].split(' ')[0]; const dt = new Date(dtStr); const diff = (hj - dt) / (1000 * 60 * 60 * 24); dias += diff>0?diff:0; }});
                     document.getElementById('kpi-aging').innerText = (dias / abertos.length).toFixed(1);
                 } else { document.getElementById('kpi-aging').innerText = "0.0"; }
             } else { document.getElementById('kpi-aging').innerText = "N/A"; }
 
-            let dMes = agruparPor(filtrados, d => oMes(d['Data Abertura'])); const indOrd = dMes.labels.map((val, ind) => ({val, ind})).sort((a,b) => cvDtOrd(a.val) - cvDtOrd(b.val)); dMes.labels = indOrd.map(i => i.val); dMes.values = indOrd.map(i => dMes.values[i.ind]);
+            let dMes = agruparPor(filtrados, d => obterMesAno(d['Data Abertura'])); const indOrd = dMes.labels.map((val, ind) => ({val, ind})).sort((a,b) => cvDtOrd(a.val) - cvDtOrd(b.val)); dMes.labels = indOrd.map(i => i.val); dMes.values = indOrd.map(i => dMes.values[i.ind]);
             let dAnaBruto = agruparPor(filtrados, 'Analista'); let dAna = { labels: [], values: [] }; dAnaBruto.labels.forEach((l, i) => { if(equipeFocoStr.toLowerCase().includes(l.toLowerCase())) { dAna.labels.push(l); dAna.values.push(dAnaBruto.values[i]); } });
 
             const dAss = agruparPor(filtrados, 'Categoria', 15); const dReq = agruparPor(filtrados, 'Requerente', 10); const dTipo = agruparPor(filtrados, 'Tipo');
@@ -436,7 +451,7 @@
             rendSLA('chart-prioridade', {labels: arrP.map(i=>i.l), ok: prioSLA_Atendido, no: prioSLA_Estourado}, (l) => { document.getElementById('filtro-prioridade').value = l; tabelaPaginaAtual=1; atualizarDashboard(); });
             rendC('chart-tipo', 'pie', dTipo, coresTipo, (l) => { document.getElementById('filtro-tipo').value = l; tabelaPaginaAtual=1; atualizarDashboard(); });
 
-            desenharTabela();
+            desenharTabela(kSt, kCsat);
         }
 
         function agruparPor(dados, chave, limite=null) { const c = {}; dados.forEach(d => { const k = typeof chave==='function' ? chave(d) : d[chave]; if(k) c[k] = (c[k]||0)+1; }); let arr = Object.keys(c).map(k => ({ label: k, value: c[k] })).sort((a,b) => b.value - a.value); if(limite) arr = arr.slice(0, limite); return { labels: arr.map(i=>i.label), values: arr.map(i=>i.value) }; }
@@ -454,12 +469,10 @@
         function rendC(id, tipo, dAgr, mapCores, clk=null) { const ctx = document.getElementById(id).getContext('2d'); if (graficos[id]) graficos[id].destroy(); const bgC = dAgr.labels.map(l => mapCores[l] || '#9ca3af'); graficos[id] = new Chart(ctx, { type: tipo, data: { labels: dAgr.labels, datasets: [{ data: dAgr.values, backgroundColor: bgC, borderWidth: 1, borderColor: isDark?'#1f2937':'#fff' }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' }, datalabels: { display: false } }, onClick: (e, a) => { if(clk && a.length>0) clk(dAgr.labels[a[0].index]); }, onHover: (e, a) => { e.native.target.style.cursor = a[0] ? 'pointer' : 'default'; } } }); }
         function rendSLA(id, obj, clk=null) { const ctx = document.getElementById(id).getContext('2d'); if (graficos[id]) graficos[id].destroy(); graficos[id] = new Chart(ctx, { type: 'bar', data: { labels: obj.labels, datasets: [ { label: 'SLA Cumprido', data: obj.ok, backgroundColor: '#22c55e', borderRadius: 2 }, { label: 'SLA Violado', data: obj.no, backgroundColor: '#ef4444', borderRadius: 2 } ] }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true } }, plugins: { legend: { position: 'top', labels: { boxWidth: 12, font: {size: 10} } }, datalabels: { display: false } }, onClick: (e, a) => { if(clk && a.length>0) clk(obj.labels[a[0].index]); }, onHover: (e, a) => { e.native.target.style.cursor = a[0] ? 'pointer' : 'default'; } } }); }
 
-        function desenharTabela() {
+        function desenharTabela(kSt, kCsat) {
             const tbody = document.getElementById('tabela-corpo'); const total = dadosFiltradosCache.length; document.getElementById('txt-tabela-count').innerText = `Exibindo ${total} registros.`;
-            let kSt = null; if(dadosGlobais.length>0) kSt = descobreChave(dadosGlobais[0], colsStatus);
-            let kCsat = null; if(dadosGlobais.length>0) kCsat = descobreChave(dadosGlobais[0], colsCSAT);
             
-            if (total === 0) { tbody.innerHTML = '<tr><td colspan="7" class="px-4 py-8 text-center text-gray-500 font-semibold bg-gray-50 dark:bg-gray-800">Nenhum chamado.</td></tr>'; document.getElementById('paginacao-tabela').classList.add('hidden'); return; }
+            if (total === 0) { tbody.innerHTML = '<tr><td colspan="7" class="px-4 py-8 text-center text-gray-500 font-semibold bg-gray-50 dark:bg-gray-800">Nenhum chamado corresponde aos filtros.</td></tr>'; document.getElementById('paginacao-tabela').classList.add('hidden'); return; }
 
             const totalP = Math.ceil(total / tabelaItensPorPagina); if(tabelaPaginaAtual > totalP) tabelaPaginaAtual = totalP;
             const fatia = dadosFiltradosCache.slice((tabelaPaginaAtual - 1) * tabelaItensPorPagina, ((tabelaPaginaAtual - 1) * tabelaItensPorPagina) + tabelaItensPorPagina);
@@ -486,7 +499,7 @@
 
         document.getElementById('btn-gerar-excel').addEventListener('click', () => {
             const fM = document.getElementById('relatorio-mes').value; const fA = document.getElementById('relatorio-analista').value;
-            const dadosExp = dadosGlobais.filter(d => (fM === "Todos" || oMes(d['Data Abertura']) === fM) && (fA === "Todos" || d['Analista'] === fA));
+            const dadosExp = dadosGlobais.filter(d => (fM === "Todos" || obterMesAno(d['Data Abertura']) === fM) && (fA === "Todos" || d['Analista'] === fA));
             if(dadosExp.length === 0) return alert("Nenhum dado encontrado para exportar.");
             const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(dadosExp), "Relatorio"); XLSX.writeFile(wb, `Base_Extraida.xlsx`);
         });
@@ -509,7 +522,7 @@
                     try { const urlLogo = 'https://raw.githubusercontent.com/AlbertBarros/dashbord-chamados-suporte-setic/main/bras%C3%A3o.png.png'; doc.addImage(urlLogo, 'PNG', 40, 20, 40, 40); } catch(e) {}
 
                     doc.setTextColor(26, 25, 65); doc.setFontSize(12); doc.text("Resumo Executivo", 40, 125); doc.setTextColor(60, 60, 60); doc.setFontSize(10); doc.setFont("helvetica", "normal");
-                    const mesesUnicos = new Set(dadosExp.map(d => oMes(d['Data Abertura']))).size || 1; const mediaMes = Math.round(dadosExp.length / mesesUnicos);
+                    const mesesUnicos = new Set(dadosExp.map(d => obterMesAno(d['Data Abertura']))).size || 1; const mediaMes = Math.round(dadosExp.length / mesesUnicos);
                     doc.text(doc.splitTextToSize(`Documento gerado em ${new Date().toLocaleDateString('pt-BR')} (Filtro Aplicado: Mês ${fM} | Analista: ${fA}). O período processou um total de ${dadosExp.length} tickets (média de ${mediaMes} chamados/mês). A eficiência registrou um TMA de ${tmaGlobalTexto}H, garantindo que ${slaGlobalTexto} das demandas fossem solucionadas no prazo. A taxa de incidentes correspondeu a ${incGlobalTexto}.`, w - 80), 40, 145);
                     
                     doc.setFillColor(245, 247, 250); doc.rect(40, 195, 160, 50, 'F'); doc.rect(215, 195, 160, 50, 'F'); doc.rect(390, 195, 160, 50, 'F');
