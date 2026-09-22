@@ -7,18 +7,15 @@
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        // Habilita o suporte a Dark Mode no Tailwind
         tailwind.config = { darkMode: 'class' }
     </script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     
-    <!-- Excel & PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     
-    <!-- Ícones FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
@@ -134,7 +131,7 @@
 
     </main>
 
-    <!-- Modal Ferramentas -->
+    <!-- Modal -->
     <div id="modal-config" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-2xl w-full max-w-2xl flex flex-col max-h-[90vh]">
             <div class="flex justify-between items-center p-5 border-b dark:border-gray-700 bg-gray-50 dark:bg-gray-900 rounded-t-lg">
@@ -158,6 +155,11 @@
                     </label>
                     <div id="loader-upload" class="mt-4 flex items-center justify-center gap-2 text-sm font-semibold text-[#1a1941] dark:text-indigo-300 hidden">
                         <div class="loader !border-t-current !border-4 !w-5 !h-5 inline-block"></div> Gravando no Firebase...
+                    </div>
+                    <div class="mt-6 text-center border-t dark:border-gray-700 pt-4">
+                        <button id="btn-carregar-historico" class="bg-gray-800 dark:bg-gray-600 hover:bg-black text-white px-4 py-2 rounded text-sm font-semibold transition shadow-sm">
+                            <i class="fa-solid fa-database"></i> Carregar Histórico Completo
+                        </button>
                     </div>
                 </div>
 
@@ -185,12 +187,13 @@
                     <div class="bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-800 p-4 rounded mb-5">
                         <h4 class="font-bold text-indigo-800 dark:text-indigo-300 text-sm mb-2"><i class="fa-solid fa-file-signature"></i> Geração de Relatório Oficial</h4>
                         <div class="grid grid-cols-2 gap-4">
-                            <!-- LISTA DE SELEÇÃO MÚLTIPLA ADICIONADA AQUI -->
+                            <!-- NOVA CAIXA DE SELEÇÃO MULTIPLA POR CHECKBOX -->
                             <div>
-                                <label class="block text-xs font-bold text-indigo-900 dark:text-indigo-200 uppercase mb-1">Meses <span class="text-[9px] font-normal lowercase">(Segure CTRL)</span></label>
-                                <select id="relatorio-mes" multiple class="w-full border dark:border-gray-600 rounded p-2 text-sm bg-white dark:bg-gray-700 h-20 scrollbar-thin">
-                                    <option value="Todos" selected>Global</option>
-                                </select>
+                                <label class="block text-xs font-bold text-indigo-900 dark:text-indigo-200 uppercase mb-1">Meses (Múltipla Seleção)</label>
+                                <div id="relatorio-mes-container" class="w-full border dark:border-gray-600 rounded p-2 text-sm bg-white dark:bg-gray-700 h-24 overflow-y-auto flex flex-col gap-2 shadow-inner">
+                                    <!-- Checkboxes renderizados via Javascript -->
+                                    <label class="flex items-center gap-2 cursor-pointer text-gray-700 dark:text-gray-200"><input type="checkbox" value="Todos" checked class="accent-indigo-600 w-4 h-4"> <span>Global (Todos)</span></label>
+                                </div>
                             </div>
                             <div>
                                 <label class="block text-xs font-bold text-indigo-900 dark:text-indigo-200 uppercase mb-1">Analista</label>
@@ -264,6 +267,7 @@
         let app, db; try { app = initializeApp(firebaseConfig); db = getFirestore(app); } catch (e) { console.error(e); }
 
         let dadosGlobais = []; let dadosFiltradosCache = []; let mesesRelatorioOverride = null;
+        let historicoCompletoCarregado = false;
         let corPrincipal = localStorage.getItem('dashCor') || '#1a1941';
         let equipeFocoStr = localStorage.getItem('equipeFoco') || 'fabio.palma.prestador, edison.neto.prestador, antonio.muniz.prestador, jose.andrade.prestador';
         let graficos = {}; let tabelaPaginaAtual = 1; const tabelaItensPorPagina = 50;
@@ -309,24 +313,33 @@
 
         function definirStatus(bHtml, cClasse) { const b = document.getElementById('badge-status'); b.className = `text-xs font-bold px-2 py-1 ${cClasse} rounded text-white shadow ml-2`; b.innerHTML = bHtml; b.classList.remove('hidden'); }
 
-        async function carregarDadosNuvem() {
+        async function carregarDadosNuvem(forcarCompleto = false) {
             if(!db) { definirStatus('<i class="fa-solid fa-xmark"></i> Erro DB', 'bg-red-600'); return; }
             try {
                 const q = await getDocs(collection(db, "chamados")); dadosGlobais = [];
                 q.forEach((doc) => { 
                     const d = doc.data(); 
                     const dS = String(d['Data Abertura'] || d['Ticket'] || ""); 
-                    // FILTRO ESTRITO PARA IGNORAR 2025 E MANTER APENAS 2026
-                    if (dS.includes('2026') || dS.includes('/26')) {
+                    if (forcarCompleto || dS.includes('2026') || dS.includes('/26')) {
                         dadosGlobais.push(d); 
                     }
                 });
                 if(dadosGlobais.length > 0) {
                     definirStatus('<i class="fa-solid fa-check-circle"></i> Sincronizado', 'bg-green-500');
+                    document.getElementById('tag-ano-atual').innerText = forcarCompleto ? "Visualizando: Histórico Completo" : "Visualizando: 2026";
                     preencherFiltros(); atualizarDashboard();
                 } else { definirStatus('<i class="fa-solid fa-triangle-exclamation"></i> Vazio', 'bg-red-500'); } 
+                historicoCompletoCarregado = forcarCompleto;
             } catch (e) { definirStatus('<i class="fa-solid fa-xmark"></i> Erro', 'bg-red-600'); console.error(e); }
         }
+
+        document.getElementById('btn-carregar-historico').addEventListener('click', () => { 
+            document.getElementById('btn-carregar-historico').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Carregando...'; 
+            carregarDadosNuvem(true).then(() => { 
+                document.getElementById('btn-carregar-historico').innerHTML = '<i class="fa-solid fa-check"></i> Concluído'; 
+                setTimeout(() => modal.classList.add('hidden'), 1000); 
+            }); 
+        });
 
         document.getElementById('file-upload').addEventListener('change', (e) => {
             const file = e.target.files[0]; if (!file) return; document.getElementById('loader-upload').classList.remove('hidden');
@@ -336,7 +349,7 @@
                     const ba = [writeBatch(db)]; let c = 0, b = 0;
                     rows.forEach(r => { if(r.Ticket) { ba[b].set(doc(db, "chamados", String(r.Ticket)), r); c++; if (c === 490) { ba.push(writeBatch(db)); b++; c = 0; } } });
                     for (const batch of ba) await batch.commit();
-                    document.getElementById('loader-upload').classList.add('hidden'); e.target.value = ""; await carregarDadosNuvem(); 
+                    document.getElementById('loader-upload').classList.add('hidden'); e.target.value = ""; await carregarDadosNuvem(historicoCompletoCarregado); 
                 } catch (err) { document.getElementById('loader-upload').classList.add('hidden'); }
             }; reader.readAsArrayBuffer(file);
         });
@@ -352,6 +365,28 @@
         function obterMesAno(str) { if (str && str.includes('-')) { const p = str.split(' ')[0].split('-'); if(p.length >= 2) return `${p[1]}/${p[0]}`; } return "Desc"; }
         function cvDtOrd(m) { return (!m || m==="Desc") ? 0 : parseInt(m.split('/')[1])*100 + parseInt(m.split('/')[0]); }
 
+        function preencherCheckboxes(id, arr) {
+            const container = document.getElementById(id);
+            const checkedValues = Array.from(container.querySelectorAll('input:checked')).map(cb => cb.value);
+            const selected = checkedValues.length > 0 ? checkedValues : ["Todos"];
+
+            container.innerHTML = `<label class="flex items-center gap-2 cursor-pointer text-gray-700 dark:text-gray-200"><input type="checkbox" value="Todos" ${selected.includes("Todos") ? "checked" : ""} class="accent-indigo-600 w-4 h-4"> <span>Global (Todos)</span></label>`;
+            arr.forEach(i => { 
+                container.innerHTML += `<label class="flex items-center gap-2 cursor-pointer text-gray-700 dark:text-gray-200"><input type="checkbox" value="${i}" ${selected.includes(i) ? "checked" : ""} class="accent-indigo-600 w-4 h-4"> <span>${i}</span></label>`; 
+            });
+
+            const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(cb => {
+                cb.addEventListener('change', function() {
+                    if(this.value === 'Todos' && this.checked) {
+                        checkboxes.forEach(c => { if(c !== this) c.checked = false; });
+                    } else if(this.checked) {
+                        checkboxes[0].checked = false; 
+                    }
+                });
+            });
+        }
+
         function preencherFiltros() {
             const m = new Set(), a = new Set(), p = new Set(), ass = new Set(), tp = new Set();
             dadosGlobais.forEach(d => { 
@@ -361,7 +396,9 @@
             });
             
             const mArr = Array.from(m).filter(x => x!=="Desc").sort((x,y) => cvDtOrd(x) - cvDtOrd(y));
-            preencherS('filtro-mes', mArr, "Todos"); preencherS('relatorio-mes', mArr, "Todos");
+            preencherS('filtro-mes', mArr, "Todos"); 
+            preencherCheckboxes('relatorio-mes-container', mArr); // Novo Checkbox Relatórios
+            
             preencherS('filtro-analista', Array.from(a).filter(x => equipeFocoStr.toLowerCase().includes(x.toLowerCase())).sort(), "Todos"); 
             preencherS('relatorio-analista', Array.from(a).filter(x => equipeFocoStr.toLowerCase().includes(x.toLowerCase())).sort(), "Todos");
             preencherS('filtro-prioridade', Array.from(p).sort(), "Todas");
@@ -370,19 +407,7 @@
         }
         
         function preencherS(id, arr, def) { 
-            const s = document.getElementById(id); 
-            const isMulti = s.hasAttribute('multiple');
-            let sel = isMulti ? Array.from(s.selectedOptions).map(o => o.value) : [s.value];
-            if(sel.length === 0 || (sel.length === 1 && sel[0] === "")) sel = ["Todos"];
-            
-            s.innerHTML = `<option value="Todos">${def}</option>`; 
-            arr.forEach(i => { const op = document.createElement('option'); op.value = i; op.innerText = i; s.appendChild(op); }); 
-            
-            if(isMulti) {
-                Array.from(s.options).forEach(o => { if(sel.includes(o.value)) o.selected = true; });
-            } else {
-                if (arr.includes(sel[0]) || sel[0] === "Todos") s.value = sel[0];
-            }
+            const s = document.getElementById(id); const at = s.value; s.innerHTML = `<option value="Todos">${def}</option>`; arr.forEach(i => { const op = document.createElement('option'); op.value = i; op.innerText = i; s.appendChild(op); }); if (arr.includes(at)) s.value = at; 
         }
 
         ['filtro-mes', 'filtro-analista', 'filtro-prioridade', 'filtro-data-inicio', 'filtro-data-fim', 'filtro-assunto', 'filtro-tipo'].forEach(id => { document.getElementById(id).addEventListener('change', () => { tabelaPaginaAtual = 1; atualizarDashboard(); }); });
@@ -394,7 +419,7 @@
             if (dadosGlobais.length === 0) return desenharTabela();
             
             const fM_single = document.getElementById('filtro-mes').value;
-            const fM_array = mesesRelatorioOverride || [fM_single]; // Suporte a múltiplos meses invisível para a tela principal
+            const fM_array = mesesRelatorioOverride || [fM_single]; 
             
             const fA = document.getElementById('filtro-analista').value;
             const fP = document.getElementById('filtro-prioridade').value;
@@ -434,7 +459,6 @@
             let prioSLA_Atendido = []; let prioSLA_Estourado = [];
             arrP.forEach(item => { const noPrazo = filtrados.filter(d => d['Prioridade'] === item.l && d['SLA Atendido'] === 'Sim').length; prioSLA_Atendido.push(noPrazo); prioSLA_Estourado.push(item.v - noPrazo); });
 
-            // CROSS FILTERING CLICKS
             rend('chart-meses', 'line', dMes, corPrincipal, false, false, (l) => { document.getElementById('filtro-mes').value = l; tabelaPaginaAtual=1; atualizarDashboard(); });
             rend('chart-analistas', 'bar', dAna, corPrincipal, false, true, (l) => { document.getElementById('filtro-analista').value = l; tabelaPaginaAtual=1; atualizarDashboard(); });
             rendM('chart-assuntos', 'bar', dAss, paletaAssuntos, true, (l) => { document.getElementById('filtro-assunto').value = l; tabelaPaginaAtual=1; atualizarDashboard(); });
@@ -487,8 +511,8 @@
         }
 
         document.getElementById('btn-gerar-excel').addEventListener('click', () => {
-            const relatorioMesSelect = document.getElementById('relatorio-mes');
-            const fM_array = Array.from(relatorioMesSelect.selectedOptions).map(o => o.value);
+            const checkboxes = document.querySelectorAll('#relatorio-mes-container input:checked');
+            const fM_array = Array.from(checkboxes).map(cb => cb.value);
             if(fM_array.length === 0) fM_array.push("Todos");
             
             const fA = document.getElementById('relatorio-analista').value;
@@ -502,15 +526,14 @@
         });
 
         document.getElementById('btn-gerar-pdf').addEventListener('click', () => {
-            const relatorioMesSelect = document.getElementById('relatorio-mes');
-            const fM_array = Array.from(relatorioMesSelect.selectedOptions).map(o => o.value);
+            const checkboxes = document.querySelectorAll('#relatorio-mes-container input:checked');
+            const fM_array = Array.from(checkboxes).map(cb => cb.value);
             if(fM_array.length === 0) fM_array.push("Todos");
             const fM_text = fM_array.includes("Todos") ? "Todos" : fM_array.join(', ');
             
             const fA = document.getElementById('relatorio-analista').value;
             const btn = document.getElementById('btn-gerar-pdf'); const conteudoOriginal = btn.innerHTML; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xl"></i> <div><p class="text-sm">A processar...</p></div>'; btn.disabled = true;
             
-            // Ativa os filtros sobrepostos
             mesesRelatorioOverride = fM_array;
             document.getElementById('filtro-analista').value = fA; 
             document.getElementById('filtro-prioridade').value = 'Todos'; 
@@ -530,7 +553,6 @@
                     doc.setFontSize(14); doc.setFont("helvetica", "bold"); doc.text("MINISTÉRIO DA JUSTIÇA E SEGURANÇA PÚBLICA", 40, 32);
                     doc.setFontSize(9.5); doc.setFont("helvetica", "normal"); doc.text("Polícia Rodoviária Federal - Diretoria de Tecnologia da Informação e Comunicação (DTIC)", 40, 52);
                     
-                    // NOME DO RELATÓRIO ATUALIZADO
                     doc.setFontSize(10.5); doc.setFont("helvetica", "bold"); doc.text("Relatório Gerencial Analítico - Suporte N2 - Serviço de Pronto Atendimento (SETIC)", 40, 74);
                     
                     try { const urlLogo = 'https://raw.githubusercontent.com/AlbertBarros/dashbord-chamados-suporte-setic/main/bras%C3%A3o.png.png'; doc.addImage(urlLogo, 'PNG', 40, 20, 40, 40); } catch(e) {}
@@ -574,11 +596,8 @@
                     doc.autoTable({ startY: 55, head: [["Ticket", "Abertura", "Analista", "Assunto", "Prioridade", "SLA Ok?"]], body: linhas, theme: 'striped', headStyles: { fillColor: [26, 25, 65] }, styles: { fontSize: 8 }, alternateRowStyles: { fillColor: [247, 248, 250] }, margin: { top: 30, right: 40, bottom: 40, left: 40 }, didDrawPage: function (dt) { doc.setFontSize(8); doc.setTextColor(150, 150, 150); doc.text(`Página ${doc.internal.getNumberOfPages()}`, w/2, doc.internal.pageSize.height - 20, {align:'center'}); } });
                     doc.save(`Relatorio_Oficial_SETIC.pdf`);
                 } catch (err) { alert("Erro ao gerar PDF."); } finally { 
-                    btn.innerHTML = conteudoOriginal; 
-                    btn.disabled = false; 
-                    // Limpa o override após a geração
-                    mesesRelatorioOverride = null;
-                    atualizarDashboard();
+                    btn.innerHTML = conteudoOriginal; btn.disabled = false; 
+                    mesesRelatorioOverride = null; atualizarDashboard();
                 }
             }, 800); 
         });
