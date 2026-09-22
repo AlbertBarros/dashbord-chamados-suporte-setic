@@ -78,7 +78,7 @@
         </div>
 
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
-            <div class="card bg-white dark:bg-gray-800 flex items-center gap-4" title="Volume total na base."><div class="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 dark:text-blue-400 text-xl"><i class="fa-solid fa-ticket"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">Total (2026)</p><p id="kpi-total" class="text-2xl font-black text-gray-800 dark:text-gray-100">0</p></div></div>
+            <div class="card bg-white dark:bg-gray-800 flex items-center gap-4" title="Volume total na base."><div class="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 dark:text-blue-400 text-xl"><i class="fa-solid fa-ticket"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">Total (Geral)</p><p id="kpi-total" class="text-2xl font-black text-gray-800 dark:text-gray-100">0</p></div></div>
             <div class="card bg-white dark:bg-gray-800 flex items-center gap-4" title="Volume filtrado."><div class="w-12 h-12 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400 text-xl"><i class="fa-solid fa-filter"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">Filtrados</p><p id="kpi-filtrado" class="text-2xl font-black text-gray-800 dark:text-gray-100">0</p></div></div>
             <div class="card bg-white dark:bg-gray-800 flex items-center gap-4" title="Tempo Médio."><div class="w-12 h-12 rounded-full bg-yellow-100 dark:bg-yellow-900/50 flex items-center justify-center text-yellow-600 dark:text-yellow-400 text-xl"><i class="fa-regular fa-clock"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">TMA (Horas)</p><p id="kpi-tma" class="text-2xl font-black text-gray-800 dark:text-gray-100">0.0h</p></div></div>
             <div class="card bg-white dark:bg-gray-800 flex items-center gap-4" title="No prazo."><div class="w-12 h-12 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center text-green-500 dark:text-green-400 text-xl"><i class="fa-solid fa-stopwatch"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">SLA Atendido</p><p id="kpi-sla" class="text-2xl font-black text-gray-800 dark:text-gray-100">0%</p></div></div>
@@ -187,11 +187,9 @@
                     <div class="bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-800 p-4 rounded mb-5">
                         <h4 class="font-bold text-indigo-800 dark:text-indigo-300 text-sm mb-2"><i class="fa-solid fa-file-signature"></i> Geração de Relatório Oficial</h4>
                         <div class="grid grid-cols-2 gap-4">
-                            <!-- NOVA CAIXA DE SELEÇÃO MULTIPLA POR CHECKBOX -->
                             <div>
                                 <label class="block text-xs font-bold text-indigo-900 dark:text-indigo-200 uppercase mb-1">Meses (Múltipla Seleção)</label>
                                 <div id="relatorio-mes-container" class="w-full border dark:border-gray-600 rounded p-2 text-sm bg-white dark:bg-gray-700 h-24 overflow-y-auto flex flex-col gap-2 shadow-inner">
-                                    <!-- Checkboxes renderizados via Javascript -->
                                     <label class="flex items-center gap-2 cursor-pointer text-gray-700 dark:text-gray-200"><input type="checkbox" value="Todos" checked class="accent-indigo-600 w-4 h-4"> <span>Global (Todos)</span></label>
                                 </div>
                             </div>
@@ -229,6 +227,7 @@
         </div>
     </div>
 
+    <!-- Scripts -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
         import { getFirestore, collection, getDocs, doc, writeBatch } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
@@ -397,7 +396,7 @@
             
             const mArr = Array.from(m).filter(x => x!=="Desc").sort((x,y) => cvDtOrd(x) - cvDtOrd(y));
             preencherS('filtro-mes', mArr, "Todos"); 
-            preencherCheckboxes('relatorio-mes-container', mArr); // Novo Checkbox Relatórios
+            preencherCheckboxes('relatorio-mes-container', mArr); 
             
             preencherS('filtro-analista', Array.from(a).filter(x => equipeFocoStr.toLowerCase().includes(x.toLowerCase())).sort(), "Todos"); 
             preencherS('relatorio-analista', Array.from(a).filter(x => equipeFocoStr.toLowerCase().includes(x.toLowerCase())).sort(), "Todos");
@@ -406,9 +405,7 @@
             preencherS('filtro-tipo', Array.from(tp).sort(), "Todos");
         }
         
-        function preencherS(id, arr, def) { 
-            const s = document.getElementById(id); const at = s.value; s.innerHTML = `<option value="Todos">${def}</option>`; arr.forEach(i => { const op = document.createElement('option'); op.value = i; op.innerText = i; s.appendChild(op); }); if (arr.includes(at)) s.value = at; 
-        }
+        function preencherS(id, arr, def) { const s = document.getElementById(id); const at = s.value; s.innerHTML = `<option value="Todos">${def}</option>`; arr.forEach(i => { const op = document.createElement('option'); op.value = i; op.innerText = i; s.appendChild(op); }); if (arr.includes(at)) s.value = at; }
 
         ['filtro-mes', 'filtro-analista', 'filtro-prioridade', 'filtro-data-inicio', 'filtro-data-fim', 'filtro-assunto', 'filtro-tipo'].forEach(id => { document.getElementById(id).addEventListener('change', () => { tabelaPaginaAtual = 1; atualizarDashboard(); }); });
         document.getElementById('btn-limpar-filtros').addEventListener('click', () => { ['filtro-mes', 'filtro-analista', 'filtro-prioridade', 'filtro-data-inicio', 'filtro-data-fim', 'filtro-assunto', 'filtro-tipo'].forEach(i => document.getElementById(i).value = i.includes('data') ? "" : "Todos"); tabelaPaginaAtual = 1; atualizarDashboard(); });
@@ -552,44 +549,59 @@
                     
                     doc.setFontSize(14); doc.setFont("helvetica", "bold"); doc.text("MINISTÉRIO DA JUSTIÇA E SEGURANÇA PÚBLICA", 40, 32);
                     doc.setFontSize(9.5); doc.setFont("helvetica", "normal"); doc.text("Polícia Rodoviária Federal - Diretoria de Tecnologia da Informação e Comunicação (DTIC)", 40, 52);
-                    
                     doc.setFontSize(10.5); doc.setFont("helvetica", "bold"); doc.text("Relatório Gerencial Analítico - Suporte N2 - Serviço de Pronto Atendimento (SETIC)", 40, 74);
                     
-                    try { const urlLogo = 'https://raw.githubusercontent.com/AlbertBarros/dashbord-chamados-suporte-setic/main/bras%C3%A3o.png.png'; doc.addImage(urlLogo, 'PNG', 40, 20, 40, 40); } catch(e) {}
+                    // LOGO POSICIONADA NO CANTO DIREITO DO CABEÇALHO
+                    try { 
+                        const urlLogo = 'https://raw.githubusercontent.com/AlbertBarros/dashbord-chamados-suporte-setic/main/bras%C3%A3o.png.png'; 
+                        doc.addImage(urlLogo, 'PNG', w - 80, 20, 40, 40); 
+                    } catch(e) {}
 
-                    doc.setTextColor(26, 25, 65); doc.setFontSize(12); doc.text("Resumo Executivo", 40, 125); doc.setTextColor(60, 60, 60); doc.setFontSize(10); doc.setFont("helvetica", "normal");
+                    // DATA E HORA DA GERAÇÃO
+                    const agora = new Date();
+                    const dataForm = agora.toLocaleDateString('pt-BR');
+                    const horaForm = agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+                    // SUBTÍTULO: Parâmetros da Extração
+                    doc.setTextColor(26, 25, 65); doc.setFontSize(11); doc.setFont("helvetica", "bold"); doc.text("Parâmetros da Extração", 40, 115);
+                    doc.setTextColor(100, 100, 100); doc.setFontSize(9); doc.setFont("helvetica", "normal");
+                    doc.text(`Documento gerado em ${dataForm} às ${horaForm} (Filtro Aplicado: Meses ${fM_text} | Analista: ${fA}).`, 40, 130);
+
+                    // RESUMO EXECUTIVO
+                    doc.setTextColor(26, 25, 65); doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.text("Resumo Executivo", 40, 155);
+                    doc.setTextColor(60, 60, 60); doc.setFontSize(10); doc.setFont("helvetica", "normal");
+                    doc.text(doc.splitTextToSize(`O período processou um total de ${dadosExp.length} tickets. A eficiência registrou um TMA de ${tmaGlobalTexto}, garantindo que ${slaGlobalTexto} das demandas fossem solucionadas no prazo. A taxa de incidentes correspondeu a ${incGlobalTexto}.`, w - 80), 40, 170);
                     
                     const mesesUnicos = new Set(dadosExp.map(d => obterMesAno(d['Data Abertura']))).size || 1; 
                     const mediaMes = Math.round(dadosExp.length / mesesUnicos);
                     
-                    doc.text(doc.splitTextToSize(`Documento gerado em ${new Date().toLocaleDateString('pt-BR')} (Filtro Aplicado: Meses ${fM_text} | Analista: ${fA}). O período processou um total de ${dadosExp.length} tickets. A eficiência registrou um TMA de ${tmaGlobalTexto}, garantindo que ${slaGlobalTexto} das demandas fossem solucionadas no prazo. A taxa de incidentes correspondeu a ${incGlobalTexto}.`, w - 80), 40, 145);
-                    
+                    // 4 CAIXAS DE KPI NO PDF
                     doc.setFillColor(245, 247, 250); 
-                    doc.rect(40, 195, 120, 50, 'F');
-                    doc.rect(171, 195, 120, 50, 'F');
-                    doc.rect(302, 195, 120, 50, 'F');
-                    doc.rect(433, 195, 120, 50, 'F');
+                    doc.rect(40, 210, 120, 50, 'F');
+                    doc.rect(171, 210, 120, 50, 'F');
+                    doc.rect(302, 210, 120, 50, 'F');
+                    doc.rect(433, 210, 120, 50, 'F');
 
                     doc.setFontSize(8); doc.setTextColor(120, 120, 120); doc.setFont("helvetica", "bold"); 
-                    doc.text("VOLUME TOTAL", 100, 215, {align: 'center'}); 
-                    doc.text("MÉDIA / MÊS", 231, 215, {align: 'center'}); 
-                    doc.text("TMA (HORAS)", 362, 215, {align: 'center'}); 
-                    doc.text("SLA ATENDIDO", 493, 215, {align: 'center'});
+                    doc.text("VOLUME TOTAL", 100, 230, {align: 'center'}); 
+                    doc.text("MÉDIA / MÊS", 231, 230, {align: 'center'}); 
+                    doc.text("TMA (HORAS)", 362, 230, {align: 'center'}); 
+                    doc.text("SLA ATENDIDO", 493, 230, {align: 'center'});
                     
                     doc.setFontSize(16); doc.setTextColor(26, 25, 65); 
-                    doc.text(String(dadosExp.length), 100, 235, {align: 'center'}); 
-                    doc.text(String(mediaMes), 231, 235, {align: 'center'}); 
-                    doc.text(String(tmaGlobalTexto), 362, 235, {align: 'center'}); 
+                    doc.text(String(dadosExp.length), 100, 250, {align: 'center'}); 
+                    doc.text(String(mediaMes), 231, 250, {align: 'center'}); 
+                    doc.text(String(tmaGlobalTexto), 362, 250, {align: 'center'}); 
                     doc.setTextColor(22, 163, 74); 
-                    doc.text(String(slaGlobalTexto), 493, 235, {align: 'center'});
+                    doc.text(String(slaGlobalTexto), 493, 250, {align: 'center'});
 
-                    doc.setFontSize(12); doc.setTextColor(26, 25, 65); doc.text("Análise Visual", 40, 275); doc.setFontSize(9); doc.setTextColor(100, 100, 100);
+                    doc.setFontSize(12); doc.setTextColor(26, 25, 65); doc.text("Análise Visual", 40, 290); doc.setFontSize(9); doc.setTextColor(100, 100, 100);
                     const getImg = (id) => { try { const c = document.getElementById(id); return c ? c.toDataURL('image/jpeg', 1.0) : null; } catch(e) { return null; } };
                     
-                    doc.text("Evolução Histórica", 40, 295); const i1 = getImg('chart-meses'); if(i1) doc.addImage(i1, 'JPEG', 40, 300, 240, 130);
-                    doc.text("Volume Foco", 305, 295); const i2 = getImg('chart-analistas'); if(i2) doc.addImage(i2, 'JPEG', 305, 300, 240, 130);
-                    doc.text("Assuntos Top 15", 40, 450); const i3 = getImg('chart-assuntos'); if(i3) doc.addImage(i3, 'JPEG', 40, 455, 240, 130);
-                    doc.text("SLA vs Criticidade", 305, 450); const i4 = getImg('chart-prioridade'); if(i4) doc.addImage(i4, 'JPEG', 305, 455, 240, 130);
+                    doc.text("Evolução Histórica", 40, 310); const i1 = getImg('chart-meses'); if(i1) doc.addImage(i1, 'JPEG', 40, 315, 240, 130);
+                    doc.text("Volume Foco", 305, 310); const i2 = getImg('chart-analistas'); if(i2) doc.addImage(i2, 'JPEG', 305, 315, 240, 130);
+                    doc.text("Assuntos Top 15", 40, 465); const i3 = getImg('chart-assuntos'); if(i3) doc.addImage(i3, 'JPEG', 40, 470, 240, 130);
+                    doc.text("SLA vs Criticidade", 305, 465); const i4 = getImg('chart-prioridade'); if(i4) doc.addImage(i4, 'JPEG', 305, 470, 240, 130);
 
                     doc.addPage(); doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.setTextColor(26, 25, 65); doc.text("Detalhamento dos Chamados Extraídos", 40, 40);
                     const linhas = dadosExp.map(d => [ String(d['Ticket']||'-'), String((d['Data Abertura']||'').split(' ')[0]), String((d['Analista']||'-').split('.')[0]), String((d['Assunto']||'').substring(0, 35)), String(d['Prioridade']||'-'), String(d['SLA Atendido']||'-') ]);
