@@ -678,7 +678,7 @@
         });
 
         // ==========================================
-        // AUDITORIA E FISCALIZAÇÃO IMR (CORREÇÃO DE TEXTO E CICLO CORRETO)
+        // AUDITORIA E FISCALIZAÇÃO IMR
         // ==========================================
         document.getElementById('btn-gerar-fiscal-pdf').addEventListener('click', () => {
             const mesSelecionado = document.getElementById('fiscal-mes').value;
@@ -890,7 +890,7 @@
                     });
 
                     // ==========================================
-                    // CONCLUSÃO DE GLOSA (CORREÇÃO DE TEXTO FLUIDO SEGURO)
+                    // CONCLUSÃO DE GLOSA (TEXTO FLUIDO SEGURO COM NEGRITO)
                     // ==========================================
                     const finalY = doc.lastAutoTable.finalY + 30;
                     doc.setTextColor(26, 25, 65); doc.setFontSize(12); doc.setFont("helvetica", "bold"); 
@@ -900,14 +900,22 @@
                     doc.setFontSize(10); doc.setTextColor(60, 60, 60);
 
                     if (totalPontosGlosa === 0) {
-                        doc.text("Após análise rigorosa dos índices apresentados no período aferido, atesta-se que a empresa cumpriu com", 40, posY);
-                        doc.text("todos os Níveis Mínimos de Serviços (NMS) previstos contratualmente. Portanto,", 40, posY + 14);
-                        
-                        doc.setFont("helvetica", "bold");
-                        doc.text("NÃO SERÁ APLICADA GLOSA", 324, posY + 14);
+                        const l1 = "Após análise rigorosa dos índices apresentados no período aferido, atesta-se que a empresa cumpriu com";
+                        const l2 = "todos os Níveis Mínimos de Serviços (NMS) previstos contratualmente. Portanto, ";
+                        const lBold = "NÃO SERÁ APLICADA GLOSA";
+                        const l3 = " (0 pontos computados), devendo o faturamento prosseguir em sua integralidade.";
                         
                         doc.setFont("helvetica", "normal");
-                        doc.text("(0 pontos computados), devendo o faturamento prosseguir em sua integralidade.", 463, posY + 14);
+                        doc.text(l1, 40, posY);
+                        doc.text(l2, 40, posY + 14);
+                        
+                        const wL2 = doc.getTextWidth(l2);
+                        doc.setFont("helvetica", "bold");
+                        doc.text(lBold, 40 + wL2, posY + 14);
+                        
+                        const wBold = doc.getTextWidth(lBold);
+                        doc.setFont("helvetica", "normal");
+                        doc.text(l3, 40 + wL2 + wBold, posY + 14);
                     } else {
                         doc.text(`Após análise dos índices no período aferido, constatou-se descumprimento de NMS.`, 40, posY);
                         doc.setFont("helvetica", "bold");
@@ -954,7 +962,6 @@
             return "Desc";
         }
 
-        // ORDENAÇÃO CRONOLÓGICA CORRETA PARA O DROPDOWN (Ano * 100 + Mês)
         function cvDtOrd(m) { 
             if (!m || m === "Desc") return 0; 
             const parts = m.split('/');
@@ -991,16 +998,19 @@
             const m = new Set(), mFiscal = new Set(), a = new Set(), p = new Set(), ass = new Set(), tp = new Set();
             
             dadosGlobais.forEach(d => { 
-                const dataAlvo = d['Data Encerramento'] || d['Data Solução'] || d['Data Abertura'];
+                const dataAbertura = d['Data Abertura'];
+                const dataEncerramento = d['Data Encerramento'] || d['Data Solução'] || dataAbertura;
                 
-                m.add(obterMesAno(dataAlvo)); 
-                mFiscal.add(obterMesAnoFiscal(dataAlvo)); 
+                m.add(obterMesAno(dataEncerramento)); 
+                
+                // CORREÇÃO DEFINITIVA: Varre abrangentemente tanto Abertura quanto Encerramento para carregar todos os meses da base (como 07/2026 e 08/2026)
+                if(dataEncerramento) mFiscal.add(obterMesAnoFiscal(dataEncerramento));
+                if(dataAbertura) mFiscal.add(obterMesAnoFiscal(dataAbertura));
                 
                 if(d['Analista']) a.add(d['Analista']); if(d['Prioridade']) p.add(d['Prioridade']); 
                 if(d['Categoria']) ass.add(d['Categoria']); if(d['Tipo']) tp.add(d['Tipo']);
             });
             
-            // Correção: Garante que os meses (incluindo 07/2026) sejam computados e ordenados corretamente
             const mArr = Array.from(m).filter(x => x!=="Desc").sort((x,y) => cvDtOrd(x) - cvDtOrd(y));
             const mFiscalArr = Array.from(mFiscal).filter(x => x!=="Desc").sort((x,y) => cvDtOrd(x) - cvDtOrd(y));
             
