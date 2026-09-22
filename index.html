@@ -59,7 +59,7 @@
 
     <main class="flex-grow max-w-[98%] mx-auto mt-6 w-full pb-10">
         
-        <!-- Filtros Dinâmicos Avançados -->
+        <!-- Filtros Dinâmicos -->
         <div class="card bg-white dark:bg-gray-800 mb-6 border-t-4 border-[#1a1941]" id="card-filtros">
             <div class="flex justify-between items-center mb-4 border-b dark:border-gray-700 pb-2">
                 <div class="flex items-center gap-2 text-[#1a1941] dark:text-indigo-400 font-bold text-lg">
@@ -83,7 +83,7 @@
             </div>
         </div>
 
-        <!-- KPIs Cards (5 Indicadores Originais) -->
+        <!-- KPIs Cards -->
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
             <div class="card bg-white dark:bg-gray-800 flex items-center gap-4" title="Volume total na base."><div class="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 dark:text-blue-400 text-xl"><i class="fa-solid fa-ticket"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">Total (Geral)</p><p id="kpi-total" class="text-2xl font-black text-gray-800 dark:text-gray-100">0</p></div></div>
             <div class="card bg-white dark:bg-gray-800 flex items-center gap-4" title="Volume filtrado."><div class="w-12 h-12 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400 text-xl"><i class="fa-solid fa-filter"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">Filtrados</p><p id="kpi-filtrado" class="text-2xl font-black text-gray-800 dark:text-gray-100">0</p></div></div>
@@ -92,7 +92,7 @@
             <div class="card bg-white dark:bg-gray-800 flex items-center gap-4" title="Incidentes."><div class="w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center text-purple-600 dark:text-purple-400 text-xl"><i class="fa-solid fa-triangle-exclamation"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">Incidentes</p><p id="kpi-incidentes" class="text-2xl font-black text-gray-800 dark:text-gray-100">0%</p></div></div>
         </div>
 
-        <!-- Gráficos (Interativos - Clique para filtrar) -->
+        <!-- Gráficos -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <div class="card bg-white dark:bg-gray-800 flex flex-col"><h3 class="font-bold text-gray-700 dark:text-gray-300 mb-4 border-b dark:border-gray-700 pb-2 text-sm uppercase">Evolução de Chamados</h3><div class="chart-container" title="Clique num ponto para filtrar por mês"><canvas id="chart-meses"></canvas></div></div>
             <div class="card bg-white dark:bg-gray-800 flex flex-col"><h3 class="font-bold text-gray-700 dark:text-gray-300 mb-4 border-b dark:border-gray-700 pb-2 text-sm uppercase">Volume por Analista Foco (Clique para Filtrar)</h3><div class="chart-container" title="Clique numa barra para filtrar por analista"><canvas id="chart-analistas"></canvas></div></div>
@@ -140,7 +140,7 @@
 
     </main>
 
-    <!-- Modal Ferramentas -->
+    <!-- Modal -->
     <div id="modal-config" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-2xl w-full max-w-2xl flex flex-col max-h-[90vh]">
             <div class="flex justify-between items-center p-5 border-b dark:border-gray-700 bg-gray-50 dark:bg-gray-900 rounded-t-lg">
@@ -221,11 +221,12 @@
 
             <div class="flex justify-end gap-3 p-5 border-t dark:border-gray-700 bg-gray-50 dark:bg-gray-900 rounded-b-lg">
                 <button id="btn-fechar-config" class="px-5 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded font-bold text-sm">Fechar</button>
-                <button id="btn-guardar-config" class="px-5 py-2 bg-[#1a1941] text-white rounded font-bold text-sm hidden">Salvar Preferências</button>
+                <button id="btn-guardar-config" class="px-5 py-2 bg-[#1a1941] text-white rounded font-bold text-sm hidden">Salvar</button>
             </div>
         </div>
     </div>
 
+    <!-- Scripts -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
         import { getFirestore, collection, getDocs, doc, writeBatch } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
@@ -465,7 +466,7 @@
             const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(dadosExp), "Relatorio"); XLSX.writeFile(wb, `Base_Extraida.xlsx`);
         });
 
-        // === RELATÓRIO PDF COM A MÉDIA MENSAL INTEGRADA AO TEXTO (COMO SOLICITADO ANTERIORMENTE) ===
+        // === RELATÓRIO PDF COM 4 CAIXAS DE INDICADORES ALINHADOS ===
         document.getElementById('btn-gerar-pdf').addEventListener('click', () => {
             const fM = document.getElementById('relatorio-mes').value; const fA = document.getElementById('relatorio-analista').value;
             const btn = document.getElementById('btn-gerar-pdf'); const conteudoOriginal = btn.innerHTML; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xl"></i> <div><p class="text-sm">A processar...</p></div>'; btn.disabled = true;
@@ -478,7 +479,6 @@
                     
                     doc.setFillColor(26, 25, 65); doc.rect(0, 0, w, 95, 'F'); doc.setTextColor(255, 255, 255); 
                     
-                    // Cabeçalho da PRF que foi alinhado e ajustado
                     doc.setFontSize(14); doc.setFont("helvetica", "bold"); doc.text("MINISTÉRIO DA JUSTIÇA E SEGURANÇA PÚBLICA", 40, 32);
                     doc.setFontSize(9.5); doc.setFont("helvetica", "normal"); doc.text("Polícia Rodoviária Federal - Diretoria de Tecnologia da Informação e Comunicação (DTIC)", 40, 52);
                     doc.setFontSize(11); doc.setFont("helvetica", "bold"); doc.text("Relatório Gerencial Analítico - Suporte", 40, 74);
@@ -487,14 +487,31 @@
 
                     doc.setTextColor(26, 25, 65); doc.setFontSize(12); doc.text("Resumo Executivo", 40, 125); doc.setTextColor(60, 60, 60); doc.setFontSize(10); doc.setFont("helvetica", "normal");
                     
-                    const mesesUnicos = new Set(dadosExp.map(d => obterMesAno(d['Data Abertura']))).size || 1; const mediaMes = Math.round(dadosExp.length / mesesUnicos);
+                    const mesesUnicos = new Set(dadosExp.map(d => obterMesAno(d['Data Abertura']))).size || 1; 
+                    const mediaMes = Math.round(dadosExp.length / mesesUnicos);
                     
-                    // Texto do Relatório contendo a Média por Mês
-                    doc.text(doc.splitTextToSize(`Documento gerado em ${new Date().toLocaleDateString('pt-BR')} (Filtro Aplicado: Mês ${fM} | Analista: ${fA}). O período processou um total de ${dadosExp.length} tickets (média de ${mediaMes} chamados/mês). A eficiência registrou um TMA de ${tmaGlobalTexto}, garantindo que ${slaGlobalTexto} das demandas fossem solucionadas no prazo. A taxa de incidentes correspondeu a ${incGlobalTexto}.`, w - 80), 40, 145);
+                    // Texto do Relatório sem a Média por Mês (movido para as caixas abaixo)
+                    doc.text(doc.splitTextToSize(`Documento gerado em ${new Date().toLocaleDateString('pt-BR')} (Filtro Aplicado: Mês ${fM} | Analista: ${fA}). O período processou um total de ${dadosExp.length} tickets. A eficiência registrou um TMA de ${tmaGlobalTexto}, garantindo que ${slaGlobalTexto} das demandas fossem solucionadas no prazo. A taxa de incidentes correspondeu a ${incGlobalTexto}.`, w - 80), 40, 145);
                     
-                    doc.setFillColor(245, 247, 250); doc.rect(40, 195, 160, 50, 'F'); doc.rect(215, 195, 160, 50, 'F'); doc.rect(390, 195, 160, 50, 'F');
-                    doc.setFontSize(9); doc.setTextColor(120, 120, 120); doc.setFont("helvetica", "bold"); doc.text("VOLUME TOTAL", 120, 215, {align: 'center'}); doc.text("TMA (MÉDIA HORAS)", 295, 215, {align: 'center'}); doc.text("EFICIÊNCIA DE SLA", 470, 215, {align: 'center'});
-                    doc.setFontSize(16); doc.setTextColor(26, 25, 65); doc.text(String(dadosExp.length), 120, 235, {align: 'center'}); doc.text(String(tmaGlobalTexto), 295, 235, {align: 'center'}); doc.setTextColor(22, 163, 74); doc.text(String(slaGlobalTexto), 470, 235, {align: 'center'});
+                    // 4 CAIXAS DE INDICADORES ALINHADAS E PROPORCIONAIS
+                    doc.setFillColor(245, 247, 250); 
+                    doc.rect(40, 195, 120, 50, 'F');
+                    doc.rect(171, 195, 120, 50, 'F');
+                    doc.rect(302, 195, 120, 50, 'F');
+                    doc.rect(433, 195, 120, 50, 'F');
+
+                    doc.setFontSize(8); doc.setTextColor(120, 120, 120); doc.setFont("helvetica", "bold"); 
+                    doc.text("VOLUME TOTAL", 100, 215, {align: 'center'}); 
+                    doc.text("MÉDIA / MÊS", 231, 215, {align: 'center'}); 
+                    doc.text("TMA (HORAS)", 362, 215, {align: 'center'}); 
+                    doc.text("SLA ATENDIDO", 493, 215, {align: 'center'});
+                    
+                    doc.setFontSize(16); doc.setTextColor(26, 25, 65); 
+                    doc.text(String(dadosExp.length), 100, 235, {align: 'center'}); 
+                    doc.text(String(mediaMes), 231, 235, {align: 'center'}); 
+                    doc.text(String(tmaGlobalTexto), 362, 235, {align: 'center'}); 
+                    doc.setTextColor(22, 163, 74); 
+                    doc.text(String(slaGlobalTexto), 493, 235, {align: 'center'});
 
                     doc.setFontSize(12); doc.setTextColor(26, 25, 65); doc.text("Análise Visual", 40, 275); doc.setFontSize(9); doc.setTextColor(100, 100, 100);
                     const getImg = (id) => { try { const c = document.getElementById(id); return c ? c.toDataURL('image/jpeg', 1.0) : null; } catch(e) { return null; } };
