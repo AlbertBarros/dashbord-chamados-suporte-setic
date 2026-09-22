@@ -39,9 +39,8 @@
     <!-- ======================= -->
     <div id="tela-login" class="min-h-screen bg-[#1a1941] flex flex-col justify-center items-center p-4 transition-opacity">
         <div class="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-2xl w-full max-w-sm text-center border-t-4 border-blue-500">
-            <!-- Adicionado ID e crossorigin para funcionar na conversão -->
             <img id="login-logo" src="https://raw.githubusercontent.com/AlbertBarros/dashbord-chamados-suporte-setic/main/bras%C3%A3o.png" alt="Logo" class="h-24 mx-auto mb-4 object-contain" crossorigin="anonymous">
-            <h2 class="text-2xl font-black text-[#1a1941] dark:text-indigo-400 mb-1">Analytics SETIC</h2>
+            <h2 id="login-titulo" class="text-2xl font-black text-[#1a1941] dark:text-indigo-400 mb-1">Analytics SETIC</h2>
             <p class="text-gray-500 dark:text-gray-400 text-sm mb-6 font-semibold">Acesso Restrito</p>
             
             <div class="text-left mb-4">
@@ -167,21 +166,24 @@
             </div>
 
         </main>
-    </div> <!-- Fim Tela Dashboard -->
+    </div>
 
-    <!-- Modal Painel de Ferramentas - COM LARGURA AUMENTADA PARA EVITAR QUEBRA DE LINHA -->
+    <!-- Modal Painel de Ferramentas - COM ABA FISCALIZAÇÃO -->
     <div id="modal-config" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
-        <!-- Alterado max-w-2xl para max-w-3xl para dar mais espaço às abas -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-2xl w-full max-w-3xl flex flex-col max-h-[90vh]">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-2xl w-full max-w-4xl flex flex-col max-h-[90vh]">
             <div class="flex justify-between items-center p-5 border-b dark:border-gray-700 bg-gray-50 dark:bg-gray-900 rounded-t-lg">
                 <h2 class="text-xl font-bold text-[#1a1941] dark:text-indigo-400 flex items-center gap-2"><i class="fa-solid fa-toolbox"></i> Painel Administrativo</h2>
                 <button id="btn-fechar-config-icon" class="text-gray-400 hover:text-red-500 transition"><i class="fa-solid fa-xmark text-2xl"></i></button>
             </div>
             
-            <div class="flex flex-wrap gap-1 px-5 pt-4 border-b dark:border-gray-700">
+            <div class="flex flex-wrap gap-1 px-5 pt-4 border-b dark:border-gray-700 overflow-x-auto">
                 <button id="aba-dados" class="px-3 py-2 tab-active text-[#1a1941] dark:text-indigo-400 border-[#1a1941] dark:border-indigo-400 focus:outline-none font-semibold text-sm whitespace-nowrap">Atualizar Base</button>
                 <button id="aba-aparencia" class="px-3 py-2 tab-inactive focus:outline-none font-semibold text-sm whitespace-nowrap">Preferências (Equipe)</button>
                 <button id="aba-relatorios" class="px-3 py-2 tab-inactive focus:outline-none font-semibold text-sm whitespace-nowrap">Emissão Relatórios</button>
+                
+                <!-- NOVA ABA: FISCALIZAÇÃO -->
+                <button id="aba-fiscal" class="px-3 py-2 tab-inactive focus:outline-none font-semibold text-sm text-green-700 dark:text-green-500 flex items-center gap-2 whitespace-nowrap"><i class="fa-solid fa-file-contract"></i> Fiscalização (IMR)</button>
+                
                 <button id="aba-admin" class="px-3 py-2 tab-inactive focus:outline-none font-semibold text-sm text-red-600 hover:text-red-500 ml-auto flex items-center gap-2 whitespace-nowrap"><i class="fa-solid fa-shield-halved"></i> Avançado / Segurança</button>
             </div>
 
@@ -250,6 +252,31 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
                         <button id="btn-gerar-excel" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-3 rounded shadow transition flex justify-center gap-2"><i class="fa-solid fa-file-excel text-xl"></i> Excel</button>
                         <button id="btn-gerar-pdf" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-3 rounded shadow transition flex justify-center gap-2"><i class="fa-solid fa-file-pdf text-xl"></i> PDF</button>
+                    </div>
+                </div>
+
+                <!-- NOVA ABA CONTEUDO: FISCALIZAÇÃO -->
+                <div id="conteudo-fiscal" class="hidden">
+                    <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 p-6 rounded-lg mb-5 shadow-sm">
+                        <div class="flex items-start gap-4">
+                            <div class="text-green-600 dark:text-green-500 text-4xl mt-1">
+                                <i class="fa-solid fa-magnifying-glass-chart"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-lg text-green-800 dark:text-green-400 mb-2">Auditoria e Fiscalização de Contrato (IMR)</h3>
+                                <p class="text-sm text-green-700 dark:text-green-300 mb-4 leading-relaxed">
+                                    O sistema atuará como fiscal virtual: ele lerá todos os chamados da base atualmente carregada, processará a matemática linha a linha e verificará se a empresa cumpriu os <strong>Níveis Mínimos de Serviços (INS1 ao INS7)</strong> estipulados no contrato.
+                                </p>
+                                <ul class="text-xs text-green-600 dark:text-green-400 mb-5 list-disc list-inside space-y-1">
+                                    <li><strong>INS1:</strong> Aplicará nota 5 automática aos não avaliados (conforme regra).</li>
+                                    <li><strong>INS2 e INS3:</strong> Auditará o cumprimento de TIT e SLA segregando do P1 ao P5.</li>
+                                    <li><strong>INS6:</strong> Falará a varredura identificando chamados reabertos.</li>
+                                </ul>
+                                <button id="btn-gerar-fiscal-pdf" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded shadow transition flex items-center justify-center gap-2 w-full sm:w-auto">
+                                    <i class="fa-solid fa-file-shield text-lg"></i> Processar Auditoria e Gerar Relatório PDF
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -415,19 +442,38 @@
         ['btn-fechar-config', 'btn-fechar-config-icon'].forEach(id => document.getElementById(id).addEventListener('click', () => modal.classList.add('hidden')));
 
         function switchTab(activeId, contentId) {
-            ['aba-dados', 'aba-aparencia', 'aba-relatorios', 'aba-admin'].forEach(id => {
-                const el = document.getElementById(id); el.className = id === 'aba-admin' ? 'px-3 py-2 tab-inactive focus:outline-none font-semibold text-sm text-red-600 hover:text-red-500 ml-auto flex items-center gap-2 whitespace-nowrap' : 'px-3 py-2 tab-inactive focus:outline-none font-semibold text-sm whitespace-nowrap'; el.style.color = ''; el.style.borderColor = '';
+            // Incluído aba-fiscal na lista de tabs
+            ['aba-dados', 'aba-aparencia', 'aba-relatorios', 'aba-fiscal', 'aba-admin'].forEach(id => {
+                const el = document.getElementById(id); 
+                
+                if (id === 'aba-admin') {
+                    el.className = 'px-3 py-2 tab-inactive focus:outline-none font-semibold text-sm text-red-600 hover:text-red-500 ml-auto flex items-center gap-2 whitespace-nowrap';
+                } else if (id === 'aba-fiscal') {
+                    el.className = 'px-3 py-2 tab-inactive focus:outline-none font-semibold text-sm text-green-700 dark:text-green-500 hover:text-green-600 flex items-center gap-2 whitespace-nowrap';
+                } else {
+                    el.className = 'px-3 py-2 tab-inactive focus:outline-none font-semibold text-sm whitespace-nowrap'; 
+                }
+                el.style.color = ''; el.style.borderColor = '';
             });
+            
             const activeTab = document.getElementById(activeId);
-            activeTab.className = activeId === 'aba-admin' ? `px-3 py-2 tab-active text-red-700 border-red-700 focus:outline-none font-semibold text-sm ml-auto flex items-center gap-2 whitespace-nowrap` : `px-3 py-2 tab-active text-[${corPrincipal}] border-[${corPrincipal}] focus:outline-none font-semibold text-sm whitespace-nowrap`;
-            if (activeId !== 'aba-admin' && !isDark) { activeTab.style.color = corPrincipal; activeTab.style.borderColor = corPrincipal; }
-            if (activeId !== 'aba-admin' && isDark) { activeTab.style.color = '#818cf8'; activeTab.style.borderColor = '#818cf8'; }
-            ['conteudo-dados', 'conteudo-aparencia', 'conteudo-relatorios', 'conteudo-admin'].forEach(id => document.getElementById(id).classList.add('hidden'));
+            
+            if (activeId === 'aba-admin') {
+                activeTab.className = `px-3 py-2 tab-active text-red-700 border-red-700 focus:outline-none font-semibold text-sm ml-auto flex items-center gap-2 whitespace-nowrap`;
+            } else if (activeId === 'aba-fiscal') {
+                activeTab.className = `px-3 py-2 tab-active text-green-700 border-green-700 dark:text-green-500 dark:border-green-500 focus:outline-none font-semibold text-sm flex items-center gap-2 whitespace-nowrap`;
+            } else {
+                activeTab.className = `px-3 py-2 tab-active text-[${corPrincipal}] border-[${corPrincipal}] focus:outline-none font-semibold text-sm whitespace-nowrap`;
+                if (!isDark) { activeTab.style.color = corPrincipal; activeTab.style.borderColor = corPrincipal; }
+                if (isDark) { activeTab.style.color = '#818cf8'; activeTab.style.borderColor = '#818cf8'; }
+            }
+            
+            ['conteudo-dados', 'conteudo-aparencia', 'conteudo-relatorios', 'conteudo-fiscal', 'conteudo-admin'].forEach(id => document.getElementById(id).classList.add('hidden'));
             document.getElementById(contentId).classList.remove('hidden');
             document.getElementById('btn-guardar-config').style.display = contentId === 'conteudo-aparencia' ? 'block' : 'none';
         }
 
-        ['aba-dados', 'aba-aparencia', 'aba-relatorios', 'aba-admin'].forEach(id => document.getElementById(id).addEventListener('click', () => switchTab(id, 'conteudo-' + id.split('-')[1])));
+        ['aba-dados', 'aba-aparencia', 'aba-relatorios', 'aba-fiscal', 'aba-admin'].forEach(id => document.getElementById(id).addEventListener('click', () => switchTab(id, 'conteudo-' + id.split('-')[1])));
         document.getElementById('input-cor').addEventListener('input', (e) => document.getElementById('hex-view').innerText = e.target.value);
 
         // Upload de Logo dinâmico
@@ -443,9 +489,15 @@
         });
 
         function aplicarPersonalizacao() {
-            document.getElementById('titulo-painel').innerText = localStorage.getItem('dashTitulo') || 'Analytics Suporte SETIC';
-            document.getElementById('input-titulo').value = localStorage.getItem('dashTitulo') || 'Analytics Suporte SETIC';
-            document.getElementById('input-cor').value = corPrincipal; document.getElementById('hex-view').innerText = corPrincipal;
+            const tituloSalvo = localStorage.getItem('dashTitulo') || 'Analytics Suporte SETIC';
+            
+            document.getElementById('titulo-painel').innerText = tituloSalvo;
+            const loginTitulo = document.getElementById('login-titulo');
+            if(loginTitulo) loginTitulo.innerText = tituloSalvo;
+            
+            document.getElementById('input-titulo').value = tituloSalvo;
+            document.getElementById('input-cor').value = corPrincipal; 
+            document.getElementById('hex-view').innerText = corPrincipal;
             document.getElementById('input-equipe').value = equipeFocoStr;
             document.getElementById('header-bg').style.backgroundColor = isDark ? '#111827' : corPrincipal;
             document.getElementById('card-filtros').style.borderTopColor = corPrincipal;
@@ -622,6 +674,180 @@
                 btnReset.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Apagar';
                 btnReset.disabled = false;
             }
+        });
+
+        // ==========================================
+        // AUDITORIA E FISCALIZAÇÃO IMR (NOVO)
+        // ==========================================
+        document.getElementById('btn-gerar-fiscal-pdf').addEventListener('click', () => {
+            const total = dadosGlobais.length;
+            if(total === 0) return alert("Nenhum dado na base para gerar o relatório de fiscalização.");
+
+            const btn = document.getElementById('btn-gerar-fiscal-pdf'); 
+            const conteudoOriginal = btn.innerHTML; 
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xl"></i> Auditando Base de Dados...'; 
+            btn.disabled = true;
+
+            // Variáveis de Auditoria
+            let sumNotas = 0, countNotas = 0;
+            let ins2_dentro = 0, ins3_dentro = 0, ins6_fora = 0; // ins6_fora representa chamados reabertos
+            
+            let p_stats = {
+                'P1': {total: 0, dentro: 0},
+                'P2': {total: 0, dentro: 0},
+                'P3': {total: 0, dentro: 0},
+                'P4': {total: 0, dentro: 0},
+                'P5': {total: 0, dentro: 0},
+            };
+
+            const getPLevel = (slaStr) => {
+                if(!slaStr) return 'P4';
+                slaStr = String(slaStr).toLowerCase();
+                if(slaStr.includes('vip') || slaStr.includes('muito alta')) return 'P1';
+                if(slaStr.includes('alta')) return 'P2';
+                if(slaStr.includes('media') || slaStr.includes('média')) return 'P3';
+                if(slaStr.includes('muito baixa')) return 'P5';
+                if(slaStr.includes('baixa')) return 'P4';
+                return 'P4';
+            };
+
+            // Loop de Auditoria
+            dadosGlobais.forEach(d => {
+                // INS1: Pesquisa nota. Se não houver, aplica regra do edital = 5
+                let nota = 5.0; 
+                for(let key in d) {
+                    const k = key.toLowerCase();
+                    if(k.includes('nota') || k.includes('avali') || k.includes('satisfa')) {
+                        const val = parseFloat(d[key]);
+                        if(!isNaN(val)) nota = val;
+                        break;
+                    }
+                }
+                sumNotas += nota;
+                countNotas++;
+
+                // INS2: TIT
+                const tit = d['TIT Por Grupo Atendido'] || d['TIT Atendido'] || 'Sim';
+                if(String(tit).toLowerCase() === 'sim') ins2_dentro++;
+
+                // INS3: SLA Total e Quebra por Prioridade
+                const slaOk = d['SLA Atendido'] || 'Sim';
+                const isSlaOk = String(slaOk).toLowerCase() === 'sim';
+                if(isSlaOk) ins3_dentro++;
+
+                const pLevel = getPLevel(d['SLA']);
+                if(p_stats[pLevel]) {
+                    p_stats[pLevel].total++;
+                    if(isSlaOk) p_stats[pLevel].dentro++;
+                }
+
+                // INS6: Reabertos
+                let foiReaberto = false;
+                for(let key in d) {
+                    if(key.toLowerCase().includes('reabert') || key.toLowerCase().includes('reabr')) {
+                        const val = String(d[key]).toLowerCase();
+                        if(val === 'sim' || parseFloat(val) > 0) foiReaberto = true;
+                        break;
+                    }
+                }
+                if(foiReaberto) ins6_fora++;
+            });
+
+            setTimeout(() => {
+                try {
+                    const { jsPDF } = window.jspdf; 
+                    const doc = new jsPDF('p', 'pt', 'a4'); 
+                    const w = doc.internal.pageSize.width;
+                    
+                    // Cabeçalho Institucional Padrão
+                    doc.setFillColor(26, 25, 65); doc.rect(0, 0, w, 95, 'F'); doc.setTextColor(255, 255, 255); 
+                    doc.setFontSize(14); doc.setFont("helvetica", "bold"); doc.text("MINISTÉRIO DA JUSTIÇA E SEGURANÇA PÚBLICA", 40, 32);
+                    doc.setFontSize(9.5); doc.setFont("helvetica", "normal"); doc.text("Polícia Rodoviária Federal - Diretoria de Tecnologia da Informação e Comunicação (DTIC)", 40, 52);
+                    doc.setFontSize(10.5); doc.setFont("helvetica", "bold"); doc.text("Relatório de Fiscalização de Contrato - IMR (Níveis Mínimos de Serviço)", 40, 74);
+                    
+                    try { 
+                        let imgData = localStorage.getItem('dashLogo');
+                        if (imgData) { doc.addImage(imgData, 'PNG', w - 80, 20, 40, 40); } 
+                        else {
+                            const imgEl = document.querySelector('#header-logo-container img');
+                            if(imgEl) {
+                                const canvas = document.createElement('canvas'); canvas.width = imgEl.naturalWidth || imgEl.width; canvas.height = imgEl.naturalHeight || imgEl.height; const ctx = canvas.getContext('2d'); ctx.drawImage(imgEl, 0, 0); const b64 = canvas.toDataURL('image/png'); doc.addImage(b64, 'PNG', w - 80, 20, 40, 40);
+                            }
+                        }
+                    } catch(e) {}
+
+                    const agora = new Date();
+                    const dataForm = agora.toLocaleDateString('pt-BR');
+                    const horaForm = agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+                    doc.setTextColor(26, 25, 65); doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.text("Parecer e Metodologia de Cálculo", 40, 125);
+                    doc.setTextColor(60, 60, 60); doc.setFontSize(10); doc.setFont("helvetica", "normal");
+                    
+                    const textoParecer = `A presente medição avaliou o universo bruto de ${total} chamados registrados na base do mês. Os indicadores matemáticos foram processados de forma automatizada linha a linha, em estrita conformidade com as regras do Instrumento de Medição de Resultados (IMR). O indicador INS1 assumiu nota 5 automática na ausência de avaliações manuais (conforme prevê a regra contratual). Os índices INS4, INS5 e INS7 não se aplicam à fila/grupo em questão.\n\nDocumento processado eletronicamente em ${dataForm} às ${horaForm}.`;
+                    doc.text(doc.splitTextToSize(textoParecer, w - 80), 40, 145);
+
+                    doc.setTextColor(26, 25, 65); doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.text("3. Resumo de indicadores", 40, 215);
+                    
+                    // Helpers Formatação
+                    const fPct = (v) => (v * 100).toFixed(2).replace('.', ',') + '%';
+                    const getRow = (ind, den, f, t, m, at, fm, pt) => [ind, den, f, t, m, at, fm, pt];
+                    
+                    const linhasTabela = [];
+
+                    // INS1
+                    const ins1_media = countNotas > 0 ? (sumNotas / countNotas) : 5.0;
+                    linhasTabela.push(getRow('INS1', '-', '-', total, '4,0', ins1_media.toFixed(2).replace('.', ','), '0,00', '0'));
+                    
+                    // INS2
+                    const ins2_ating = total > 0 ? (ins2_dentro / total) : 1;
+                    const ins2_pontos = ins2_ating < 0.95 ? Math.floor((0.95 - ins2_ating)/0.01)*5 : 0;
+                    linhasTabela.push(getRow('INS2', ins2_dentro, (total - ins2_dentro), total, '95,00%', fPct(ins2_ating), '0,00', String(ins2_pontos)));
+
+                    // INS3 (Geral e Quebra)
+                    const ins3_ating = total > 0 ? (ins3_dentro / total) : 1;
+                    linhasTabela.push(getRow('INS3', ins3_dentro, (total - ins3_dentro), total, '90,00%', fPct(ins3_ating), '0,00', '0'));
+                    
+                    ['P1', 'P2', 'P3', 'P4', 'P5'].forEach(p => {
+                        const s = p_stats[p];
+                        const atg = s.total > 0 ? (s.dentro / s.total) : 1;
+                        linhasTabela.push(getRow(`INS3 - ${p}`, s.dentro, (s.total - s.dentro), s.total, '90,00%', fPct(atg), '0,00', '0'));
+                    });
+
+                    // INS4 e INS5
+                    linhasTabela.push(['INS4', {content: 'Não se aplica', colSpan: 6, styles: {halign: 'center', fontStyle: 'bold', fillColor: [240, 240, 240]}}, '0']);
+                    linhasTabela.push(['INS5', {content: 'Não se aplica', colSpan: 6, styles: {halign: 'center', fontStyle: 'bold', fillColor: [240, 240, 240]}}, '0']);
+
+                    // INS6 (Reabertos)
+                    const ins6_dentro = total - ins6_fora;
+                    const ins6_ating = total > 0 ? (ins6_fora / total) : 0;
+                    const ins6_pontos = ins6_ating > 0.03 ? Math.floor((ins6_ating - 0.03)/0.01)*3 : 0;
+                    linhasTabela.push(getRow('INS6', ins6_dentro, ins6_fora, total, '3,00%', fPct(ins6_ating), '0,00', String(ins6_pontos)));
+
+                    // INS7
+                    linhasTabela.push(['INS7', {content: 'Não se aplica', colSpan: 6, styles: {halign: 'center', fontStyle: 'bold', fillColor: [240, 240, 240]}}, '0']);
+
+                    // Gerar Tabela (AutoTable)
+                    doc.autoTable({ 
+                        startY: 230, 
+                        head: [["Indicadores", "Dentro da meta", "Fora da meta", "Total", "% Meta", "Atingido", "Fora da Meta", "Pontos"]], 
+                        body: linhasTabela, 
+                        theme: 'grid', 
+                        headStyles: { fillColor: [150, 150, 150], textColor: 20, fontStyle: 'bold', halign: 'center' }, 
+                        columnStyles: {
+                            0: { fontStyle: 'bold' },
+                            1: { halign: 'center' }, 2: { halign: 'center' }, 3: { halign: 'center' },
+                            4: { halign: 'center' }, 5: { halign: 'center' }, 6: { halign: 'center' }, 7: { halign: 'center' }
+                        },
+                        styles: { fontSize: 9, cellPadding: 4 }, 
+                        alternateRowStyles: { fillColor: [247, 248, 250] }, 
+                        margin: { left: 40, right: 40 } 
+                    });
+
+                    doc.save(`Auditoria_Fiscalizacao_IMR.pdf`);
+                } catch (err) { alert("Erro ao gerar PDF de Fiscalização."); } finally { 
+                    btn.innerHTML = conteudoOriginal; btn.disabled = false; 
+                }
+            }, 800); 
         });
 
         function parseHoras(str) { if(!str) return 0; const p = String(str).split(':'); return p.length === 3 ? parseInt(p[0]) + (parseInt(p[1])/60) + (parseInt(p[2])/3600) : 0; }
