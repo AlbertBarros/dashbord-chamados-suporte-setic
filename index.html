@@ -81,7 +81,6 @@
                     <i class="fa-solid fa-toolbox"></i> Painel de Ferramentas
                 </button>
 
-                <!-- BOTÃO DE LOGOUT -->
                 <button id="btn-logout" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded transition shadow flex items-center gap-2 text-sm font-semibold border border-white border-opacity-20">
                     <i class="fa-solid fa-arrow-right-from-bracket"></i> Sair
                 </button>
@@ -691,7 +690,7 @@
 
             const btn = document.getElementById('btn-gerar-fiscal-pdf'); 
             const conteudoOriginal = btn.innerHTML; 
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xl"></i> Auditando Base de Dados...'; 
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xl"></i> Auditando Base...'; 
             btn.disabled = true;
 
             let sumNotas = 0, countNotas = 0;
@@ -758,10 +757,10 @@
                     const doc = new jsPDF('p', 'pt', 'a4'); 
                     const w = doc.internal.pageSize.width;
                     
-                    doc.setFillColor(26, 25, 65); doc.rect(0, 0, w, 95, 'F'); doc.setTextColor(255, 255, 255); 
+                    doc.setFillColor(26, 25, 65); doc.rect(0, 0, w, 85, 'F'); doc.setTextColor(255, 255, 255); 
                     doc.setFontSize(14); doc.setFont("helvetica", "bold"); doc.text("MINISTÉRIO DA JUSTIÇA E SEGURANÇA PÚBLICA", 40, 32);
                     doc.setFontSize(9.5); doc.setFont("helvetica", "normal"); doc.text("Polícia Rodoviária Federal - Diretoria de Tecnologia da Informação e Comunicação (DTIC)", 40, 52);
-                    doc.setFontSize(10.5); doc.setFont("helvetica", "bold"); doc.text("Relatório de Fiscalização de Contrato - IMR (Níveis Mínimos de Serviço)", 40, 74);
+                    doc.setFontSize(10.5); doc.setFont("helvetica", "bold"); doc.text("Relatório de Fiscalização de Contrato - IMR (Níveis Mínimos de Serviço)", 40, 72);
                     
                     try { 
                         let imgData = localStorage.getItem('dashLogo');
@@ -774,20 +773,54 @@
                         }
                     } catch(e) {}
 
+                    // ==========================================
+                    // BLOCO DE METADADOS DO CONTRATO
+                    // ==========================================
+                    const mesTexto = mesSelecionado === 'Todos' ? 'Base Completa' : mesSelecionado;
+                    let periodoAfericao = "Base Completa";
+                    if (mesSelecionado !== 'Todos') {
+                        const p = mesSelecionado.split('/');
+                        let mm = parseInt(p[0]); let yy = parseInt(p[1]);
+                        let mmNext = mm + 1; let yyNext = yy;
+                        if (mmNext > 12) { mmNext = 1; yyNext++; }
+                        const m1 = mm < 10 ? '0'+mm : mm;
+                        const m2 = mmNext < 10 ? '0'+mmNext : mmNext;
+                        periodoAfericao = `04/${m1}/${yy} a 03/${m2}/${yyNext}`;
+                    }
+
+                    doc.setTextColor(26, 25, 65); doc.setFontSize(10); 
+                    
+                    doc.setFont("helvetica", "bold"); doc.text("Empresa:", 40, 105);
+                    doc.setFont("helvetica", "normal"); doc.text("IOS Informática", 95, 105);
+
+                    doc.setFont("helvetica", "bold"); doc.text("Contrato:", 40, 120);
+                    doc.setFont("helvetica", "normal"); doc.text("14/2025", 95, 120);
+
+                    doc.setFont("helvetica", "bold"); doc.text("Fiscal Técnico:", 40, 135);
+                    doc.setFont("helvetica", "normal"); doc.text("Albert Einstein da Silva Barros", 125, 135);
+
+                    doc.setFont("helvetica", "bold"); doc.text("Mês Referente:", 330, 105);
+                    doc.setFont("helvetica", "normal"); doc.text(mesTexto, 420, 105);
+
+                    doc.setFont("helvetica", "bold"); doc.text("Período de Aferição:", 330, 120);
+                    doc.setFont("helvetica", "normal"); doc.text(periodoAfericao, 445, 120);
+
+                    // ==========================================
+                    // PARECER TÉCNICO
+                    // ==========================================
                     const agora = new Date();
                     const dataForm = agora.toLocaleDateString('pt-BR');
                     const horaForm = agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
-                    doc.setTextColor(26, 25, 65); doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.text("Parecer e Metodologia de Cálculo", 40, 125);
+                    doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.text("Parecer e Metodologia de Cálculo", 40, 165);
                     doc.setTextColor(60, 60, 60); doc.setFontSize(10); doc.setFont("helvetica", "normal");
                     
-                    const mesTexto = mesSelecionado === 'Todos' ? 'Base Completa' : mesSelecionado;
-                    const textoParecer = `A presente medição avaliou o universo bruto de ${total} chamados registrados na base referentes ao ciclo de medição selecionado (${mesTexto}, que compreende do dia 04 ao dia 03 do mês subsequente). Os indicadores matemáticos foram processados de forma automatizada linha a linha, em estrita conformidade com as regras do Instrumento de Medição de Resultados (IMR). O indicador INS1 assumiu nota 5 automática na ausência de avaliações manuais (conforme prevê a regra contratual). Os índices INS4, INS5 e INS7 não se aplicam à fila/grupo em questão.\n\nDocumento processado eletronicamente em ${dataForm} às ${horaForm}.`;
+                    const textoParecer = `A presente medição avaliou o universo de ${total} chamados registrados na base referentes ao ciclo de medição selecionado (${mesTexto}, que compreende do dia 04 ao dia 03 do mês subsequente). Os indicadores matemáticos foram processados de forma automatizada linha a linha, em estrita conformidade com as regras do Instrumento de Medição de Resultados (IMR). O indicador INS1 assumiu nota 5 automática na ausência de avaliações manuais. Os índices INS4, INS5 e INS7 não se aplicam à fila em questão.\n\nDocumento processado eletronicamente em ${dataForm} às ${horaForm}.`;
                     
                     const splitText = doc.splitTextToSize(textoParecer, w - 80);
-                    doc.text(splitText, 40, 145);
+                    doc.text(splitText, 40, 180);
                     
-                    const nextY = 145 + (splitText.length * 15) + 20;
+                    const nextY = 180 + (splitText.length * 15) + 20;
 
                     doc.setTextColor(26, 25, 65); doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.text("3. Resumo de indicadores", 40, nextY);
                     
