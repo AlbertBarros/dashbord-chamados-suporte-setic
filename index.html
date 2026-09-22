@@ -551,23 +551,20 @@
                     doc.setFontSize(9.5); doc.setFont("helvetica", "normal"); doc.text("Polícia Rodoviária Federal - Diretoria de Tecnologia da Informação e Comunicação (DTIC)", 40, 52);
                     doc.setFontSize(10.5); doc.setFont("helvetica", "bold"); doc.text("Relatório Gerencial Analítico - Suporte N2 - Serviço de Pronto Atendimento (SETIC)", 40, 74);
                     
-                    // LOGO POSICIONADA NO CANTO DIREITO DO CABEÇALHO
+                    // BRASÃO ALINHADO À DIREITA NO CABEÇALHO AZUL
                     try { 
                         const urlLogo = 'https://raw.githubusercontent.com/AlbertBarros/dashbord-chamados-suporte-setic/main/bras%C3%A3o.png.png'; 
                         doc.addImage(urlLogo, 'PNG', w - 80, 20, 40, 40); 
                     } catch(e) {}
 
-                    // DATA E HORA DA GERAÇÃO
                     const agora = new Date();
                     const dataForm = agora.toLocaleDateString('pt-BR');
                     const horaForm = agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
-                    // SUBTÍTULO: Parâmetros da Extração
                     doc.setTextColor(26, 25, 65); doc.setFontSize(11); doc.setFont("helvetica", "bold"); doc.text("Parâmetros da Extração", 40, 115);
                     doc.setTextColor(100, 100, 100); doc.setFontSize(9); doc.setFont("helvetica", "normal");
                     doc.text(`Documento gerado em ${dataForm} às ${horaForm} (Filtro Aplicado: Meses ${fM_text} | Analista: ${fA}).`, 40, 130);
 
-                    // RESUMO EXECUTIVO
                     doc.setTextColor(26, 25, 65); doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.text("Resumo Executivo", 40, 155);
                     doc.setTextColor(60, 60, 60); doc.setFontSize(10); doc.setFont("helvetica", "normal");
                     doc.text(doc.splitTextToSize(`O período processou um total de ${dadosExp.length} tickets. A eficiência registrou um TMA de ${tmaGlobalTexto}, garantindo que ${slaGlobalTexto} das demandas fossem solucionadas no prazo. A taxa de incidentes correspondeu a ${incGlobalTexto}.`, w - 80), 40, 170);
@@ -575,7 +572,6 @@
                     const mesesUnicos = new Set(dadosExp.map(d => obterMesAno(d['Data Abertura']))).size || 1; 
                     const mediaMes = Math.round(dadosExp.length / mesesUnicos);
                     
-                    // 4 CAIXAS DE KPI NO PDF
                     doc.setFillColor(245, 247, 250); 
                     doc.rect(40, 210, 120, 50, 'F');
                     doc.rect(171, 210, 120, 50, 'F');
