@@ -36,10 +36,9 @@
 
     <header id="header-bg" class="bg-[#1a1941] text-white p-4 shadow-md flex justify-between items-center sticky top-0 z-40 transition-colors">
         <div class="flex items-center gap-3 ml-4">
-            <!-- Logo sem fundo branco -->
+            <!-- Logo e Ícone de Gráfico juntos -->
             <div id="header-logo-container" class="flex items-center"></div>
-            <!-- Ícone de Gráfico restaurado -->
-            <i class="fa-solid fa-chart-line text-2xl" id="header-default-icon"></i>
+            <i class="fa-solid fa-chart-line text-2xl"></i>
             <h1 id="titulo-painel" class="text-xl font-bold tracking-wide">Analytics Suporte SETIC</h1>
         </div>
         <div class="flex items-center gap-4 mr-4">
@@ -323,14 +322,10 @@
 
             const savedLogo = localStorage.getItem('dashLogo');
             const logoContainer = document.getElementById('header-logo-container');
-            const defaultIcon = document.getElementById('header-default-icon');
             if (savedLogo) {
-                // Removido bg-white e p-0.5 shadow para a imagem PNG ficar sem fundo branco
                 logoContainer.innerHTML = `<img src="${savedLogo}" alt="Logo" class="h-9 w-9 object-contain">`;
-                defaultIcon.style.display = 'none';
             } else {
-                logoContainer.innerHTML = '';
-                defaultIcon.style.display = 'block';
+                logoContainer.innerHTML = `<img src="https://raw.githubusercontent.com/AlbertBarros/dashbord-chamados-suporte-setic/main/bras%C3%A3o.png" alt="Logo" class="h-9 w-9 object-contain">`;
             }
         }
 
@@ -582,7 +577,6 @@
                     doc.setFontSize(9.5); doc.setFont("helvetica", "normal"); doc.text("Polícia Rodoviária Federal - Diretoria de Tecnologia da Informação e Comunicação (DTIC)", 40, 52);
                     doc.setFontSize(10.5); doc.setFont("helvetica", "bold"); doc.text("Relatório Gerencial Analítico - Suporte N2 - Serviço de Pronto Atendimento (SETIC)", 40, 74);
                     
-                    // --- BRASÃO VIA LINK DIRETO DO GITHUB (SEM FUNDO BRANCO) ---
                     try { 
                         const savedLogoPdf = localStorage.getItem('dashLogo');
                         const urlLogo = savedLogoPdf || 'https://raw.githubusercontent.com/AlbertBarros/dashbord-chamados-suporte-setic/main/bras%C3%A3o.png'; 
