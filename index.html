@@ -36,7 +36,6 @@
 
     <header id="header-bg" class="bg-[#1a1941] text-white p-4 shadow-md flex justify-between items-center sticky top-0 z-40 transition-colors">
         <div class="flex items-center gap-3 ml-4">
-            <!-- Logo e Ícone de Gráfico juntos -->
             <div id="header-logo-container" class="flex items-center"></div>
             <i class="fa-solid fa-chart-line text-2xl"></i>
             <h1 id="titulo-painel" class="text-xl font-bold tracking-wide">Analytics Suporte SETIC</h1>
@@ -72,7 +71,7 @@
                 <div><label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Mês Base</label><select id="filtro-mes" class="w-full bg-transparent border border-gray-300 dark:border-gray-600 rounded p-2 text-sm"><option value="Todos">Todos os Meses</option></select></div>
                 <div><label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Data Inicial</label><input type="date" id="filtro-data-inicio" class="w-full bg-transparent border border-gray-300 dark:border-gray-600 rounded p-2 text-sm [color-scheme:light] dark:[color-scheme:dark]"></div>
                 <div><label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Data Final</label><input type="date" id="filtro-data-fim" class="w-full bg-transparent border border-gray-300 dark:border-gray-600 rounded p-2 text-sm [color-scheme:light] dark:[color-scheme:dark]"></div>
-                <div><label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Analista Foco</label><select id="filtro-analista" class="w-full bg-transparent border border-gray-300 dark:border-gray-600 rounded p-2 text-sm"><option value="Todos">Geral (Todos)</option></select></div>
+                <div><label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Analista</label><select id="filtro-analista" class="w-full bg-transparent border border-gray-300 dark:border-gray-600 rounded p-2 text-sm"><option value="Todos">Geral (Todos)</option></select></div>
                 <div><label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Criticidade</label><select id="filtro-prioridade" class="w-full bg-transparent border border-gray-300 dark:border-gray-600 rounded p-2 text-sm"><option value="Todos">Todas</option></select></div>
                 <div><label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Assunto</label><select id="filtro-assunto" class="w-full bg-transparent border border-gray-300 dark:border-gray-600 rounded p-2 text-sm"><option value="Todos">Todos</option></select></div>
                 <div><label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Tipo</label><select id="filtro-tipo" class="w-full bg-transparent border border-gray-300 dark:border-gray-600 rounded p-2 text-sm"><option value="Todos">Todos</option></select></div>
@@ -89,7 +88,7 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <div class="card bg-white dark:bg-gray-800 flex flex-col"><h3 class="font-bold text-gray-700 dark:text-gray-300 mb-4 border-b dark:border-gray-700 pb-2 text-sm uppercase">Evolução de Chamados</h3><div class="chart-container" title="Clique num ponto para filtrar por mês"><canvas id="chart-meses"></canvas></div></div>
-            <div class="card bg-white dark:bg-gray-800 flex flex-col"><h3 class="font-bold text-gray-700 dark:text-gray-300 mb-4 border-b dark:border-gray-700 pb-2 text-sm uppercase">Volume por Analista Foco (Clique para Filtrar)</h3><div class="chart-container" title="Clique numa barra para filtrar por analista"><canvas id="chart-analistas"></canvas></div></div>
+            <div class="card bg-white dark:bg-gray-800 flex flex-col"><h3 class="font-bold text-gray-700 dark:text-gray-300 mb-4 border-b dark:border-gray-700 pb-2 text-sm uppercase">Volume por Analista</h3><div class="chart-container" title="Clique numa barra para filtrar por analista"><canvas id="chart-analistas"></canvas></div></div>
         </div>
         
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
