@@ -7,15 +7,18 @@
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
+        // Habilita o suporte a Dark Mode no Tailwind
         tailwind.config = { darkMode: 'class' }
     </script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     
+    <!-- Excel & PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     
+    <!-- Ícones FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
@@ -131,7 +134,7 @@
 
     </main>
 
-    <!-- Modal -->
+    <!-- Modal Ferramentas -->
     <div id="modal-config" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-2xl w-full max-w-2xl flex flex-col max-h-[90vh]">
             <div class="flex justify-between items-center p-5 border-b dark:border-gray-700 bg-gray-50 dark:bg-gray-900 rounded-t-lg">
@@ -182,8 +185,19 @@
                     <div class="bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-800 p-4 rounded mb-5">
                         <h4 class="font-bold text-indigo-800 dark:text-indigo-300 text-sm mb-2"><i class="fa-solid fa-file-signature"></i> Geração de Relatório Oficial</h4>
                         <div class="grid grid-cols-2 gap-4">
-                            <div><label class="block text-xs font-bold text-indigo-900 dark:text-indigo-200 uppercase mb-1">Mês</label><select id="relatorio-mes" class="w-full border dark:border-gray-600 rounded p-2 text-sm bg-white dark:bg-gray-700"><option value="Todos">Global</option></select></div>
-                            <div><label class="block text-xs font-bold text-indigo-900 dark:text-indigo-200 uppercase mb-1">Analista</label><select id="relatorio-analista" class="w-full border dark:border-gray-600 rounded p-2 text-sm bg-white dark:bg-gray-700"><option value="Todos">Equipe Completa</option></select></div>
+                            <!-- LISTA DE SELEÇÃO MÚLTIPLA ADICIONADA AQUI -->
+                            <div>
+                                <label class="block text-xs font-bold text-indigo-900 dark:text-indigo-200 uppercase mb-1">Meses <span class="text-[9px] font-normal lowercase">(Segure CTRL)</span></label>
+                                <select id="relatorio-mes" multiple class="w-full border dark:border-gray-600 rounded p-2 text-sm bg-white dark:bg-gray-700 h-20 scrollbar-thin">
+                                    <option value="Todos" selected>Global</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-indigo-900 dark:text-indigo-200 uppercase mb-1">Analista</label>
+                                <select id="relatorio-analista" class="w-full border dark:border-gray-600 rounded p-2 text-sm bg-white dark:bg-gray-700">
+                                    <option value="Todos">Equipe Completa</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
@@ -216,7 +230,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
         import { getFirestore, collection, getDocs, doc, writeBatch } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
-        // === DARK MODE ===
+        // === DARK MODE LOGIC ===
         let isDark = localStorage.getItem('darkMode') === 'true';
         if (isDark) { document.documentElement.classList.add('dark'); document.getElementById('icon-theme').className = "fa-solid fa-sun text-yellow-400 text-lg"; }
         
@@ -249,7 +263,7 @@
         
         let app, db; try { app = initializeApp(firebaseConfig); db = getFirestore(app); } catch (e) { console.error(e); }
 
-        let dadosGlobais = []; let dadosFiltradosCache = [];
+        let dadosGlobais = []; let dadosFiltradosCache = []; let mesesRelatorioOverride = null;
         let corPrincipal = localStorage.getItem('dashCor') || '#1a1941';
         let equipeFocoStr = localStorage.getItem('equipeFoco') || 'fabio.palma.prestador, edison.neto.prestador, antonio.muniz.prestador, jose.andrade.prestador';
         let graficos = {}; let tabelaPaginaAtual = 1; const tabelaItensPorPagina = 50;
@@ -355,7 +369,21 @@
             preencherS('filtro-tipo', Array.from(tp).sort(), "Todos");
         }
         
-        function preencherS(id, arr, def) { const s = document.getElementById(id); const at = s.value; s.innerHTML = `<option value="Todos">${def}</option>`; arr.forEach(i => { const op = document.createElement('option'); op.value = i; op.innerText = i; s.appendChild(op); }); if (arr.includes(at)) s.value = at; }
+        function preencherS(id, arr, def) { 
+            const s = document.getElementById(id); 
+            const isMulti = s.hasAttribute('multiple');
+            let sel = isMulti ? Array.from(s.selectedOptions).map(o => o.value) : [s.value];
+            if(sel.length === 0 || (sel.length === 1 && sel[0] === "")) sel = ["Todos"];
+            
+            s.innerHTML = `<option value="Todos">${def}</option>`; 
+            arr.forEach(i => { const op = document.createElement('option'); op.value = i; op.innerText = i; s.appendChild(op); }); 
+            
+            if(isMulti) {
+                Array.from(s.options).forEach(o => { if(sel.includes(o.value)) o.selected = true; });
+            } else {
+                if (arr.includes(sel[0]) || sel[0] === "Todos") s.value = sel[0];
+            }
+        }
 
         ['filtro-mes', 'filtro-analista', 'filtro-prioridade', 'filtro-data-inicio', 'filtro-data-fim', 'filtro-assunto', 'filtro-tipo'].forEach(id => { document.getElementById(id).addEventListener('change', () => { tabelaPaginaAtual = 1; atualizarDashboard(); }); });
         document.getElementById('btn-limpar-filtros').addEventListener('click', () => { ['filtro-mes', 'filtro-analista', 'filtro-prioridade', 'filtro-data-inicio', 'filtro-data-fim', 'filtro-assunto', 'filtro-tipo'].forEach(i => document.getElementById(i).value = i.includes('data') ? "" : "Todos"); tabelaPaginaAtual = 1; atualizarDashboard(); });
@@ -364,13 +392,24 @@
 
         function atualizarDashboard() {
             if (dadosGlobais.length === 0) return desenharTabela();
-            const fM = document.getElementById('filtro-mes').value, fA = document.getElementById('filtro-analista').value, fP = document.getElementById('filtro-prioridade').value;
-            const fAss = document.getElementById('filtro-assunto').value, fTp = document.getElementById('filtro-tipo').value;
-            const dIn = document.getElementById('filtro-data-inicio').value, dFim = document.getElementById('filtro-data-fim').value;
+            
+            const fM_single = document.getElementById('filtro-mes').value;
+            const fM_array = mesesRelatorioOverride || [fM_single]; // Suporte a múltiplos meses invisível para a tela principal
+            
+            const fA = document.getElementById('filtro-analista').value;
+            const fP = document.getElementById('filtro-prioridade').value;
+            const fAss = document.getElementById('filtro-assunto').value;
+            const fTp = document.getElementById('filtro-tipo').value;
+            const dIn = document.getElementById('filtro-data-inicio').value;
+            const dFim = document.getElementById('filtro-data-fim').value;
 
             const filtrados = dadosGlobais.filter(d => {
-                let match = (fM === "Todos" || obterMesAno(d['Data Abertura']) === fM) && (fA === "Todos" || d['Analista'] === fA) && (fP === "Todos" || d['Prioridade'] === fP) &&
-                            (fAss === "Todos" || d['Categoria'] === fAss) && (fTp === "Todos" || d['Tipo'] === fTp);
+                const mesChamado = obterMesAno(d['Data Abertura']);
+                let match = (fM_array.includes("Todos") || fM_array.includes(mesChamado)) && 
+                            (fA === "Todos" || d['Analista'] === fA) && 
+                            (fP === "Todos" || d['Prioridade'] === fP) &&
+                            (fAss === "Todos" || d['Categoria'] === fAss) && 
+                            (fTp === "Todos" || d['Tipo'] === fTp);
                 if(match && (dIn || dFim) && d['Data Abertura']) {
                     const n = parseInt(d['Data Abertura'].split(' ')[0].replace(/-/g, ''));
                     if(dIn && n < parseInt(dIn.replace(/-/g, ''))) match = false; if(dFim && n > parseInt(dFim.replace(/-/g, ''))) match = false;
@@ -448,20 +487,42 @@
         }
 
         document.getElementById('btn-gerar-excel').addEventListener('click', () => {
-            const fM = document.getElementById('relatorio-mes').value; const fA = document.getElementById('relatorio-analista').value;
-            const dadosExp = dadosGlobais.filter(d => (fM === "Todos" || obterMesAno(d['Data Abertura']) === fM) && (fA === "Todos" || d['Analista'] === fA));
+            const relatorioMesSelect = document.getElementById('relatorio-mes');
+            const fM_array = Array.from(relatorioMesSelect.selectedOptions).map(o => o.value);
+            if(fM_array.length === 0) fM_array.push("Todos");
+            
+            const fA = document.getElementById('relatorio-analista').value;
+            const dadosExp = dadosGlobais.filter(d => 
+                (fM_array.includes("Todos") || fM_array.includes(obterMesAno(d['Data Abertura']))) && 
+                (fA === "Todos" || d['Analista'] === fA)
+            );
+            
             if(dadosExp.length === 0) return alert("Nenhum dado encontrado para exportar.");
             const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(dadosExp), "Relatorio"); XLSX.writeFile(wb, `Base_Extraida.xlsx`);
         });
 
         document.getElementById('btn-gerar-pdf').addEventListener('click', () => {
-            const fM = document.getElementById('relatorio-mes').value; const fA = document.getElementById('relatorio-analista').value;
+            const relatorioMesSelect = document.getElementById('relatorio-mes');
+            const fM_array = Array.from(relatorioMesSelect.selectedOptions).map(o => o.value);
+            if(fM_array.length === 0) fM_array.push("Todos");
+            const fM_text = fM_array.includes("Todos") ? "Todos" : fM_array.join(', ');
+            
+            const fA = document.getElementById('relatorio-analista').value;
             const btn = document.getElementById('btn-gerar-pdf'); const conteudoOriginal = btn.innerHTML; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xl"></i> <div><p class="text-sm">A processar...</p></div>'; btn.disabled = true;
-            document.getElementById('filtro-mes').value = fM; document.getElementById('filtro-analista').value = fA; document.getElementById('filtro-prioridade').value = 'Todos'; document.getElementById('filtro-assunto').value = 'Todos'; document.getElementById('filtro-tipo').value = 'Todos'; document.getElementById('filtro-data-inicio').value = ''; document.getElementById('filtro-data-fim').value = ''; atualizarDashboard(); 
+            
+            // Ativa os filtros sobrepostos
+            mesesRelatorioOverride = fM_array;
+            document.getElementById('filtro-analista').value = fA; 
+            document.getElementById('filtro-prioridade').value = 'Todos'; 
+            document.getElementById('filtro-assunto').value = 'Todos'; 
+            document.getElementById('filtro-tipo').value = 'Todos'; 
+            document.getElementById('filtro-data-inicio').value = ''; 
+            document.getElementById('filtro-data-fim').value = ''; 
+            atualizarDashboard(); 
 
             setTimeout(() => {
                 try {
-                    const dadosExp = dadosFiltradosCache; if(dadosExp.length === 0) { alert("Nenhum dado."); btn.innerHTML = conteudoOriginal; btn.disabled = false; return; }
+                    const dadosExp = dadosFiltradosCache; if(dadosExp.length === 0) { alert("Nenhum dado."); btn.innerHTML = conteudoOriginal; btn.disabled = false; mesesRelatorioOverride = null; atualizarDashboard(); return; }
                     const { jsPDF } = window.jspdf; const doc = new jsPDF('p', 'pt', 'a4'); const w = doc.internal.pageSize.width;
                     
                     doc.setFillColor(26, 25, 65); doc.rect(0, 0, w, 95, 'F'); doc.setTextColor(255, 255, 255); 
@@ -469,7 +530,7 @@
                     doc.setFontSize(14); doc.setFont("helvetica", "bold"); doc.text("MINISTÉRIO DA JUSTIÇA E SEGURANÇA PÚBLICA", 40, 32);
                     doc.setFontSize(9.5); doc.setFont("helvetica", "normal"); doc.text("Polícia Rodoviária Federal - Diretoria de Tecnologia da Informação e Comunicação (DTIC)", 40, 52);
                     
-                    // NOME DO RELATÓRIO ATUALIZADO COMO SOLICITADO
+                    // NOME DO RELATÓRIO ATUALIZADO
                     doc.setFontSize(10.5); doc.setFont("helvetica", "bold"); doc.text("Relatório Gerencial Analítico - Suporte N2 - Serviço de Pronto Atendimento (SETIC)", 40, 74);
                     
                     try { const urlLogo = 'https://raw.githubusercontent.com/AlbertBarros/dashbord-chamados-suporte-setic/main/bras%C3%A3o.png.png'; doc.addImage(urlLogo, 'PNG', 40, 20, 40, 40); } catch(e) {}
@@ -479,7 +540,7 @@
                     const mesesUnicos = new Set(dadosExp.map(d => obterMesAno(d['Data Abertura']))).size || 1; 
                     const mediaMes = Math.round(dadosExp.length / mesesUnicos);
                     
-                    doc.text(doc.splitTextToSize(`Documento gerado em ${new Date().toLocaleDateString('pt-BR')} (Filtro Aplicado: Mês ${fM} | Analista: ${fA}). O período processou um total de ${dadosExp.length} tickets. A eficiência registrou um TMA de ${tmaGlobalTexto}, garantindo que ${slaGlobalTexto} das demandas fossem solucionadas no prazo. A taxa de incidentes correspondeu a ${incGlobalTexto}.`, w - 80), 40, 145);
+                    doc.text(doc.splitTextToSize(`Documento gerado em ${new Date().toLocaleDateString('pt-BR')} (Filtro Aplicado: Meses ${fM_text} | Analista: ${fA}). O período processou um total de ${dadosExp.length} tickets. A eficiência registrou um TMA de ${tmaGlobalTexto}, garantindo que ${slaGlobalTexto} das demandas fossem solucionadas no prazo. A taxa de incidentes correspondeu a ${incGlobalTexto}.`, w - 80), 40, 145);
                     
                     doc.setFillColor(245, 247, 250); 
                     doc.rect(40, 195, 120, 50, 'F');
@@ -512,7 +573,13 @@
                     const linhas = dadosExp.map(d => [ String(d['Ticket']||'-'), String((d['Data Abertura']||'').split(' ')[0]), String((d['Analista']||'-').split('.')[0]), String((d['Assunto']||'').substring(0, 35)), String(d['Prioridade']||'-'), String(d['SLA Atendido']||'-') ]);
                     doc.autoTable({ startY: 55, head: [["Ticket", "Abertura", "Analista", "Assunto", "Prioridade", "SLA Ok?"]], body: linhas, theme: 'striped', headStyles: { fillColor: [26, 25, 65] }, styles: { fontSize: 8 }, alternateRowStyles: { fillColor: [247, 248, 250] }, margin: { top: 30, right: 40, bottom: 40, left: 40 }, didDrawPage: function (dt) { doc.setFontSize(8); doc.setTextColor(150, 150, 150); doc.text(`Página ${doc.internal.getNumberOfPages()}`, w/2, doc.internal.pageSize.height - 20, {align:'center'}); } });
                     doc.save(`Relatorio_Oficial_SETIC.pdf`);
-                } catch (err) { alert("Erro ao gerar PDF."); } finally { btn.innerHTML = conteudoOriginal; btn.disabled = false; }
+                } catch (err) { alert("Erro ao gerar PDF."); } finally { 
+                    btn.innerHTML = conteudoOriginal; 
+                    btn.disabled = false; 
+                    // Limpa o override após a geração
+                    mesesRelatorioOverride = null;
+                    atualizarDashboard();
+                }
             }, 800); 
         });
 
