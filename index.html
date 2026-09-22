@@ -6,8 +6,13 @@
     <title>Analytics Suporte SETIC</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
-// Habilita o suporte a Dark Mode no Tailwind tailwind.config = { darkMode: 'class' } </script> <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script> 
-       
+    <script>
+        // Habilita o suporte a Dark Mode no Tailwind
+        tailwind.config = { darkMode: 'class' }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    
     <!-- Excel & PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -17,33 +22,36 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        body { background-color: #f3f4f6; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
-        .card { background-color: #ffffff; border-radius: 0.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 1.25rem; }
-        
-        .chart-container { position: relative; height: 260px; width: 100%; }
-        .chart-container-small { position: relative; height: 240px; width: 100%; display: flex; justify-content: center; }
-        
-        .loader { border: 3px solid #f3f3f3; border-top: 3px solid #ffffff; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: none; }
+        body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; transition: background-color 0.3s; }
+        .card { border-radius: 0.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 1.25rem; transition: background-color 0.3s, border-color 0.3s; }
+        .chart-container { position: relative; height: 260px; width: 100%; cursor: pointer; }
+        .chart-container-small { position: relative; height: 240px; width: 100%; display: flex; justify-content: center; cursor: pointer; }
+        .loader { border: 3px solid transparent; border-top: 3px solid currentColor; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: none; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .tab-active { border-bottom: 2px solid; font-weight: bold; }
-        .tab-inactive { border-color: transparent; color: #6b7280; }
-        .tab-inactive:hover { color: #1f2937; }
-        
+        .tab-inactive { border-color: transparent; opacity: 0.6; }
+        .tab-inactive:hover { opacity: 1; }
         .table-container { max-height: 400px; overflow-y: auto; }
-        .data-table th { position: sticky; top: 0; background-color: #f8fafc; z-index: 10; }
+        .data-table th { position: sticky; top: 0; z-index: 10; }
     </style>
 </head>
-<body class="text-gray-800 flex flex-col min-h-screen">
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 flex flex-col min-h-screen">
 
     <!-- Cabeçalho -->
-    <header id="header-bg" class="bg-[#1a1941] text-white p-4 shadow-md flex justify-between items-center sticky top-0 z-40">
+    <header id="header-bg" class="bg-[#1a1941] text-white p-4 shadow-md flex justify-between items-center sticky top-0 z-40 transition-colors">
         <div class="flex items-center gap-3 ml-4">
             <i class="fa-solid fa-chart-line text-2xl"></i>
             <h1 id="titulo-painel" class="text-xl font-bold tracking-wide">Analytics Suporte SETIC</h1>
         </div>
         <div class="flex items-center gap-4 mr-4">
             <span id="badge-status" class="text-xs font-bold px-2 py-1 bg-yellow-500 rounded text-white shadow"><i class="fa-solid fa-spinner fa-spin"></i> A Ligar</span>
-            <button id="btn-config" class="bg-[#2c2a5e] hover:bg-[#3d3b73] px-4 py-2 rounded transition shadow flex items-center gap-2 text-sm font-semibold">
+            
+            <!-- Botão Dark Mode -->
+            <button id="btn-theme" class="bg-black bg-opacity-20 hover:bg-opacity-40 p-2 rounded-full transition shadow w-10 h-10 flex items-center justify-center" title="Alternar Tema Escuro/Claro">
+                <i class="fa-solid fa-moon text-lg" id="icon-theme"></i>
+            </button>
+            
+            <button id="btn-config" class="bg-[#2c2a5e] hover:bg-[#3d3b73] px-4 py-2 rounded transition shadow flex items-center gap-2 text-sm font-semibold border border-white border-opacity-20">
                 <i class="fa-solid fa-toolbox"></i> Painel de Ferramentas
             </button>
         </div>
@@ -51,161 +59,114 @@
 
     <main class="flex-grow max-w-[98%] mx-auto mt-6 w-full pb-10">
         
-        <!-- Filtros Dinâmicos -->
-        <div class="card mb-6 border-t-4 border-[#1a1941]" id="card-filtros">
-            <div class="flex justify-between items-center mb-4 border-b pb-2">
-                <div class="flex items-center gap-2 text-[#1a1941] font-bold text-lg">
+        <!-- Filtros Dinâmicos Avançados -->
+        <div class="card bg-white dark:bg-gray-800 mb-6 border-t-4 border-[#1a1941]" id="card-filtros">
+            <div class="flex justify-between items-center mb-4 border-b dark:border-gray-700 pb-2">
+                <div class="flex items-center gap-2 text-[#1a1941] dark:text-indigo-400 font-bold text-lg">
                     <i class="fa-solid fa-filter"></i>
                     <h2>Filtros Dinâmicos</h2>
-                    <span id="tag-ano-atual" class="ml-2 text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded">Visualizando: Ano Corrente</span>
+                    <span id="tag-ano-atual" class="ml-2 text-xs bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-1 rounded">Visualizando: Ano Corrente</span>
                 </div>
-                <button id="btn-limpar-filtros" class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3 py-1 rounded text-sm font-semibold transition">
+                <button id="btn-limpar-filtros" class="text-red-500 hover:text-red-700 bg-red-50 dark:bg-red-900/30 dark:hover:bg-red-900/50 px-3 py-1 rounded text-sm font-semibold transition">
                     <i class="fa-solid fa-eraser"></i> Limpar Filtros
                 </button>
             </div>
             
-            <div class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Mês Base</label>
-                    <select id="filtro-mes" class="w-full border-gray-300 border rounded p-2 text-sm focus:ring-[#1a1941]"><option value="Todos">Todos os Meses</option></select>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Data Inicial</label>
-                    <input type="date" id="filtro-data-inicio" class="w-full border-gray-300 border rounded p-2 text-sm focus:ring-[#1a1941]">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Data Final</label>
-                    <input type="date" id="filtro-data-fim" class="w-full border-gray-300 border rounded p-2 text-sm focus:ring-[#1a1941]">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Analista Foco</label>
-                    <select id="filtro-analista" class="w-full border-gray-300 border rounded p-2 text-sm focus:ring-[#1a1941]"><option value="Todos">Geral (Todos)</option></select>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Criticidade</label>
-                    <select id="filtro-prioridade" class="w-full border-gray-300 border rounded p-2 text-sm focus:ring-[#1a1941]"><option value="Todos">Todas as Prioridades</option></select>
-                </div>
+            <div class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-7 gap-4">
+                <div><label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Mês Base</label><select id="filtro-mes" class="w-full bg-transparent border border-gray-300 dark:border-gray-600 rounded p-2 text-sm"><option value="Todos">Todos os Meses</option></select></div>
+                <div><label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Data Inicial</label><input type="date" id="filtro-data-inicio" class="w-full bg-transparent border border-gray-300 dark:border-gray-600 rounded p-2 text-sm [color-scheme:light] dark:[color-scheme:dark]"></div>
+                <div><label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Data Final</label><input type="date" id="filtro-data-fim" class="w-full bg-transparent border border-gray-300 dark:border-gray-600 rounded p-2 text-sm [color-scheme:light] dark:[color-scheme:dark]"></div>
+                <div><label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Analista Foco</label><select id="filtro-analista" class="w-full bg-transparent border border-gray-300 dark:border-gray-600 rounded p-2 text-sm"><option value="Todos">Geral (Todos)</option></select></div>
+                <div><label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Criticidade</label><select id="filtro-prioridade" class="w-full bg-transparent border border-gray-300 dark:border-gray-600 rounded p-2 text-sm"><option value="Todos">Todas</option></select></div>
+                <div><label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Assunto</label><select id="filtro-assunto" class="w-full bg-transparent border border-gray-300 dark:border-gray-600 rounded p-2 text-sm"><option value="Todos">Todos</option></select></div>
+                <div><label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Tipo</label><select id="filtro-tipo" class="w-full bg-transparent border border-gray-300 dark:border-gray-600 rounded p-2 text-sm"><option value="Todos">Todos</option></select></div>
             </div>
         </div>
 
-        <!-- KPIs Cards -->
+        <!-- KPIs Cards (5 Indicadores Originais) -->
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
-            <div class="card flex items-center gap-4 cursor-help hover:bg-gray-50 transition" title="Volume total de chamados na base.">
-                <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-xl"><i class="fa-solid fa-ticket"></i></div>
-                <div><p class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Total (Geral)</p><p id="kpi-total" class="text-2xl font-black text-gray-800">0</p></div>
-            </div>
-            <div class="card flex items-center gap-4 cursor-help hover:bg-gray-50 transition" title="Quantidade baseada nos filtros atuais.">
-                <div class="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 text-xl"><i class="fa-solid fa-calendar-check"></i></div>
-                <div><p class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Filtrados</p><p id="kpi-filtrado" class="text-2xl font-black text-gray-800">0</p></div>
-            </div>
-            <div class="card flex items-center gap-4 cursor-help hover:bg-gray-50 transition" title="Tempo Médio de Atendimento em horas.">
-                <div class="w-12 h-12 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600 text-xl"><i class="fa-regular fa-clock"></i></div>
-                <div><p class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">TMA (Horas)</p><p id="kpi-tma" class="text-2xl font-black text-gray-800">0.0h</p></div>
-            </div>
-            <div class="card flex items-center gap-4 cursor-help hover:bg-gray-50 transition" title="Percentagem resolvidos no prazo.">
-                <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-green-500 text-xl"><i class="fa-solid fa-stopwatch"></i></div>
-                <div><p class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">SLA Atendido</p><p id="kpi-sla" class="text-2xl font-black text-gray-800">0%</p></div>
-            </div>
-            <div class="card flex items-center gap-4 cursor-help hover:bg-gray-50 transition" title="Volume de falhas (vs pedidos).">
-                <div class="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 text-xl"><i class="fa-solid fa-triangle-exclamation"></i></div>
-                <div><p class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Incidentes</p><p id="kpi-incidentes" class="text-2xl font-black text-gray-800">0%</p></div>
-            </div>
+            <div class="card bg-white dark:bg-gray-800 flex items-center gap-4" title="Volume total na base."><div class="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 dark:text-blue-400 text-xl"><i class="fa-solid fa-ticket"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">Total (Geral)</p><p id="kpi-total" class="text-2xl font-black text-gray-800 dark:text-gray-100">0</p></div></div>
+            <div class="card bg-white dark:bg-gray-800 flex items-center gap-4" title="Volume filtrado."><div class="w-12 h-12 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400 text-xl"><i class="fa-solid fa-filter"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">Filtrados</p><p id="kpi-filtrado" class="text-2xl font-black text-gray-800 dark:text-gray-100">0</p></div></div>
+            <div class="card bg-white dark:bg-gray-800 flex items-center gap-4" title="Tempo Médio."><div class="w-12 h-12 rounded-full bg-yellow-100 dark:bg-yellow-900/50 flex items-center justify-center text-yellow-600 dark:text-yellow-400 text-xl"><i class="fa-regular fa-clock"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">TMA (Horas)</p><p id="kpi-tma" class="text-2xl font-black text-gray-800 dark:text-gray-100">0.0h</p></div></div>
+            <div class="card bg-white dark:bg-gray-800 flex items-center gap-4" title="No prazo."><div class="w-12 h-12 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center text-green-500 dark:text-green-400 text-xl"><i class="fa-solid fa-stopwatch"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">SLA Atendido</p><p id="kpi-sla" class="text-2xl font-black text-gray-800 dark:text-gray-100">0%</p></div></div>
+            <div class="card bg-white dark:bg-gray-800 flex items-center gap-4" title="Incidentes."><div class="w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center text-purple-600 dark:text-purple-400 text-xl"><i class="fa-solid fa-triangle-exclamation"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">Incidentes</p><p id="kpi-incidentes" class="text-2xl font-black text-gray-800 dark:text-gray-100">0%</p></div></div>
         </div>
 
-        <!-- Gráficos -->
+        <!-- Gráficos (Interativos - Clique para filtrar) -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <div class="card flex flex-col">
-                <h3 class="font-bold text-gray-700 mb-4 border-b pb-2 text-sm uppercase">Evolução de Chamados</h3>
-                <div class="chart-container"><canvas id="chart-meses"></canvas></div>
-            </div>
-            <div class="card flex flex-col">
-                <h3 class="font-bold text-gray-700 mb-4 border-b pb-2 text-sm uppercase">Volume por Analista Foco (Clique para Filtrar)</h3>
-                <div class="chart-container"><canvas id="chart-analistas"></canvas></div>
-            </div>
+            <div class="card bg-white dark:bg-gray-800 flex flex-col"><h3 class="font-bold text-gray-700 dark:text-gray-300 mb-4 border-b dark:border-gray-700 pb-2 text-sm uppercase">Evolução de Chamados</h3><div class="chart-container" title="Clique num ponto para filtrar por mês"><canvas id="chart-meses"></canvas></div></div>
+            <div class="card bg-white dark:bg-gray-800 flex flex-col"><h3 class="font-bold text-gray-700 dark:text-gray-300 mb-4 border-b dark:border-gray-700 pb-2 text-sm uppercase">Volume por Analista Foco (Clique para Filtrar)</h3><div class="chart-container" title="Clique numa barra para filtrar por analista"><canvas id="chart-analistas"></canvas></div></div>
         </div>
         
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <div class="card flex flex-col">
-                <h3 class="font-bold text-gray-700 mb-4 border-b pb-2 text-sm uppercase">Top 15 Assuntos (Categorias)</h3>
-                <div class="chart-container"><canvas id="chart-assuntos"></canvas></div>
-            </div>
-            <div class="card flex flex-col">
-                <h3 class="font-bold text-gray-700 mb-2 border-b pb-2 text-sm uppercase">Eficiência SLA por Criticidade</h3>
-                <p class="text-[10px] text-gray-500 mb-2">Compara chamados dentro do prazo vs estourados.</p>
-                <div class="chart-container"><canvas id="chart-prioridade"></canvas></div>
-            </div>
+            <div class="card bg-white dark:bg-gray-800 flex flex-col"><h3 class="font-bold text-gray-700 dark:text-gray-300 mb-4 border-b dark:border-gray-700 pb-2 text-sm uppercase">Top 15 Assuntos (Categorias)</h3><div class="chart-container" title="Clique numa barra para filtrar por assunto"><canvas id="chart-assuntos"></canvas></div></div>
+            <div class="card bg-white dark:bg-gray-800 flex flex-col"><h3 class="font-bold text-gray-700 dark:text-gray-300 mb-2 border-b dark:border-gray-700 pb-2 text-sm uppercase">Eficiência SLA por Criticidade</h3><p class="text-[10px] text-gray-500 dark:text-gray-400 mb-2">Compara chamados dentro do prazo vs estourados.</p><div class="chart-container" title="Clique para filtrar por criticidade"><canvas id="chart-prioridade"></canvas></div></div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <div class="card flex flex-col">
-                <h3 class="font-bold text-gray-700 mb-4 border-b pb-2 text-sm uppercase">Top Maiores Requerentes</h3>
-                <div class="chart-container"><canvas id="chart-requerentes"></canvas></div>
-            </div>
-            <div class="card flex flex-col items-center justify-center">
-                <h3 class="font-bold text-gray-700 mb-4 w-full border-b pb-2 text-sm uppercase">Natureza do Chamado</h3>
-                <div class="chart-container-small"><canvas id="chart-tipo"></canvas></div>
-            </div>
+            <div class="card bg-white dark:bg-gray-800 flex flex-col"><h3 class="font-bold text-gray-700 dark:text-gray-300 mb-4 border-b dark:border-gray-700 pb-2 text-sm uppercase">Top Maiores Requerentes</h3><div class="chart-container"><canvas id="chart-requerentes"></canvas></div></div>
+            <div class="card bg-white dark:bg-gray-800 flex flex-col items-center justify-center"><h3 class="font-bold text-gray-700 dark:text-gray-300 mb-4 w-full border-b dark:border-gray-700 pb-2 text-sm uppercase">Natureza do Chamado</h3><div class="chart-container-small" title="Clique para filtrar por tipo"><canvas id="chart-tipo"></canvas></div></div>
         </div>
 
         <!-- Tabela -->
-        <div class="card">
-            <div class="flex justify-between items-end mb-4 border-b pb-2">
-                <h3 class="font-bold text-gray-700 text-sm uppercase"><i class="fa-solid fa-table-list mr-2 text-[#1a1941]"></i>Detalhamento Operacional</h3>
-                <span class="text-xs text-gray-500 font-semibold" id="txt-tabela-count">Exibindo 0 registros.</span>
+        <div class="card bg-white dark:bg-gray-800">
+            <div class="flex justify-between items-end mb-4 border-b dark:border-gray-700 pb-2">
+                <h3 class="font-bold text-gray-700 dark:text-gray-300 text-sm uppercase"><i class="fa-solid fa-table-list mr-2 text-[#1a1941] dark:text-indigo-400"></i>Detalhamento Operacional</h3>
+                <span class="text-xs text-gray-500 dark:text-gray-400 font-semibold" id="txt-tabela-count">Exibindo 0 registros.</span>
             </div>
-            <div class="table-container rounded border border-gray-200">
-                <table class="data-table w-full text-left text-sm text-gray-600">
-                    <thead class="bg-gray-50 text-gray-700 uppercase text-xs border-b border-gray-200 shadow-sm">
+            <div class="table-container rounded border border-gray-200 dark:border-gray-700">
+                <table class="data-table w-full text-left text-sm text-gray-600 dark:text-gray-300">
+                    <thead class="bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-200 uppercase text-xs border-b dark:border-gray-600 shadow-sm">
                         <tr>
-                            <th class="px-4 py-3 font-semibold">Ticket</th>
-                            <th class="px-4 py-3 font-semibold">Data Abertura</th>
-                            <th class="px-4 py-3 font-semibold">Analista</th>
-                            <th class="px-4 py-3 font-semibold w-1/3">Assunto (Resumo)</th>
-                            <th class="px-4 py-3 font-semibold">Prioridade</th>
-                            <th class="px-4 py-3 font-semibold">SLA</th>
+                            <th class="px-4 py-3 font-semibold bg-gray-50 dark:bg-gray-700">Ticket</th>
+                            <th class="px-4 py-3 font-semibold bg-gray-50 dark:bg-gray-700">Abertura</th>
+                            <th class="px-4 py-3 font-semibold bg-gray-50 dark:bg-gray-700">Analista</th>
+                            <th class="px-4 py-3 font-semibold w-1/3 bg-gray-50 dark:bg-gray-700">Assunto (Resumo)</th>
+                            <th class="px-4 py-3 font-semibold bg-gray-50 dark:bg-gray-700">Prioridade</th>
+                            <th class="px-4 py-3 font-semibold bg-gray-50 dark:bg-gray-700">SLA</th>
                         </tr>
                     </thead>
-                    <tbody id="tabela-corpo" class="divide-y divide-gray-100 bg-white">
+                    <tbody id="tabela-corpo" class="divide-y divide-gray-100 dark:divide-gray-700 bg-white dark:bg-gray-800">
                         <tr><td colspan="6" class="px-4 py-8 text-center text-gray-400">Aguardando dados...</td></tr>
                     </tbody>
                 </table>
             </div>
             <div class="mt-3 flex justify-between items-center hidden" id="paginacao-tabela">
-                <button id="btn-tab-prev" class="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded text-xs font-semibold text-gray-600 transition disabled:opacity-50"><i class="fa-solid fa-chevron-left"></i> Anterior</button>
-                <span class="text-xs text-gray-500 font-bold" id="txt-paginacao">Página 1 de 1</span>
-                <button id="btn-tab-next" class="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded text-xs font-semibold text-gray-600 transition disabled:opacity-50">Próxima <i class="fa-solid fa-chevron-right"></i></button>
+                <button id="btn-tab-prev" class="px-3 py-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-xs font-semibold transition disabled:opacity-50"><i class="fa-solid fa-chevron-left"></i> Anterior</button>
+                <span class="text-xs text-gray-500 dark:text-gray-400 font-bold" id="txt-paginacao">Página 1 de 1</span>
+                <button id="btn-tab-next" class="px-3 py-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-xs font-semibold transition disabled:opacity-50">Próxima <i class="fa-solid fa-chevron-right"></i></button>
             </div>
         </div>
 
     </main>
 
-    <!-- Modal -->
+    <!-- Modal Ferramentas -->
     <div id="modal-config" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-lg shadow-2xl w-full max-w-2xl flex flex-col max-h-[90vh]">
-            <div class="flex justify-between items-center p-5 border-b bg-gray-50 rounded-t-lg">
-                <h2 class="text-xl font-bold text-[#1a1941] flex items-center gap-2"><i class="fa-solid fa-toolbox"></i> Painel Administrativo</h2>
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-2xl w-full max-w-2xl flex flex-col max-h-[90vh]">
+            <div class="flex justify-between items-center p-5 border-b dark:border-gray-700 bg-gray-50 dark:bg-gray-900 rounded-t-lg">
+                <h2 class="text-xl font-bold text-[#1a1941] dark:text-indigo-400 flex items-center gap-2"><i class="fa-solid fa-toolbox"></i> Painel Administrativo</h2>
                 <button id="btn-fechar-config-icon" class="text-gray-400 hover:text-red-500 transition"><i class="fa-solid fa-xmark text-2xl"></i></button>
             </div>
             
-            <div class="flex flex-wrap gap-1 px-5 pt-4 border-b">
-                <button id="aba-dados" class="px-4 py-2 tab-active text-[#1a1941] border-[#1a1941] focus:outline-none font-semibold text-sm">Atualizar Base</button>
+            <div class="flex flex-wrap gap-1 px-5 pt-4 border-b dark:border-gray-700">
+                <button id="aba-dados" class="px-4 py-2 tab-active text-[#1a1941] dark:text-indigo-400 border-[#1a1941] dark:border-indigo-400 focus:outline-none font-semibold text-sm">Atualizar Base</button>
                 <button id="aba-aparencia" class="px-4 py-2 tab-inactive focus:outline-none font-semibold text-sm">Preferências (Equipe)</button>
                 <button id="aba-relatorios" class="px-4 py-2 tab-inactive focus:outline-none font-semibold text-sm">Emissão Relatórios</button>
-                <button id="aba-admin" class="px-4 py-2 tab-inactive focus:outline-none font-semibold text-sm text-red-600 hover:text-red-800 ml-auto"><i class="fa-solid fa-triangle-exclamation"></i> Avançado / Reset</button>
+                <button id="aba-admin" class="px-4 py-2 tab-inactive focus:outline-none font-semibold text-sm text-red-600 hover:text-red-500 ml-auto"><i class="fa-solid fa-triangle-exclamation"></i> Avançado / Reset</button>
             </div>
 
             <div class="p-6 overflow-y-auto flex-grow">
                 <div id="conteudo-dados" class="block">
-                    <label class="bg-gray-50 hover:bg-gray-100 text-[#1a1941] border-2 border-dashed border-[#1a1941] w-full p-8 rounded-lg font-semibold cursor-pointer transition flex flex-col items-center justify-center gap-3">
+                    <label class="bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 text-[#1a1941] dark:text-indigo-300 border-2 border-dashed border-[#1a1941] dark:border-indigo-400 w-full p-8 rounded-lg font-semibold cursor-pointer transition flex flex-col items-center justify-center gap-3">
                         <i class="fa-solid fa-cloud-arrow-up text-4xl mb-1"></i>
                         <span>Clique para Importar Planilha Atualizada (.xlsx)</span>
                         <input type="file" id="file-upload" accept=".xlsx, .xls" class="hidden">
                     </label>
-                    <div id="loader-upload" class="mt-4 flex items-center justify-center gap-2 text-sm font-semibold text-[#1a1941] hidden">
-                        <div class="loader !border-t-[#1a1941] !border-4 !w-5 !h-5 inline-block"></div> Gravando no Firebase...
+                    <div id="loader-upload" class="mt-4 flex items-center justify-center gap-2 text-sm font-semibold text-[#1a1941] dark:text-indigo-300 hidden">
+                        <div class="loader !border-t-current !border-4 !w-5 !h-5 inline-block"></div> Gravando no Firebase...
                     </div>
-                    <div class="mt-6 text-center border-t pt-4">
-                        <button id="btn-carregar-historico" class="bg-gray-800 hover:bg-black text-white px-4 py-2 rounded text-sm font-semibold transition shadow-sm">
+                    <div class="mt-6 text-center border-t dark:border-gray-700 pt-4">
+                        <button id="btn-carregar-historico" class="bg-gray-800 dark:bg-gray-600 hover:bg-black text-white px-4 py-2 rounded text-sm font-semibold transition shadow-sm">
                             <i class="fa-solid fa-database"></i> Carregar Histórico Completo
                         </button>
                     </div>
@@ -215,109 +176,101 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                         <div>
                             <label class="block text-sm font-semibold mb-1">Título do Painel Oficial</label>
-                            <input type="text" id="input-titulo" class="w-full border rounded p-2 text-sm bg-gray-50 focus:bg-white transition" placeholder="Analytics Suporte SETIC">
+                            <input type="text" id="input-titulo" class="w-full border dark:border-gray-600 rounded p-2 text-sm bg-gray-50 dark:bg-gray-700 transition" placeholder="Analytics Suporte SETIC">
                         </div>
                         <div>
-                            <label class="block text-sm font-semibold mb-1">Cor Primária (Tema)</label>
-                            <div class="flex items-center gap-2 border rounded bg-gray-50 pr-2">
-                                <input type="color" id="input-cor" class="w-12 border-0 h-10 cursor-pointer p-0" value="#1a1941">
-                                <span class="text-xs font-mono text-gray-500" id="hex-view">#1a1941</span>
+                            <label class="block text-sm font-semibold mb-1">Cor Primária (Claro)</label>
+                            <div class="flex items-center gap-2 border dark:border-gray-600 rounded bg-gray-50 dark:bg-gray-700 pr-2">
+                                <input type="color" id="input-cor" class="w-12 border-0 h-10 cursor-pointer p-0 bg-transparent" value="#1a1941">
+                                <span class="text-xs font-mono text-gray-500 dark:text-gray-400" id="hex-view">#1a1941</span>
                             </div>
                         </div>
                     </div>
                     <div>
                         <label class="block text-sm font-semibold mb-1">Composição da Equipe Foco (Analistas Filtrados)</label>
-                        <textarea id="input-equipe" class="w-full border rounded p-3 text-sm text-gray-700 bg-gray-50 focus:bg-white transition font-mono" rows="3" placeholder="fabio.palma.prestador, edison.neto.prestador..."></textarea>
+                        <textarea id="input-equipe" class="w-full border dark:border-gray-600 rounded p-3 text-sm bg-gray-50 dark:bg-gray-700 transition font-mono" rows="3" placeholder="fabio.palma.prestador..."></textarea>
                     </div>
                 </div>
 
                 <div id="conteudo-relatorios" class="hidden">
-                    <div class="bg-indigo-50 border border-indigo-100 p-4 rounded mb-5">
-                        <h4 class="font-bold text-indigo-800 text-sm mb-2"><i class="fa-solid fa-file-signature"></i> Geração de Relatório Oficial</h4>
+                    <div class="bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-800 p-4 rounded mb-5">
+                        <h4 class="font-bold text-indigo-800 dark:text-indigo-300 text-sm mb-2"><i class="fa-solid fa-file-signature"></i> Geração de Relatório Oficial</h4>
                         <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-xs font-bold text-indigo-900 uppercase mb-1">Filtro de Mês</label>
-                                <select id="relatorio-mes" class="w-full border border-indigo-200 rounded p-2 text-sm bg-white"><option value="Todos">Global (Todo o Período)</option></select>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-indigo-900 uppercase mb-1">Analista Avaliado</label>
-                                <select id="relatorio-analista" class="w-full border border-indigo-200 rounded p-2 text-sm bg-white"><option value="Todos">Equipe Completa</option></select>
-                            </div>
+                            <div><label class="block text-xs font-bold text-indigo-900 dark:text-indigo-200 uppercase mb-1">Mês</label><select id="relatorio-mes" class="w-full border dark:border-gray-600 rounded p-2 text-sm bg-white dark:bg-gray-700"><option value="Todos">Global</option></select></div>
+                            <div><label class="block text-xs font-bold text-indigo-900 dark:text-indigo-200 uppercase mb-1">Analista</label><select id="relatorio-analista" class="w-full border dark:border-gray-600 rounded p-2 text-sm bg-white dark:bg-gray-700"><option value="Todos">Equipe Completa</option></select></div>
                         </div>
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
-                        <button id="btn-gerar-excel" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-3 rounded shadow transition flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-file-excel text-xl"></i> Extração Excel
-                        </button>
-                        <button id="btn-gerar-pdf" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-3 rounded shadow transition flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-file-pdf text-xl"></i> Relatório PDF
-                        </button>
+                        <button id="btn-gerar-excel" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-3 rounded shadow transition flex justify-center gap-2"><i class="fa-solid fa-file-excel text-xl"></i> Excel</button>
+                        <button id="btn-gerar-pdf" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-3 rounded shadow transition flex justify-center gap-2"><i class="fa-solid fa-file-pdf text-xl"></i> PDF</button>
                     </div>
                 </div>
 
                 <div id="conteudo-admin" class="hidden">
-                    <div class="border-2 border-red-200 bg-red-50 p-5 rounded-lg">
-                        <div class="flex items-center gap-3 text-red-700 mb-3">
-                            <i class="fa-solid fa-skull-crossbones text-2xl"></i>
-                            <h3 class="font-bold text-lg">Zona de Perigo</h3>
-                        </div>
-                        <p class="text-sm text-red-800 mb-4 font-semibold">Esta ação apagará <strong>todos os chamados</strong> armazenados na nuvem.</p>
-                        <div class="flex items-end gap-3 bg-white p-4 rounded border border-red-200 shadow-inner">
-                            <div class="flex-grow">
-                                <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Palavra-passe</label>
-                                <input type="password" id="input-senha-admin" class="w-full border rounded p-2 text-sm" placeholder="Digite a senha para desbloquear">
-                            </div>
-                            <button id="btn-zerar-banco" class="bg-gray-400 text-white font-bold py-2 px-4 rounded text-sm cursor-not-allowed transition" disabled>Apagar Nuvem</button>
+                    <div class="border-2 border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-900/20 p-5 rounded-lg">
+                        <h3 class="font-bold text-lg text-red-700 dark:text-red-400 mb-3"><i class="fa-solid fa-skull-crossbones"></i> Zona de Perigo</h3>
+                        <p class="text-sm text-red-800 dark:text-red-300 mb-4 font-semibold">Apagará <strong>todos os chamados</strong> da nuvem.</p>
+                        <div class="flex items-end gap-3 bg-white dark:bg-gray-800 p-4 rounded border dark:border-gray-700">
+                            <div class="flex-grow"><input type="password" id="input-senha-admin" class="w-full border dark:border-gray-600 rounded p-2 text-sm dark:bg-gray-700" placeholder="Senha"></div>
+                            <button id="btn-zerar-banco" class="bg-gray-400 text-white font-bold py-2 px-4 rounded text-sm cursor-not-allowed" disabled>Apagar</button>
                         </div>
                         <p id="msg-admin-status" class="text-xs font-bold mt-2 text-center hidden"></p>
                     </div>
                 </div>
             </div>
 
-            <div class="flex justify-end gap-3 p-5 border-t bg-gray-50 rounded-b-lg">
-                <button id="btn-fechar-config" class="px-5 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 font-bold text-sm transition">Fechar</button>
-                <button id="btn-guardar-config" class="px-5 py-2 bg-[#1a1941] text-white rounded hover:bg-opacity-90 font-bold text-sm transition shadow hidden">Salvar Preferências</button>
+            <div class="flex justify-end gap-3 p-5 border-t dark:border-gray-700 bg-gray-50 dark:bg-gray-900 rounded-b-lg">
+                <button id="btn-fechar-config" class="px-5 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded font-bold text-sm">Fechar</button>
+                <button id="btn-guardar-config" class="px-5 py-2 bg-[#1a1941] text-white rounded font-bold text-sm hidden">Salvar Preferências</button>
             </div>
         </div>
     </div>
 
-    <!-- Scripts -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
         import { getFirestore, collection, getDocs, doc, writeBatch } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
-        Chart.defaults.animation = false; 
-        Chart.register(ChartDataLabels);
-        const bgPlugin = {
-            id: 'customCanvasBackgroundColor',
-            beforeDraw: (chart, args, options) => {
-                const ctx = chart.ctx; ctx.save(); ctx.globalCompositeOperation = 'destination-over';
-                ctx.fillStyle = options.color || '#ffffff'; ctx.fillRect(0, 0, chart.width, chart.height); ctx.restore();
-            }
-        };
+        // === DARK MODE LOGIC ===
+        let isDark = localStorage.getItem('darkMode') === 'true';
+        if (isDark) { document.documentElement.classList.add('dark'); document.getElementById('icon-theme').className = "fa-solid fa-sun text-yellow-400 text-lg"; }
+        
+        Chart.defaults.animation = false; Chart.register(ChartDataLabels);
+        const setChartColors = () => { Chart.defaults.color = isDark ? '#9ca3af' : '#6b7280'; Chart.defaults.borderColor = isDark ? '#374151' : '#e5e7eb'; };
+        setChartColors();
+        
+        const bgPlugin = { id: 'customCanvasBackgroundColor', beforeDraw: (chart, args, options) => { 
+            const ctx = chart.ctx; ctx.save(); ctx.globalCompositeOperation = 'destination-over'; 
+            ctx.fillStyle = isDark ? '#1f2937' : '#ffffff'; ctx.fillRect(0, 0, chart.width, chart.height); ctx.restore(); 
+        }};
         Chart.register(bgPlugin);
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyBmi5IQIl0WwwrGGqq8Q-lB2gcou8TDqaU",
-            authDomain: "dashboard-chamado-setic.firebaseapp.com",
-            projectId: "dashboard-chamado-setic",
-            storageBucket: "dashboard-chamado-setic.firebasestorage.app",
-            messagingSenderId: "502847512745",
-            appId: "1:502847512745:web:2941e763621ecc0af509b8"
+        document.getElementById('btn-theme').addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+            isDark = document.documentElement.classList.contains('dark');
+            localStorage.setItem('darkMode', isDark);
+            document.getElementById('icon-theme').className = isDark ? "fa-solid fa-sun text-yellow-400 text-lg" : "fa-solid fa-moon text-lg";
+            setChartColors(); atualizarDashboard();
+        });
+
+        // Configurações do Firebase SETIC
+        const firebaseConfig = { 
+            apiKey: "AIzaSyBmi5IQIl0WwwrGGqq8Q-lB2gcou8TDqaU", 
+            authDomain: "dashboard-chamado-setic.firebaseapp.com", 
+            projectId: "dashboard-chamado-setic", 
+            storageBucket: "dashboard-chamado-setic.firebasestorage.app", 
+            messagingSenderId: "502847512745", 
+            appId: "1:502847512745:web:2941e763621ecc0af509b8" 
         };
         
-        let app, db;
-        try { app = initializeApp(firebaseConfig); db = getFirestore(app); } catch (error) { console.error(error); }
+        let app, db; try { app = initializeApp(firebaseConfig); db = getFirestore(app); } catch (e) { console.error(e); }
 
         let dadosGlobais = []; let dadosFiltradosCache = []; let historicoCompletoCarregado = false;
         let corPrincipal = localStorage.getItem('dashCor') || '#1a1941';
         let equipeFocoStr = localStorage.getItem('equipeFoco') || 'fabio.palma.prestador, edison.neto.prestador, antonio.muniz.prestador, jose.andrade.prestador';
-        let graficos = {};
+        let graficos = {}; let tabelaPaginaAtual = 1; const tabelaItensPorPagina = 50;
         const paletaAssuntos = ['#4f46e5', '#3b82f6', '#0ea5e9', '#06b6d4', '#14b8a6', '#10b981', '#22c55e', '#84cc16', '#eab308', '#f59e0b', '#f97316', '#ef4444', '#f43f5e', '#d946ef', '#a855f7'];
         const coresPrioridade = { 'Muito Alto': '#b91c1c', 'Alto': '#ef4444', 'Médio': '#f59e0b', 'Baixo': '#22c55e', 'Muito Baixo': '#94a3b8' };
         const coresTipo = { 'Requisição': '#6366f1', 'Incidente': '#f43f5e' };
-        
-        let tabelaPaginaAtual = 1; const tabelaItensPorPagina = 50;
 
         const modal = document.getElementById('modal-config');
         document.getElementById('btn-config').addEventListener('click', () => { modal.classList.remove('hidden'); switchTab('aba-dados', 'conteudo-dados'); });
@@ -325,23 +278,18 @@
 
         function switchTab(activeId, contentId) {
             ['aba-dados', 'aba-aparencia', 'aba-relatorios', 'aba-admin'].forEach(id => {
-                const el = document.getElementById(id);
-                el.className = id === 'aba-admin' ? 'px-4 py-2 tab-inactive focus:outline-none font-semibold text-sm text-red-600 hover:text-red-800 ml-auto' : 'px-4 py-2 tab-inactive focus:outline-none font-semibold text-sm';
-                el.style.color = ''; el.style.borderColor = '';
+                const el = document.getElementById(id); el.className = id === 'aba-admin' ? 'px-4 py-2 tab-inactive focus:outline-none font-semibold text-sm text-red-600 hover:text-red-500 ml-auto' : 'px-4 py-2 tab-inactive focus:outline-none font-semibold text-sm'; el.style.color = ''; el.style.borderColor = '';
             });
             const activeTab = document.getElementById(activeId);
             activeTab.className = activeId === 'aba-admin' ? `px-4 py-2 tab-active text-red-700 border-red-700 focus:outline-none font-semibold text-sm ml-auto` : `px-4 py-2 tab-active text-[${corPrincipal}] border-[${corPrincipal}] focus:outline-none font-semibold text-sm`;
-            if (activeId !== 'aba-admin') { activeTab.style.color = corPrincipal; activeTab.style.borderColor = corPrincipal; }
+            if (activeId !== 'aba-admin' && !isDark) { activeTab.style.color = corPrincipal; activeTab.style.borderColor = corPrincipal; }
+            if (activeId !== 'aba-admin' && isDark) { activeTab.style.color = '#818cf8'; activeTab.style.borderColor = '#818cf8'; }
             ['conteudo-dados', 'conteudo-aparencia', 'conteudo-relatorios', 'conteudo-admin'].forEach(id => document.getElementById(id).classList.add('hidden'));
             document.getElementById(contentId).classList.remove('hidden');
             document.getElementById('btn-guardar-config').style.display = contentId === 'conteudo-aparencia' ? 'block' : 'none';
         }
 
-        document.getElementById('aba-dados').addEventListener('click', () => switchTab('aba-dados', 'conteudo-dados'));
-        document.getElementById('aba-aparencia').addEventListener('click', () => switchTab('aba-aparencia', 'conteudo-aparencia'));
-        document.getElementById('aba-relatorios').addEventListener('click', () => switchTab('aba-relatorios', 'conteudo-relatorios'));
-        document.getElementById('aba-admin').addEventListener('click', () => switchTab('aba-admin', 'conteudo-admin'));
-
+        ['aba-dados', 'aba-aparencia', 'aba-relatorios', 'aba-admin'].forEach(id => document.getElementById(id).addEventListener('click', () => switchTab(id, 'conteudo-' + id.split('-')[1])));
         document.getElementById('input-cor').addEventListener('input', (e) => document.getElementById('hex-view').innerText = e.target.value);
 
         function aplicarPersonalizacao() {
@@ -349,9 +297,8 @@
             document.getElementById('input-titulo').value = localStorage.getItem('dashTitulo') || 'Analytics Suporte SETIC';
             document.getElementById('input-cor').value = corPrincipal; document.getElementById('hex-view').innerText = corPrincipal;
             document.getElementById('input-equipe').value = equipeFocoStr;
-            document.getElementById('header-bg').style.backgroundColor = corPrincipal;
+            document.getElementById('header-bg').style.backgroundColor = isDark ? '#111827' : corPrincipal;
             document.getElementById('card-filtros').style.borderTopColor = corPrincipal;
-            document.querySelector('.data-table th').style.borderBottomColor = corPrincipal;
         }
 
         document.getElementById('btn-guardar-config').addEventListener('click', () => {
@@ -361,264 +308,152 @@
             aplicarPersonalizacao(); preencherFiltros(); atualizarDashboard(); modal.classList.add('hidden');
         });
 
-        function definirStatus(badgeHtml, corClasse) {
-            const b = document.getElementById('badge-status');
-            b.className = `text-xs font-bold px-2 py-1 ${corClasse} rounded text-white shadow ml-2`;
-            b.innerHTML = badgeHtml; b.classList.remove('hidden');
-        }
+        function definirStatus(bHtml, cClasse) { const b = document.getElementById('badge-status'); b.className = `text-xs font-bold px-2 py-1 ${cClasse} rounded text-white shadow ml-2`; b.innerHTML = bHtml; b.classList.remove('hidden'); }
 
-        async function carregarDadosNuvem(forcarCompleto = false) {
+        async function carregarDadosNuvem(forcar = false) {
             if(!db) { definirStatus('<i class="fa-solid fa-xmark"></i> Erro DB', 'bg-red-600'); return; }
             try {
-                const anoAtualStr = new Date().getFullYear().toString(); 
-                const querySnapshot = await getDocs(collection(db, "chamados"));
-                dadosGlobais = [];
-                querySnapshot.forEach((doc) => {
-                    const d = doc.data(); const dStr = String(d['Data Abertura'] || d['Ticket'] || ""); 
-                    if (forcarCompleto || dStr.includes(anoAtualStr) || dStr.includes(anoAtualStr.substring(2))) dadosGlobais.push(d);
-                });
-                
+                const anoAtual = new Date().getFullYear().toString(); const q = await getDocs(collection(db, "chamados")); dadosGlobais = [];
+                q.forEach((doc) => { const d = doc.data(); const dS = String(d['Data Abertura'] || d['Ticket'] || ""); if (forcar || dS.includes(anoAtual) || dS.includes(anoAtual.substring(2))) dadosGlobais.push(d); });
                 if(dadosGlobais.length > 0) {
                     definirStatus('<i class="fa-solid fa-check-circle"></i> Sincronizado', 'bg-green-500');
-                    document.getElementById('tag-ano-atual').innerText = forcarCompleto ? "Visualizando: Todo o Histórico" : `Visualizando: Ano ${anoAtualStr}`;
-                    document.getElementById('tag-ano-atual').className = forcarCompleto ? "ml-2 text-[10px] bg-purple-100 text-purple-800 font-bold px-2 py-1 rounded border border-purple-200" : "ml-2 text-[10px] bg-green-100 text-green-800 font-bold px-2 py-1 rounded border border-green-200";
+                    document.getElementById('tag-ano-atual').innerText = forcar ? "Histórico Completo" : `Ano ${anoAtual}`;
                     preencherFiltros(); atualizarDashboard();
-                } else {
-                    definirStatus('<i class="fa-solid fa-triangle-exclamation"></i> Vazio', 'bg-red-500');
-                }
-                historicoCompletoCarregado = forcarCompleto;
-            } catch (e) { definirStatus('<i class="fa-solid fa-xmark"></i> Erro', 'bg-red-600'); console.error(e); }
+                } else { definirStatus('<i class="fa-solid fa-triangle-exclamation"></i> Vazio', 'bg-red-500'); } historicoCompletoCarregado = forcar;
+            } catch (e) { definirStatus('<i class="fa-solid fa-xmark"></i> Erro', 'bg-red-600'); console.error("Erro Firebase:", e); }
         }
 
-        document.getElementById('btn-carregar-historico').addEventListener('click', () => {
-            document.getElementById('btn-carregar-historico').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Baixando...';
-            carregarDadosNuvem(true).then(() => {
-                document.getElementById('btn-carregar-historico').innerHTML = '<i class="fa-solid fa-check"></i> Histórico Carregado';
-                document.getElementById('btn-carregar-historico').classList.replace('bg-gray-800', 'bg-green-600');
-                setTimeout(() => modal.classList.add('hidden'), 1000);
-            });
-        });
+        document.getElementById('btn-carregar-historico').addEventListener('click', () => { document.getElementById('btn-carregar-historico').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>...'; carregarDadosNuvem(true).then(() => { document.getElementById('btn-carregar-historico').innerHTML = 'Concluído'; setTimeout(() => modal.classList.add('hidden'), 1000); }); });
 
         document.getElementById('file-upload').addEventListener('change', (e) => {
-            const file = e.target.files[0]; if (!file) return;
-            document.getElementById('loader-upload').classList.remove('hidden');
-            const reader = new FileReader();
-            reader.onload = async function(ev) {
-                const wb = XLSX.read(new Uint8Array(ev.target.result), { type: 'array' });
-                const jsonRows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: "" });
+            const file = e.target.files[0]; if (!file) return; document.getElementById('loader-upload').classList.remove('hidden');
+            const reader = new FileReader(); reader.onload = async function(ev) {
+                const wb = XLSX.read(new Uint8Array(ev.target.result), { type: 'array' }); const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: "" });
                 try {
-                    const batchArray = [writeBatch(db)]; let c = 0, b = 0;
-                    jsonRows.forEach(row => {
-                        if(row.Ticket) { batchArray[b].set(doc(db, "chamados", String(row.Ticket)), row); c++; if (c === 490) { batchArray.push(writeBatch(db)); b++; c = 0; } }
-                    });
-                    for (const batch of batchArray) await batch.commit();
-                    document.getElementById('loader-upload').classList.add('hidden'); e.target.value = ""; 
-                    await carregarDadosNuvem(historicoCompletoCarregado); 
+                    const ba = [writeBatch(db)]; let c = 0, b = 0;
+                    rows.forEach(r => { if(r.Ticket) { ba[b].set(doc(db, "chamados", String(r.Ticket)), r); c++; if (c === 490) { ba.push(writeBatch(db)); b++; c = 0; } } });
+                    for (const batch of ba) await batch.commit();
+                    document.getElementById('loader-upload').classList.add('hidden'); e.target.value = ""; await carregarDadosNuvem(historicoCompletoCarregado); 
                 } catch (err) { document.getElementById('loader-upload').classList.add('hidden'); }
-            };
-            reader.readAsArrayBuffer(file);
+            }; reader.readAsArrayBuffer(file);
         });
 
-        const inputSenha = document.getElementById('input-senha-admin'); const btnReset = document.getElementById('btn-zerar-banco'); const msgAdmin = document.getElementById('msg-admin-status');
-        inputSenha.addEventListener('input', (e) => {
-            if(e.target.value === 'setic2026') { btnReset.disabled = false; btnReset.className = "bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded text-sm transition shadow animate-pulse"; } 
-            else { btnReset.disabled = true; btnReset.className = "bg-gray-300 text-white font-bold py-2 px-4 rounded text-sm cursor-not-allowed transition"; }
-        });
+        const inSenha = document.getElementById('input-senha-admin'); const btnReset = document.getElementById('btn-zerar-banco');
+        inSenha.addEventListener('input', (e) => { btnReset.disabled = e.target.value !== 'setic2026'; btnReset.className = btnReset.disabled ? "bg-gray-400 text-white font-bold py-2 px-4 rounded text-sm cursor-not-allowed" : "bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded text-sm shadow"; });
         btnReset.addEventListener('click', async () => {
-            if(!confirm("TEM A CERTEZA ABSOLUTA? Esta ação irá deletar TODOS os documentos da base.")) return;
-            btnReset.disabled = true; inputSenha.disabled = true; btnReset.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Excluindo...';
-            msgAdmin.className = "text-xs font-bold mt-2 text-center text-blue-600 block"; msgAdmin.innerText = "Apagando lotes...";
-            try {
-                const querySnapshot = await getDocs(collection(db, "chamados")); const docsLength = querySnapshot.size;
-                let b = writeBatch(db); let c = 0; const promessas = [];
-                querySnapshot.docs.forEach((docSnap) => { b.delete(docSnap.ref); c++; if(c === 490) { promessas.push(b.commit()); b = writeBatch(db); c = 0; } });
-                if(c > 0) promessas.push(b.commit()); await Promise.all(promessas);
-                msgAdmin.className = "text-xs font-bold mt-2 text-center text-green-600 block"; msgAdmin.innerText = `Sucesso: ${docsLength} apagados.`;
-                btnReset.innerHTML = '<i class="fa-solid fa-check"></i> Concluído'; dadosGlobais = []; atualizarDashboard();
-            } catch(e) { msgAdmin.className = "text-xs font-bold mt-2 text-center text-red-600 block"; msgAdmin.innerText = "Erro ao excluir."; btnReset.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Erro'; }
+            if(!confirm("TEM A CERTEZA ABSOLUTA?")) return;
+            try { const q = await getDocs(collection(db, "chamados")); let b = writeBatch(db); let c = 0; const pr = []; q.docs.forEach((d) => { b.delete(d.ref); c++; if(c === 490) { pr.push(b.commit()); b = writeBatch(db); c = 0; } }); if(c > 0) pr.push(b.commit()); await Promise.all(pr); alert("Excluído."); dadosGlobais = []; atualizarDashboard(); } catch(e) { alert("Erro."); }
         });
 
-        function parseHoras(tempoStr) {
-            if(!tempoStr) return 0; const p = String(tempoStr).split(':'); return p.length === 3 ? parseInt(p[0]) + (parseInt(p[1])/60) + (parseInt(p[2])/3600) : 0;
-        }
-        function obterMesAno(dStr) { if (dStr && dStr.includes('-')) { const p = dStr.split(' ')[0].split('-'); if(p.length >= 2) return `${p[1]}/${p[0]}`; } return "Desconhecido"; }
-        function cvDtOrd(ma) { return (!ma || ma==="Desconhecido") ? 0 : parseInt(ma.split('/')[1])*100 + parseInt(ma.split('/')[0]); }
+        function parseHoras(str) { if(!str) return 0; const p = String(str).split(':'); return p.length === 3 ? parseInt(p[0]) + (parseInt(p[1])/60) + (parseInt(p[2])/3600) : 0; }
+        function obterMesAno(str) { if (str && str.includes('-')) { const p = str.split(' ')[0].split('-'); if(p.length >= 2) return `${p[1]}/${p[0]}`; } return "Desc"; }
+        function cvDtOrd(m) { return (!m || m==="Desc") ? 0 : parseInt(m.split('/')[1])*100 + parseInt(m.split('/')[0]); }
 
         function preencherFiltros() {
-            const meses = new Set(); const analistas = new Set(); const prioridades = new Set();
-            dadosGlobais.forEach(d => { meses.add(obterMesAno(d['Data Abertura'])); if(d['Analista']) analistas.add(d['Analista']); if(d['Prioridade']) prioridades.add(d['Prioridade']); });
+            const m = new Set(), a = new Set(), p = new Set(), ass = new Set(), tp = new Set();
+            dadosGlobais.forEach(d => { 
+                m.add(obterMesAno(d['Data Abertura'])); 
+                if(d['Analista']) a.add(d['Analista']); if(d['Prioridade']) p.add(d['Prioridade']); 
+                if(d['Categoria']) ass.add(d['Categoria']); if(d['Tipo']) tp.add(d['Tipo']);
+            });
             
-            const mArr = Array.from(meses).filter(m => m!=="Desconhecido").sort((a,b) => cvDtOrd(a) - cvDtOrd(b));
-            preencherSelect('filtro-mes', mArr, "Todos os Meses"); preencherSelect('relatorio-mes', mArr, "Geral (Todos)");
-            const eqArray = equipeFocoStr.split(',').map(s=>s.trim().toLowerCase());
-            const analistasFoco = Array.from(analistas).filter(a => eqArray.includes(a.toLowerCase())).sort();
-            preencherSelect('filtro-analista', analistasFoco, "Geral (Todos)"); preencherSelect('relatorio-analista', analistasFoco, "Geral (Todos)");
-            preencherSelect('filtro-prioridade', Array.from(prioridades).sort(), "Todas as Prioridades");
+            const mArr = Array.from(m).filter(x => x!=="Desc").sort((x,y) => cvDtOrd(x) - cvDtOrd(y));
+            preencherS('filtro-mes', mArr, "Todos"); preencherS('relatorio-mes', mArr, "Todos");
+            preencherS('filtro-analista', Array.from(a).filter(x => equipeFocoStr.toLowerCase().includes(x.toLowerCase())).sort(), "Todos"); 
+            preencherS('relatorio-analista', Array.from(a).filter(x => equipeFocoStr.toLowerCase().includes(x.toLowerCase())).sort(), "Todos");
+            preencherS('filtro-prioridade', Array.from(p).sort(), "Todas");
+            preencherS('filtro-assunto', Array.from(ass).sort(), "Todos");
+            preencherS('filtro-tipo', Array.from(tp).sort(), "Todos");
         }
+        
+        function preencherS(id, arr, def) { const s = document.getElementById(id); const at = s.value; s.innerHTML = `<option value="Todos">${def}</option>`; arr.forEach(i => { const op = document.createElement('option'); op.value = i; op.innerText = i; s.appendChild(op); }); if (arr.includes(at)) s.value = at; }
 
-        function preencherSelect(id, arr, def) {
-            const s = document.getElementById(id); const atual = s.value; s.innerHTML = `<option value="Todos">${def}</option>`;
-            arr.forEach(i => { const opt = document.createElement('option'); opt.value = i; opt.innerText = i; s.appendChild(opt); });
-            if (arr.includes(atual)) s.value = atual;
-        }
-
-        ['filtro-mes', 'filtro-analista', 'filtro-prioridade', 'filtro-data-inicio', 'filtro-data-fim'].forEach(id => { document.getElementById(id).addEventListener('change', () => { tabelaPaginaAtual = 1; atualizarDashboard(); }); });
-        document.getElementById('btn-limpar-filtros').addEventListener('click', () => { ['filtro-mes', 'filtro-analista', 'filtro-prioridade', 'filtro-data-inicio', 'filtro-data-fim'].forEach(i => document.getElementById(i).value = i.includes('data') ? "" : "Todos"); tabelaPaginaAtual = 1; atualizarDashboard(); });
-        document.getElementById('btn-tab-prev').addEventListener('click', () => { if(tabelaPaginaAtual > 1) { tabelaPaginaAtual--; desenharTabela(); }});
-        document.getElementById('btn-tab-next').addEventListener('click', () => { if(tabelaPaginaAtual < Math.ceil(dadosFiltradosCache.length / tabelaItensPorPagina)) { tabelaPaginaAtual++; desenharTabela(); }});
+        ['filtro-mes', 'filtro-analista', 'filtro-prioridade', 'filtro-data-inicio', 'filtro-data-fim', 'filtro-assunto', 'filtro-tipo'].forEach(id => { document.getElementById(id).addEventListener('change', () => { tabelaPaginaAtual = 1; atualizarDashboard(); }); });
+        document.getElementById('btn-limpar-filtros').addEventListener('click', () => { ['filtro-mes', 'filtro-analista', 'filtro-prioridade', 'filtro-data-inicio', 'filtro-data-fim', 'filtro-assunto', 'filtro-tipo'].forEach(i => document.getElementById(i).value = i.includes('data') ? "" : "Todos"); tabelaPaginaAtual = 1; atualizarDashboard(); });
 
         let tmaGlobalTexto = "0.0h"; let slaGlobalTexto = "0%"; let incGlobalTexto = "0%";
 
         function atualizarDashboard() {
-            if (dadosGlobais.length === 0) {
-                document.getElementById('kpi-total').innerText = '0'; document.getElementById('kpi-filtrado').innerText = '0';
-                document.getElementById('kpi-tma').innerText = '0.0h'; document.getElementById('kpi-sla').innerText = '0%'; document.getElementById('kpi-incidentes').innerText = '0%';
-                desenharTabela(); return;
-            }
-
-            const fM = document.getElementById('filtro-mes').value; const fA = document.getElementById('filtro-analista').value;
-            const fP = document.getElementById('filtro-prioridade').value; const dIn = document.getElementById('filtro-data-inicio').value; const dFim = document.getElementById('filtro-data-fim').value;
+            if (dadosGlobais.length === 0) return desenharTabela();
+            const fM = document.getElementById('filtro-mes').value, fA = document.getElementById('filtro-analista').value, fP = document.getElementById('filtro-prioridade').value;
+            const fAss = document.getElementById('filtro-assunto').value, fTp = document.getElementById('filtro-tipo').value;
+            const dIn = document.getElementById('filtro-data-inicio').value, dFim = document.getElementById('filtro-data-fim').value;
 
             const filtrados = dadosGlobais.filter(d => {
-                let match = (fM === "Todos" || obterMesAno(d['Data Abertura']) === fM) && (fA === "Todos" || d['Analista'] === fA) && (fP === "Todos" || d['Prioridade'] === fP);
+                let match = (fM === "Todos" || obterMesAno(d['Data Abertura']) === fM) && (fA === "Todos" || d['Analista'] === fA) && (fP === "Todos" || d['Prioridade'] === fP) &&
+                            (fAss === "Todos" || d['Categoria'] === fAss) && (fTp === "Todos" || d['Tipo'] === fTp);
                 if(match && (dIn || dFim) && d['Data Abertura']) {
-                    const dObjStr = d['Data Abertura'].split(' ')[0]; const dNum = parseInt(dObjStr.replace(/-/g, ''));
-                    if(dIn && dNum < parseInt(dIn.replace(/-/g, ''))) match = false;
-                    if(dFim && dNum > parseInt(dFim.replace(/-/g, ''))) match = false;
-                }
-                return match;
+                    const n = parseInt(d['Data Abertura'].split(' ')[0].replace(/-/g, ''));
+                    if(dIn && n < parseInt(dIn.replace(/-/g, ''))) match = false; if(dFim && n > parseInt(dFim.replace(/-/g, ''))) match = false;
+                } return match;
             });
             filtrados.sort((a,b) => { const da = a['Data Abertura'] || ""; const db = b['Data Abertura'] || ""; return da > db ? -1 : (da < db ? 1 : 0); });
             dadosFiltradosCache = filtrados;
 
-            const total = filtrados.length;
-            document.getElementById('kpi-total').innerText = dadosGlobais.length.toLocaleString('pt-BR');
-            document.getElementById('kpi-filtrado').innerText = total.toLocaleString('pt-BR');
+            const total = filtrados.length; document.getElementById('kpi-total').innerText = dadosGlobais.length.toLocaleString('pt-BR'); document.getElementById('kpi-filtrado').innerText = total.toLocaleString('pt-BR');
             
-            const horasTMA = total > 0 ? (filtrados.reduce((acc, d) => acc + parseHoras(d['Tempo Solução']), 0) / total) : 0;
-            tmaGlobalTexto = horasTMA.toFixed(1) + 'h'; document.getElementById('kpi-tma').innerText = tmaGlobalTexto;
-
-            const atend = filtrados.filter(d => d['SLA Atendido'] === 'Sim').length; const incid = filtrados.filter(d => String(d['Tipo']).toLowerCase() === 'incidente').length;
-            slaGlobalTexto = total > 0 ? ((atend / total) * 100).toFixed(1) + '%' : '0%';
-            incGlobalTexto = total > 0 ? ((incid / total) * 100).toFixed(1) + '%' : '0%';
+            const hT = total > 0 ? (filtrados.reduce((acc, d) => acc + parseHoras(d['Tempo Solução']), 0) / total) : 0; tmaGlobalTexto = hT.toFixed(1) + 'h'; document.getElementById('kpi-tma').innerText = tmaGlobalTexto;
+            const at = filtrados.filter(d => d['SLA Atendido'] === 'Sim').length; const inc = filtrados.filter(d => String(d['Tipo']).toLowerCase() === 'incidente').length;
+            slaGlobalTexto = total > 0 ? ((at / total) * 100).toFixed(1) + '%' : '0%'; incGlobalTexto = total > 0 ? ((inc / total) * 100).toFixed(1) + '%' : '0%';
             document.getElementById('kpi-sla').innerText = slaGlobalTexto; document.getElementById('kpi-incidentes').innerText = incGlobalTexto;
 
-            let dMes = agruparPor(filtrados, d => obterMesAno(d['Data Abertura']));
-            const indOrd = dMes.labels.map((val, ind) => ({val, ind})).sort((a,b) => cvDtOrd(a.val) - cvDtOrd(b.val));
-            dMes.labels = indOrd.map(i => i.val); dMes.values = indOrd.map(i => dMes.values[i.ind]);
+            let dMes = agruparPor(filtrados, d => obterMesAno(d['Data Abertura'])); const indOrd = dMes.labels.map((val, ind) => ({val, ind})).sort((a,b) => cvDtOrd(a.val) - cvDtOrd(b.val)); dMes.labels = indOrd.map(i => i.val); dMes.values = indOrd.map(i => dMes.values[i.ind]);
+            let dAnaBruto = agruparPor(filtrados, 'Analista'); let dAna = { labels: [], values: [] }; dAnaBruto.labels.forEach((l, i) => { if(equipeFocoStr.toLowerCase().includes(l.toLowerCase())) { dAna.labels.push(l); dAna.values.push(dAnaBruto.values[i]); } });
 
-            const eqArray = equipeFocoStr.split(',').map(s=>s.trim().toLowerCase());
-            let dAnaBruto = agruparPor(filtrados, 'Analista'); let dAna = { labels: [], values: [] };
-            dAnaBruto.labels.forEach((lbl, idx) => { if(eqArray.includes(lbl.toLowerCase())) { dAna.labels.push(lbl); dAna.values.push(dAnaBruto.values[idx]); } });
-
-            const dAss = agruparPor(filtrados, 'Categoria', 15); const dReq = agruparPor(filtrados, 'Requerente', 10);
-            
-            let dPrioBruto = agruparPor(filtrados, 'Prioridade');
-            const mapOrdP = {'Muito Alto': 1, 'Alto': 2, 'Médio': 3, 'Baixo': 4, 'Muito Baixo': 5};
+            const dAss = agruparPor(filtrados, 'Categoria', 15); const dReq = agruparPor(filtrados, 'Requerente', 10); const dTipo = agruparPor(filtrados, 'Tipo');
+            let dPrioBruto = agruparPor(filtrados, 'Prioridade'); const mapOrdP = {'Muito Alto': 1, 'Alto': 2, 'Médio': 3, 'Baixo': 4, 'Muito Baixo': 5};
             let arrP = dPrioBruto.labels.map((l, i) => ({l, v: dPrioBruto.values[i]})).sort((a,b) => (mapOrdP[a.l] || 99) - (mapOrdP[b.l] || 99));
-            
             let prioSLA_Atendido = []; let prioSLA_Estourado = [];
-            arrP.forEach(item => {
-                const noPrazo = filtrados.filter(d => d['Prioridade'] === item.l && d['SLA Atendido'] === 'Sim').length;
-                prioSLA_Atendido.push(noPrazo); prioSLA_Estourado.push(item.v - noPrazo);
-            });
-            const dadosSlaPrio = { labels: arrP.map(i=>i.l), atendido: prioSLA_Atendido, estourado: prioSLA_Estourado };
-            const dTipo = agruparPor(filtrados, 'Tipo');
+            arrP.forEach(item => { const noPrazo = filtrados.filter(d => d['Prioridade'] === item.l && d['SLA Atendido'] === 'Sim').length; prioSLA_Atendido.push(noPrazo); prioSLA_Estourado.push(item.v - noPrazo); });
 
-            renderizarG('chart-meses', 'line', dMes, corPrincipal, false, false);
-            renderizarG('chart-analistas', 'bar', dAna, corPrincipal, false, true, (l) => { document.getElementById('filtro-analista').value = l; tabelaPaginaAtual=1; atualizarDashboard(); });
-            renderizarGMulti('chart-assuntos', 'bar', dAss, paletaAssuntos, true);
-            renderizarG('chart-requerentes', 'bar', dReq, '#2e2b7a', true, false);
-            renderizarSLAStack('chart-prioridade', dadosSlaPrio);
-            renderizarCirc('chart-tipo', 'pie', dTipo, coresTipo);
+            // CROSS FILTERING CLICKS
+            rend('chart-meses', 'line', dMes, corPrincipal, false, false, (l) => { document.getElementById('filtro-mes').value = l; tabelaPaginaAtual=1; atualizarDashboard(); });
+            rend('chart-analistas', 'bar', dAna, corPrincipal, false, true, (l) => { document.getElementById('filtro-analista').value = l; tabelaPaginaAtual=1; atualizarDashboard(); });
+            rendM('chart-assuntos', 'bar', dAss, paletaAssuntos, true, (l) => { document.getElementById('filtro-assunto').value = l; tabelaPaginaAtual=1; atualizarDashboard(); });
+            rend('chart-requerentes', 'bar', dReq, '#2e2b7a', true, false);
+            rendSLA('chart-prioridade', {labels: arrP.map(i=>i.l), ok: prioSLA_Atendido, no: prioSLA_Estourado}, (l) => { document.getElementById('filtro-prioridade').value = l; tabelaPaginaAtual=1; atualizarDashboard(); });
+            rendC('chart-tipo', 'pie', dTipo, coresTipo, (l) => { document.getElementById('filtro-tipo').value = l; tabelaPaginaAtual=1; atualizarDashboard(); });
 
             desenharTabela();
         }
 
-        function agruparPor(dados, chave, limite=null) {
-            const c = {}; dados.forEach(d => { const k = typeof chave==='function' ? chave(d) : d[chave]; if(k) c[k] = (c[k]||0)+1; });
-            let arr = Object.keys(c).map(k => ({ label: k, value: c[k] })).sort((a,b) => b.value - a.value);
-            if(limite) arr = arr.slice(0, limite);
-            return { labels: arr.map(i=>i.label), values: arr.map(i=>i.value) };
-        }
+        function agruparPor(dados, chave, limite=null) { const c = {}; dados.forEach(d => { const k = typeof chave==='function' ? chave(d) : d[chave]; if(k) c[k] = (c[k]||0)+1; }); let arr = Object.keys(c).map(k => ({ label: k, value: c[k] })).sort((a,b) => b.value - a.value); if(limite) arr = arr.slice(0, limite); return { labels: arr.map(i=>i.label), values: arr.map(i=>i.value) }; }
 
-        function renderizarG(id, tipo, dAgr, cor, horizontal, showLabels=false, onClickCallback=null) {
+        function rend(id, tipo, dAgr, cor, horizontal, showLabels=false, clk=null) {
             const ctx = document.getElementById(id).getContext('2d'); if (graficos[id]) graficos[id].destroy();
-            const options = { 
-                responsive: true, maintainAspectRatio: false,
-                plugins: { legend: { display: false }, datalabels: { display: showLabels, color: '#fff', font: {weight: 'bold'}, anchor: 'end', align: 'start', offset: 4 } },
-                onClick: (e, act) => { if(onClickCallback && act.length>0) onClickCallback(dAgr.labels[act[0].index]); }
-            };
-            if(horizontal) options.indexAxis = 'y';
-            if(tipo === 'line' && showLabels) options.plugins.datalabels = {display:true, color:cor, anchor:'end', align:'top', offset:4, font:{weight:'bold'}};
-            const ds = { data: dAgr.values, backgroundColor: cor, borderRadius: horizontal ? 0 : 4 };
-            if(tipo === 'line') { ds.fill=true; ds.backgroundColor=cor+'20'; ds.borderColor=cor; ds.tension=0.4; ds.pointBackgroundColor=cor; }
+            const options = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, datalabels: { display: showLabels, color: isDark?'#e5e7eb':'#fff', font: {weight: 'bold'}, anchor: 'end', align: 'start', offset: 4 } }, onClick: (e, a) => { if(clk && a.length>0) clk(dAgr.labels[a[0].index]); }, onHover: (e, a) => { e.native.target.style.cursor = a[0] ? 'pointer' : 'default'; } };
+            if(horizontal) options.indexAxis = 'y'; if(tipo === 'line' && showLabels) options.plugins.datalabels = {display:true, color:cor, anchor:'end', align:'top', offset:4, font:{weight:'bold'}};
+            const ds = { data: dAgr.values, backgroundColor: isDark?'#818cf8':cor, borderRadius: horizontal ? 0 : 4 };
+            if(tipo === 'line') { ds.fill=true; ds.backgroundColor=isDark?'rgba(129, 140, 248, 0.2)':cor+'20'; ds.borderColor=isDark?'#818cf8':cor; ds.tension=0.4; }
             graficos[id] = new Chart(ctx, { type: tipo, data: { labels: dAgr.labels, datasets: [ds] }, options: options });
         }
 
-        function renderizarGMulti(id, tipo, dAgr, cores, horizontal) {
-            const ctx = document.getElementById(id).getContext('2d'); if (graficos[id]) graficos[id].destroy();
-            graficos[id] = new Chart(ctx, {
-                type: tipo, data: { labels: dAgr.labels, datasets: [{ data: dAgr.values, backgroundColor: cores, borderRadius: 2 }] },
-                options: { indexAxis: horizontal ? 'y' : 'x', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, datalabels: { display: false } } }
-            });
-        }
-
-        function renderizarCirc(id, tipo, dAgr, mapCores) {
-            const ctx = document.getElementById(id).getContext('2d'); if (graficos[id]) graficos[id].destroy();
-            const bgC = dAgr.labels.map(l => mapCores[l] || '#9ca3af');
-            graficos[id] = new Chart(ctx, {
-                type: tipo, data: { labels: dAgr.labels, datasets: [{ data: dAgr.values, backgroundColor: bgC, borderWidth: 1 }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' }, datalabels: { display: false } } }
-            });
-        }
-
-        function renderizarSLAStack(id, objDados) {
-            const ctx = document.getElementById(id).getContext('2d'); if (graficos[id]) graficos[id].destroy();
-            graficos[id] = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: objDados.labels,
-                    datasets: [
-                        { label: 'SLA Cumprido', data: objDados.atendido, backgroundColor: '#22c55e', borderRadius: 2 },
-                        { label: 'SLA Violado', data: objDados.estourado, backgroundColor: '#ef4444', borderRadius: 2 }
-                    ]
-                },
-                options: {
-                    responsive: true, maintainAspectRatio: false,
-                    scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } },
-                    plugins: { legend: { position: 'top', labels: { boxWidth: 12, font: {size: 10} } }, datalabels: { display: false } }
-                }
-            });
-        }
+        function rendM(id, tipo, dAgr, cores, horizontal, clk=null) { const ctx = document.getElementById(id).getContext('2d'); if (graficos[id]) graficos[id].destroy(); graficos[id] = new Chart(ctx, { type: tipo, data: { labels: dAgr.labels, datasets: [{ data: dAgr.values, backgroundColor: cores, borderRadius: 2 }] }, options: { indexAxis: horizontal ? 'y' : 'x', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, datalabels: { display: false } }, onClick: (e, a) => { if(clk && a.length>0) clk(dAgr.labels[a[0].index]); }, onHover: (e, a) => { e.native.target.style.cursor = a[0] ? 'pointer' : 'default'; } } }); }
+        function rendC(id, tipo, dAgr, mapCores, clk=null) { const ctx = document.getElementById(id).getContext('2d'); if (graficos[id]) graficos[id].destroy(); const bgC = dAgr.labels.map(l => mapCores[l] || '#9ca3af'); graficos[id] = new Chart(ctx, { type: tipo, data: { labels: dAgr.labels, datasets: [{ data: dAgr.values, backgroundColor: bgC, borderWidth: 1, borderColor: isDark?'#1f2937':'#fff' }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' }, datalabels: { display: false } }, onClick: (e, a) => { if(clk && a.length>0) clk(dAgr.labels[a[0].index]); }, onHover: (e, a) => { e.native.target.style.cursor = a[0] ? 'pointer' : 'default'; } } }); }
+        function rendSLA(id, obj, clk=null) { const ctx = document.getElementById(id).getContext('2d'); if (graficos[id]) graficos[id].destroy(); graficos[id] = new Chart(ctx, { type: 'bar', data: { labels: obj.labels, datasets: [ { label: 'SLA Cumprido', data: obj.ok, backgroundColor: '#22c55e', borderRadius: 2 }, { label: 'SLA Violado', data: obj.no, backgroundColor: '#ef4444', borderRadius: 2 } ] }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true } }, plugins: { legend: { position: 'top', labels: { boxWidth: 12, font: {size: 10} } }, datalabels: { display: false } }, onClick: (e, a) => { if(clk && a.length>0) clk(obj.labels[a[0].index]); }, onHover: (e, a) => { e.native.target.style.cursor = a[0] ? 'pointer' : 'default'; } } }); }
 
         function desenharTabela() {
-            const tbody = document.getElementById('tabela-corpo'); const total = dadosFiltradosCache.length;
-            document.getElementById('txt-tabela-count').innerText = `Exibindo ${total} registros.`;
+            const tbody = document.getElementById('tabela-corpo'); const total = dadosFiltradosCache.length; document.getElementById('txt-tabela-count').innerText = `Exibindo ${total} registros.`;
             
-            if (total === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-gray-500 font-semibold bg-gray-50">Nenhum chamado corresponde aos filtros.</td></tr>';
-                document.getElementById('paginacao-tabela').classList.add('hidden'); return;
-            }
+            if (total === 0) { tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-gray-500 font-semibold bg-gray-50 dark:bg-gray-800">Nenhum chamado corresponde aos filtros.</td></tr>'; document.getElementById('paginacao-tabela').classList.add('hidden'); return; }
 
             const totalP = Math.ceil(total / tabelaItensPorPagina); if(tabelaPaginaAtual > totalP) tabelaPaginaAtual = totalP;
             const fatia = dadosFiltradosCache.slice((tabelaPaginaAtual - 1) * tabelaItensPorPagina, ((tabelaPaginaAtual - 1) * tabelaItensPorPagina) + tabelaItensPorPagina);
 
             tbody.innerHTML = '';
             fatia.forEach(d => {
-                const badgeSLA = d['SLA Atendido'] === 'Sim' ? `<span class="bg-green-100 text-green-700 px-2 py-0.5 rounded text-[10px] font-bold">Sim</span>` : `<span class="bg-red-100 text-red-700 px-2 py-0.5 rounded text-[10px] font-bold">Não</span>`;
-                const tr = document.createElement('tr'); tr.className = "hover:bg-blue-50 transition";
-                tr.innerHTML = `
-                    <td class="px-4 py-2 font-mono text-xs font-semibold text-gray-700">${d['Ticket'] || '-'}</td>
-                    <td class="px-4 py-2 text-xs">${(d['Data Abertura']||'').substring(0, 10)}</td>
-                    <td class="px-4 py-2 text-xs font-medium text-gray-900">${(d['Analista']||'').split('.')[0]}</td>
-                    <td class="px-4 py-2 text-xs truncate max-w-[200px]" title="${d['Assunto']||''}">${d['Assunto']||'-'}</td>
-                    <td class="px-4 py-2 text-xs">${d['Prioridade']||'-'}</td>
-                    <td class="px-4 py-2 text-xs">${badgeSLA}</td>
+                const bSLA = d['SLA Atendido'] === 'Sim' ? `<span class="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-0.5 rounded text-[10px] font-bold">Sim</span>` : `<span class="bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 px-2 py-0.5 rounded text-[10px] font-bold">Não</span>`;
+                tbody.innerHTML += `
+                    <tr class="hover:bg-blue-50 dark:hover:bg-gray-700 transition">
+                        <td class="px-4 py-2 font-mono text-xs font-semibold">${d['Ticket'] || '-'}</td>
+                        <td class="px-4 py-2 text-xs">${(d['Data Abertura']||'').substring(0, 10)}</td>
+                        <td class="px-4 py-2 text-xs font-medium">${(d['Analista']||'').split('.')[0]}</td>
+                        <td class="px-4 py-2 text-xs truncate max-w-[200px]" title="${d['Assunto']||''}">${d['Assunto']||'-'}</td>
+                        <td class="px-4 py-2 text-xs">${d['Prioridade']||'-'}</td>
+                        <td class="px-4 py-2 text-xs">${bSLA}</td>
+                    </tr>
                 `;
-                tbody.appendChild(tr);
             });
-
             document.getElementById('paginacao-tabela').classList.remove('hidden'); document.getElementById('txt-paginacao').innerText = `Página ${tabelaPaginaAtual} de ${totalP}`;
             document.getElementById('btn-tab-prev').disabled = tabelaPaginaAtual === 1; document.getElementById('btn-tab-next').disabled = tabelaPaginaAtual === totalP;
         }
@@ -627,120 +462,57 @@
             const fM = document.getElementById('relatorio-mes').value; const fA = document.getElementById('relatorio-analista').value;
             const dadosExp = dadosGlobais.filter(d => (fM === "Todos" || obterMesAno(d['Data Abertura']) === fM) && (fA === "Todos" || d['Analista'] === fA));
             if(dadosExp.length === 0) return alert("Nenhum dado encontrado para exportar.");
-            const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(dadosExp), "Relatorio");
-            XLSX.writeFile(wb, `Base_Extraida_SETIC.xlsx`);
+            const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(dadosExp), "Relatorio"); XLSX.writeFile(wb, `Base_Extraida.xlsx`);
         });
 
-        // === RELATÓRIO PDF COM CABEÇALHO PROPORCIONAL E TÍTULOS DE GRÁFICOS CORRIGIDOS ===
+        // === RELATÓRIO PDF COM A MÉDIA MENSAL INTEGRADA AO TEXTO (COMO SOLICITADO ANTERIORMENTE) ===
         document.getElementById('btn-gerar-pdf').addEventListener('click', () => {
             const fM = document.getElementById('relatorio-mes').value; const fA = document.getElementById('relatorio-analista').value;
-            const btn = document.getElementById('btn-gerar-pdf');
-            
-            const conteudoOriginal = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xl"></i> <div><p class="text-sm">A processar...</p></div>';
-            btn.disabled = true;
-            
-            document.getElementById('filtro-mes').value = fM; document.getElementById('filtro-analista').value = fA;
-            document.getElementById('filtro-prioridade').value = 'Todos'; document.getElementById('filtro-data-inicio').value = ''; document.getElementById('filtro-data-fim').value = '';
-            atualizarDashboard(); 
+            const btn = document.getElementById('btn-gerar-pdf'); const conteudoOriginal = btn.innerHTML; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xl"></i> <div><p class="text-sm">A processar...</p></div>'; btn.disabled = true;
+            document.getElementById('filtro-mes').value = fM; document.getElementById('filtro-analista').value = fA; document.getElementById('filtro-prioridade').value = 'Todos'; document.getElementById('filtro-assunto').value = 'Todos'; document.getElementById('filtro-tipo').value = 'Todos'; document.getElementById('filtro-data-inicio').value = ''; document.getElementById('filtro-data-fim').value = ''; atualizarDashboard(); 
 
             setTimeout(() => {
                 try {
-                    const dadosExp = dadosFiltradosCache;
-                    if(dadosExp.length === 0) {
-                        alert("Nenhum dado com os filtros selecionados.");
-                        btn.innerHTML = conteudoOriginal; btn.disabled = false; return;
-                    }
-                    
+                    const dadosExp = dadosFiltradosCache; if(dadosExp.length === 0) { alert("Nenhum dado."); btn.innerHTML = conteudoOriginal; btn.disabled = false; return; }
                     const { jsPDF } = window.jspdf; const doc = new jsPDF('p', 'pt', 'a4'); const w = doc.internal.pageSize.width;
                     
-                    // Cabeçalho institucional (Fundo azul escuro)
-                    doc.setFillColor(26, 25, 65); doc.rect(0, 0, w, 95, 'F');
+                    doc.setFillColor(26, 25, 65); doc.rect(0, 0, w, 95, 'F'); doc.setTextColor(255, 255, 255); 
                     
-                    doc.setTextColor(255, 255, 255); 
+                    // Cabeçalho da PRF que foi alinhado e ajustado
+                    doc.setFontSize(14); doc.setFont("helvetica", "bold"); doc.text("MINISTÉRIO DA JUSTIÇA E SEGURANÇA PÚBLICA", 40, 32);
+                    doc.setFontSize(9.5); doc.setFont("helvetica", "normal"); doc.text("Polícia Rodoviária Federal - Diretoria de Tecnologia da Informação e Comunicação (DTIC)", 40, 52);
+                    doc.setFontSize(11); doc.setFont("helvetica", "bold"); doc.text("Relatório Gerencial Analítico - Suporte", 40, 74);
                     
-                    // Linha 1: MINISTÉRIO (Fonte Grande, igual à imagem de referência)
-                    doc.setFontSize(14); doc.setFont("helvetica", "bold");
-                    doc.text("MINISTÉRIO DA JUSTIÇA E SEGURANÇA PÚBLICA", 40, 32);
-                    
-                    // Linha 2: Polícia Rodoviária Federal (Tamanho médio)
-                    doc.setFontSize(9.5); doc.setFont("helvetica", "normal");
-                    doc.text("Polícia Rodoviária Federal - Diretoria de Tecnologia da Informação e Comunicação (DTIC)", 40, 52);
-                    
-                    // Linha 3: Relatório Gerencial Analítico - Suporte (Destaque em negrito)
-                    doc.setFontSize(11); doc.setFont("helvetica", "bold");
-                    doc.text("Relatório Gerencial Analítico - Suporte", 40, 74);
+                    try { const urlLogo = 'https://raw.githubusercontent.com/AlbertBarros/dashbord-chamados-suporte-setic/main/bras%C3%A3o.png.png'; doc.addImage(urlLogo, 'PNG', 40, 20, 40, 40); } catch(e) {}
 
-                    // Seção: Resumo Executivo
-                    doc.setTextColor(26, 25, 65); doc.setFontSize(12); doc.text("Resumo Executivo", 40, 125);
-                    doc.setTextColor(60, 60, 60); doc.setFontSize(10); doc.setFont("helvetica", "normal");
+                    doc.setTextColor(26, 25, 65); doc.setFontSize(12); doc.text("Resumo Executivo", 40, 125); doc.setTextColor(60, 60, 60); doc.setFontSize(10); doc.setFont("helvetica", "normal");
                     
-                    const txtIA = `Documento gerado em ${new Date().toLocaleDateString('pt-BR')} (Filtro Aplicado: Mês ${fM} | Analista: ${fA}). O período processou um total de ${dadosExp.length} tickets. A eficiência registrou um TMA de ${tmaGlobalTexto}, garantindo que ${slaGlobalTexto} das demandas fossem solucionadas no prazo. A taxa de incidentes correspondeu a ${incGlobalTexto}.`;
-                    doc.text(doc.splitTextToSize(txtIA, w - 80), 40, 145);
+                    const mesesUnicos = new Set(dadosExp.map(d => obterMesAno(d['Data Abertura']))).size || 1; const mediaMes = Math.round(dadosExp.length / mesesUnicos);
                     
-                    // Blocos de KPI
+                    // Texto do Relatório contendo a Média por Mês
+                    doc.text(doc.splitTextToSize(`Documento gerado em ${new Date().toLocaleDateString('pt-BR')} (Filtro Aplicado: Mês ${fM} | Analista: ${fA}). O período processou um total de ${dadosExp.length} tickets (média de ${mediaMes} chamados/mês). A eficiência registrou um TMA de ${tmaGlobalTexto}, garantindo que ${slaGlobalTexto} das demandas fossem solucionadas no prazo. A taxa de incidentes correspondeu a ${incGlobalTexto}.`, w - 80), 40, 145);
+                    
                     doc.setFillColor(245, 247, 250); doc.rect(40, 195, 160, 50, 'F'); doc.rect(215, 195, 160, 50, 'F'); doc.rect(390, 195, 160, 50, 'F');
-                    doc.setFontSize(9); doc.setTextColor(120, 120, 120); doc.setFont("helvetica", "bold");
-                    doc.text("VOLUME TOTAL", 120, 215, {align: 'center'}); doc.text("TMA (MÉDIA HORAS)", 295, 215, {align: 'center'}); doc.text("EFICIÊNCIA DE SLA", 470, 215, {align: 'center'});
-                    doc.setFontSize(16); doc.setTextColor(26, 25, 65);
-                    doc.text(String(dadosExp.length), 120, 235, {align: 'center'}); doc.text(String(tmaGlobalTexto), 295, 235, {align: 'center'});
-                    doc.setTextColor(22, 163, 74); doc.text(String(slaGlobalTexto), 470, 235, {align: 'center'});
+                    doc.setFontSize(9); doc.setTextColor(120, 120, 120); doc.setFont("helvetica", "bold"); doc.text("VOLUME TOTAL", 120, 215, {align: 'center'}); doc.text("TMA (MÉDIA HORAS)", 295, 215, {align: 'center'}); doc.text("EFICIÊNCIA DE SLA", 470, 215, {align: 'center'});
+                    doc.setFontSize(16); doc.setTextColor(26, 25, 65); doc.text(String(dadosExp.length), 120, 235, {align: 'center'}); doc.text(String(tmaGlobalTexto), 295, 235, {align: 'center'}); doc.setTextColor(22, 163, 74); doc.text(String(slaGlobalTexto), 470, 235, {align: 'center'});
 
-                    // Seção: Análise Visual
-                    doc.setFontSize(12); doc.setTextColor(26, 25, 65); doc.text("Análise Visual", 40, 275);
-                    doc.setFontSize(9); doc.setTextColor(100, 100, 100);
-                    
+                    doc.setFontSize(12); doc.setTextColor(26, 25, 65); doc.text("Análise Visual", 40, 275); doc.setFontSize(9); doc.setTextColor(100, 100, 100);
                     const getImg = (id) => { try { const c = document.getElementById(id); return c ? c.toDataURL('image/jpeg', 1.0) : null; } catch(e) { return null; } };
                     
-                    // Gráfico 1: Evolução Histórica (chart-meses)
-                    doc.text("Evolução Histórica", 40, 295); 
-                    const i1 = getImg('chart-meses'); if(i1) doc.addImage(i1, 'JPEG', 40, 300, 240, 130);
-                    
-                    // Gráfico 2: Volume Foco (chart-analistas)
-                    doc.text("Volume Foco", 305, 295); 
-                    const i2 = getImg('chart-analistas'); if(i2) doc.addImage(i2, 'JPEG', 305, 300, 240, 130);
-                    
-                    // Gráfico 3: Assuntos Top 15 (chart-assuntos)
-                    doc.text("Assuntos Top 15", 40, 450); 
-                    const i3 = getImg('chart-assuntos'); if(i3) doc.addImage(i3, 'JPEG', 40, 455, 240, 130);
-                    
-                    // Gráfico 4: SLA vs Criticidade (chart-prioridade)
-                    doc.text("SLA vs Criticidade", 305, 450); 
-                    const i4 = getImg('chart-prioridade'); if(i4) doc.addImage(i4, 'JPEG', 305, 455, 240, 130);
+                    doc.text("Evolução Histórica", 40, 295); const i1 = getImg('chart-meses'); if(i1) doc.addImage(i1, 'JPEG', 40, 300, 240, 130);
+                    doc.text("Volume Foco", 305, 295); const i2 = getImg('chart-analistas'); if(i2) doc.addImage(i2, 'JPEG', 305, 300, 240, 130);
+                    doc.text("Assuntos Top 15", 40, 450); const i3 = getImg('chart-assuntos'); if(i3) doc.addImage(i3, 'JPEG', 40, 455, 240, 130);
+                    doc.text("SLA vs Criticidade", 305, 450); const i4 = getImg('chart-prioridade'); if(i4) doc.addImage(i4, 'JPEG', 305, 455, 240, 130);
 
-                    // Página 2: Detalhamento dos Chamados Extraídos
-                    doc.addPage();
-                    doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.setTextColor(26, 25, 65); doc.text("Detalhamento dos Chamados Extraídos", 40, 40);
-
-                    const linhas = dadosExp.map(d => [ 
-                        String(d['Ticket']||'-'), 
-                        String((d['Data Abertura']||'').split(' ')[0]), 
-                        String((d['Analista']||'-').split('.')[0]), 
-                        String((d['Assunto']||'').substring(0, 35)), 
-                        String(d['Prioridade']||'-'), 
-                        String(d['SLA Atendido']||'-') 
-                    ]);
-                    
-                    doc.autoTable({
-                        startY: 55, head: [["Ticket", "Abertura", "Analista", "Assunto", "Prioridade", "SLA Ok?"]], body: linhas,
-                        theme: 'striped', headStyles: { fillColor: [26, 25, 65] }, styles: { fontSize: 8 }, alternateRowStyles: { fillColor: [247, 248, 250] },
-                        margin: { top: 30, right: 40, bottom: 40, left: 40 },
-                        didDrawPage: function (dt) { doc.setFontSize(8); doc.setTextColor(150, 150, 150); doc.text(`Página ${doc.internal.getNumberOfPages()}`, w/2, doc.internal.pageSize.height - 20, {align:'center'}); }
-                    });
+                    doc.addPage(); doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.setTextColor(26, 25, 65); doc.text("Detalhamento dos Chamados Extraídos", 40, 40);
+                    const linhas = dadosExp.map(d => [ String(d['Ticket']||'-'), String((d['Data Abertura']||'').split(' ')[0]), String((d['Analista']||'-').split('.')[0]), String((d['Assunto']||'').substring(0, 35)), String(d['Prioridade']||'-'), String(d['SLA Atendido']||'-') ]);
+                    doc.autoTable({ startY: 55, head: [["Ticket", "Abertura", "Analista", "Assunto", "Prioridade", "SLA Ok?"]], body: linhas, theme: 'striped', headStyles: { fillColor: [26, 25, 65] }, styles: { fontSize: 8 }, alternateRowStyles: { fillColor: [247, 248, 250] }, margin: { top: 30, right: 40, bottom: 40, left: 40 }, didDrawPage: function (dt) { doc.setFontSize(8); doc.setTextColor(150, 150, 150); doc.text(`Página ${doc.internal.getNumberOfPages()}`, w/2, doc.internal.pageSize.height - 20, {align:'center'}); } });
                     doc.save(`Relatorio_Oficial_SETIC.pdf`);
-                } catch (err) {
-                    console.error("Erro FATAL na geração do PDF:", err); 
-                    alert("Ainda ocorreu um erro ao gerar o PDF. Verifique o console do navegador.");
-                } finally {
-                    btn.innerHTML = conteudoOriginal; btn.disabled = false;
-                }
+                } catch (err) { alert("Erro ao gerar PDF."); } finally { btn.innerHTML = conteudoOriginal; btn.disabled = false; }
             }, 800); 
         });
 
-        aplicarPersonalizacao();
-        carregarDadosNuvem();
+        aplicarPersonalizacao(); carregarDadosNuvem();
     </script>
 </body>
 </html>
-
-
