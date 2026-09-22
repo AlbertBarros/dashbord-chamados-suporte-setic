@@ -678,7 +678,7 @@
         });
 
         // ==========================================
-        // AUDITORIA E FISCALIZAÇÃO IMR (COM CORES E NEGRITO)
+        // AUDITORIA E FISCALIZAÇÃO IMR (CORREÇÃO CONEXÃO DE TEXTO)
         // ==========================================
         document.getElementById('btn-gerar-fiscal-pdf').addEventListener('click', () => {
             const mesSelecionado = document.getElementById('fiscal-mes').value;
@@ -890,27 +890,33 @@
                     });
 
                     // ==========================================
-                    // CONCLUSÃO DE GLOSA (COM NEGRITO)
+                    // CONCLUSÃO DE GLOSA (CORREÇÃO DE SOBREPOSIÇÃO)
                     // ==========================================
                     const finalY = doc.lastAutoTable.finalY + 30;
                     doc.setTextColor(26, 25, 65); doc.setFontSize(12); doc.setFont("helvetica", "bold"); 
                     doc.text("Conclusão do Fiscal", 40, finalY);
                     
-                    const posY = finalY + 15;
-                    doc.setFontSize(10); doc.setFont("helvetica", "normal"); doc.setTextColor(60, 60, 60);
+                    const posY = finalY + 18;
+                    doc.setFontSize(10); doc.setTextColor(60, 60, 60);
 
                     if (totalPontosGlosa === 0) {
-                        doc.text("Após análise rigorosa dos índices apresentados no período aferido, atesta-se que a empresa cumpriu com", 40, posY);
-                        doc.text("todos os Níveis Mínimos de Serviços (NMS) previstos contratualmente. Portanto,", 40, posY + 14);
-                        
-                        doc.setFont("helvetica", "bold");
-                        doc.text("NÃO SERÁ APLICADA GLOSA", 324, posY + 14);
+                        // Uso do método split/flow perfeitamente alinhado com pedaços em negrito
+                        const parte1 = "Após análise rigorosa dos índices apresentados no período aferido, atesta-se que a empresa cumpriu com todos os Níveis Mínimos de Serviços (NMS) previstos contratualmente. Portanto, ";
+                        const parteBold = "NÃO SERÁ APLICADA GLOSA";
+                        const parte2 = " (0 pontos computados), devendo o faturamento prosseguir em sua integralidade.";
                         
                         doc.setFont("helvetica", "normal");
-                        doc.text("(0 pontos computados), devendo o faturamento prosseguir em sua integralidade.", 463, posY + 14);
+                        doc.text(parte1, 40, posY);
+                        
+                        const larguraParte1 = doc.getTextWidth(parte1);
+                        doc.setFont("helvetica", "bold");
+                        doc.text(parteBold, 40 + larguraParte1, posY);
+                        
+                        const larguraBold = doc.getTextWidth(parteBold);
+                        doc.setFont("helvetica", "normal");
+                        doc.text(parte2, 40 + larguraParte1 + larguraBold, posY);
                     } else {
                         doc.text(`Após análise dos índices no período aferido, constatou-se descumprimento de NMS.`, 40, posY);
-                        
                         doc.setFont("helvetica", "bold");
                         doc.text(`SERÁ APLICADA GLOSA correspondente a um total de ${totalPontosGlosa} pontos.`, 40, posY + 14);
                     }
@@ -955,7 +961,7 @@
             return "Desc";
         }
 
-        // CORREÇÃO DA ORDENAÇÃO CRONOLÓGICA DO DROPDOWN
+        // ORDENAÇÃO CRONOLÓGICA CORRETA PARA O DROPDOWN (Ano * 100 + Mês)
         function cvDtOrd(m) { 
             if (!m || m === "Desc") return 0; 
             const parts = m.split('/');
@@ -1001,7 +1007,7 @@
                 if(d['Categoria']) ass.add(d['Categoria']); if(d['Tipo']) tp.add(d['Tipo']);
             });
             
-            // Ordenação cronológica correta usando cvDtOrd
+            // Ordenação correta do mais antigo para o mais recente usando cvDtOrd
             const mArr = Array.from(m).filter(x => x!=="Desc").sort((x,y) => cvDtOrd(x) - cvDtOrd(y));
             const mFiscalArr = Array.from(mFiscal).filter(x => x!=="Desc").sort((x,y) => cvDtOrd(x) - cvDtOrd(y));
             
