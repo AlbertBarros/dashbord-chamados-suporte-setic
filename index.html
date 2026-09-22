@@ -39,7 +39,8 @@
     <!-- ======================= -->
     <div id="tela-login" class="min-h-screen bg-[#1a1941] flex flex-col justify-center items-center p-4 transition-opacity">
         <div class="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-2xl w-full max-w-sm text-center border-t-4 border-blue-500">
-            <img src="https://raw.githubusercontent.com/AlbertBarros/dashbord-chamados-suporte-setic/main/bras%C3%A3o.png" alt="Logo" class="h-24 mx-auto mb-4 object-contain">
+            <!-- Adicionado ID e crossorigin para funcionar na conversão -->
+            <img id="login-logo" src="https://raw.githubusercontent.com/AlbertBarros/dashbord-chamados-suporte-setic/main/bras%C3%A3o.png" alt="Logo" class="h-24 mx-auto mb-4 object-contain" crossorigin="anonymous">
             <h2 class="text-2xl font-black text-[#1a1941] dark:text-indigo-400 mb-1">Analytics SETIC</h2>
             <p class="text-gray-500 dark:text-gray-400 text-sm mb-6 font-semibold">Acesso Restrito</p>
             
@@ -252,7 +253,7 @@
                     </div>
                 </div>
 
-                <!-- Aba Avançado / Segurança -->
+                <!-- Aba Avançado / Segurança (Protegida) -->
                 <div id="conteudo-admin" class="hidden">
                     <div class="border-2 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/20 p-5 rounded-lg mb-4">
                         <h3 class="font-bold text-lg text-gray-800 dark:text-gray-200 mb-2"><i class="fa-solid fa-lock"></i> Autenticação de Administrador</h3>
@@ -265,6 +266,7 @@
                         </div>
                     </div>
 
+                    <!-- GESTÃO DE UTILIZADORES (Só aparece com a senha) -->
                     <div id="area-gestao-usuarios" class="hidden bg-white dark:bg-gray-800 p-5 rounded border border-blue-200 dark:border-gray-700 border-l-4 border-l-blue-500 shadow-sm mb-4">
                         <h4 class="font-bold text-blue-800 dark:text-blue-400 mb-2 flex items-center gap-2"><i class="fa-solid fa-user-plus"></i> Criar Acesso de Analista</h4>
                         <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">Registe o e-mail e a senha provisória para um colega aceder ao Analytics.</p>
@@ -277,6 +279,7 @@
                         </div>
                     </div>
 
+                    <!-- ZONA DE PERIGO / EXCLUSÃO (Só aparece com a senha) -->
                     <div id="area-gestao-banco" class="hidden bg-white dark:bg-gray-800 p-5 rounded border border-red-200 dark:border-gray-700 border-l-4 border-l-red-500 shadow-sm">
                         <h4 class="font-bold text-red-700 dark:text-red-400 mb-2 flex items-center gap-2"><i class="fa-solid fa-trash-can"></i> Gestão da Base de Dados</h4>
                         <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">Selecione o mês correspondente à planilha que deseja remover para não duplicar dados incorretos.</p>
@@ -365,15 +368,15 @@
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 telaLogin.classList.add('hidden');
-                telaLogin.classList.remove('flex'); // Remove flex para evitar sobreposição
+                telaLogin.classList.remove('flex'); 
                 telaDashboard.classList.remove('hidden');
-                telaDashboard.classList.add('flex'); // Mostra como flexbox
+                telaDashboard.classList.add('flex'); 
                 carregarDadosNuvem();
             } else {
                 telaDashboard.classList.add('hidden');
-                telaDashboard.classList.remove('flex'); // Remove do fluxo da página
+                telaDashboard.classList.remove('flex'); 
                 telaLogin.classList.remove('hidden');
-                telaLogin.classList.add('flex'); // Volta a mostrar o login centralizado
+                telaLogin.classList.add('flex'); 
             }
         });
 
@@ -449,10 +452,14 @@
 
             const savedLogo = localStorage.getItem('dashLogo');
             const logoContainer = document.getElementById('header-logo-container');
+            const loginLogo = document.getElementById('login-logo');
+            
             if (savedLogo) {
                 logoContainer.innerHTML = `<img src="${savedLogo}" alt="Logo" class="h-9 w-9 object-contain mr-2">`;
+                if(loginLogo) loginLogo.src = savedLogo;
             } else {
-                logoContainer.innerHTML = `<img src="https://raw.githubusercontent.com/AlbertBarros/dashbord-chamados-suporte-setic/main/bras%C3%A3o.png" alt="Logo" class="h-9 w-9 object-contain mr-2">`;
+                logoContainer.innerHTML = `<img src="https://raw.githubusercontent.com/AlbertBarros/dashbord-chamados-suporte-setic/main/bras%C3%A3o.png" alt="Logo" class="h-9 w-9 object-contain mr-2" crossorigin="anonymous">`;
+                if(loginLogo) loginLogo.src = "https://raw.githubusercontent.com/AlbertBarros/dashbord-chamados-suporte-setic/main/bras%C3%A3o.png";
             }
         }
 
@@ -809,9 +816,21 @@
                     doc.setFontSize(10.5); doc.setFont("helvetica", "bold"); doc.text("Relatório Gerencial Analítico - Suporte N2 - Serviço de Pronto Atendimento (SETIC)", 40, 74);
                     
                     try { 
-                        const savedLogoPdf = localStorage.getItem('dashLogo');
-                        const urlLogo = savedLogoPdf || 'https://raw.githubusercontent.com/AlbertBarros/dashbord-chamados-suporte-setic/main/bras%C3%A3o.png'; 
-                        doc.addImage(urlLogo, 'PNG', w - 80, 20, 40, 40); 
+                        let imgData = localStorage.getItem('dashLogo');
+                        if (imgData) {
+                            doc.addImage(imgData, 'PNG', w - 80, 20, 40, 40);
+                        } else {
+                            const imgEl = document.querySelector('#header-logo-container img');
+                            if(imgEl) {
+                                const canvas = document.createElement('canvas');
+                                canvas.width = imgEl.naturalWidth || imgEl.width;
+                                canvas.height = imgEl.naturalHeight || imgEl.height;
+                                const ctx = canvas.getContext('2d');
+                                ctx.drawImage(imgEl, 0, 0);
+                                const b64 = canvas.toDataURL('image/png');
+                                doc.addImage(b64, 'PNG', w - 80, 20, 40, 40);
+                            }
+                        }
                     } catch(e) {}
 
                     const agora = new Date();
