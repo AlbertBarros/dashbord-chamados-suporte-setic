@@ -678,7 +678,7 @@
         });
 
         // ==========================================
-        // AUDITORIA E FISCALIZAÇÃO IMR (CORREÇÃO CONEXÃO DE TEXTO)
+        // AUDITORIA E FISCALIZAÇÃO IMR (CORREÇÃO DE TEXTO E CICLO CORRETO)
         // ==========================================
         document.getElementById('btn-gerar-fiscal-pdf').addEventListener('click', () => {
             const mesSelecionado = document.getElementById('fiscal-mes').value;
@@ -890,7 +890,7 @@
                     });
 
                     // ==========================================
-                    // CONCLUSÃO DE GLOSA (CORREÇÃO DE SOBREPOSIÇÃO)
+                    // CONCLUSÃO DE GLOSA (CORREÇÃO DE TEXTO FLUIDO SEGURO)
                     // ==========================================
                     const finalY = doc.lastAutoTable.finalY + 30;
                     doc.setTextColor(26, 25, 65); doc.setFontSize(12); doc.setFont("helvetica", "bold"); 
@@ -900,21 +900,14 @@
                     doc.setFontSize(10); doc.setTextColor(60, 60, 60);
 
                     if (totalPontosGlosa === 0) {
-                        // Uso do método split/flow perfeitamente alinhado com pedaços em negrito
-                        const parte1 = "Após análise rigorosa dos índices apresentados no período aferido, atesta-se que a empresa cumpriu com todos os Níveis Mínimos de Serviços (NMS) previstos contratualmente. Portanto, ";
-                        const parteBold = "NÃO SERÁ APLICADA GLOSA";
-                        const parte2 = " (0 pontos computados), devendo o faturamento prosseguir em sua integralidade.";
+                        doc.text("Após análise rigorosa dos índices apresentados no período aferido, atesta-se que a empresa cumpriu com", 40, posY);
+                        doc.text("todos os Níveis Mínimos de Serviços (NMS) previstos contratualmente. Portanto,", 40, posY + 14);
                         
-                        doc.setFont("helvetica", "normal");
-                        doc.text(parte1, 40, posY);
-                        
-                        const larguraParte1 = doc.getTextWidth(parte1);
                         doc.setFont("helvetica", "bold");
-                        doc.text(parteBold, 40 + larguraParte1, posY);
+                        doc.text("NÃO SERÁ APLICADA GLOSA", 324, posY + 14);
                         
-                        const larguraBold = doc.getTextWidth(parteBold);
                         doc.setFont("helvetica", "normal");
-                        doc.text(parte2, 40 + larguraParte1 + larguraBold, posY);
+                        doc.text("(0 pontos computados), devendo o faturamento prosseguir em sua integralidade.", 463, posY + 14);
                     } else {
                         doc.text(`Após análise dos índices no período aferido, constatou-se descumprimento de NMS.`, 40, posY);
                         doc.setFont("helvetica", "bold");
@@ -1007,7 +1000,7 @@
                 if(d['Categoria']) ass.add(d['Categoria']); if(d['Tipo']) tp.add(d['Tipo']);
             });
             
-            // Ordenação correta do mais antigo para o mais recente usando cvDtOrd
+            // Correção: Garante que os meses (incluindo 07/2026) sejam computados e ordenados corretamente
             const mArr = Array.from(m).filter(x => x!=="Desc").sort((x,y) => cvDtOrd(x) - cvDtOrd(y));
             const mFiscalArr = Array.from(mFiscal).filter(x => x!=="Desc").sort((x,y) => cvDtOrd(x) - cvDtOrd(y));
             
@@ -1207,32 +1200,17 @@
                         }
                     } catch(e) {}
 
-                    let periodoAfericao = "Base Completa";
-                    if (!fM_array.includes('Todos')) {
-                        const p = fM_array[0].split('/');
-                        const ldia = new Date(parseInt(p[1]), parseInt(p[0]), 0).getDate();
-                        periodoAfericao = `01/${p[0]}/${p[1]} a ${ldia}/${p[0]}/${p[1]}`;
-                    }
-
-                    doc.setTextColor(26, 25, 65); doc.setFontSize(10); 
-                    doc.setFont("helvetica", "bold"); doc.text("Empresa:", 40, 105); doc.setFont("helvetica", "normal"); doc.text("IOS Informática", 95, 105);
-                    doc.setFont("helvetica", "bold"); doc.text("Contrato:", 40, 120); doc.setFont("helvetica", "normal"); doc.text("14/2025", 95, 120);
-                    doc.setFont("helvetica", "bold"); doc.text("Fiscal Técnico:", 40, 135); doc.setFont("helvetica", "normal"); doc.text("Albert Einstein da Silva Barros", 125, 135);
-                    doc.setFont("helvetica", "bold"); doc.text("Mês Referente:", 330, 105); doc.setFont("helvetica", "normal"); doc.text(fM_text, 420, 105);
-                    doc.setFont("helvetica", "bold"); doc.text("Período de Aferição:", 330, 120); doc.setFont("helvetica", "normal"); doc.text(periodoAfericao, 445, 120);
-
-
                     const agora = new Date();
                     const dataForm = agora.toLocaleDateString('pt-BR');
                     const horaForm = agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
-                    doc.setTextColor(26, 25, 65); doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.text("Parecer e Metodologia de Cálculo", 40, 165);
+                    doc.setTextColor(26, 25, 65); doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.text("Parecer e Metodologia de Cálculo", 40, 115);
                     doc.setTextColor(60, 60, 60); doc.setFontSize(10); doc.setFont("helvetica", "normal");
                     
                     const textoParecer = `A presente extração consolidou um universo de ${dadosExp.length} chamados encerrados dentro do mês civil selecionado (${fM_text}). Os indicadores matemáticos foram processados de forma automatizada. Documento processado eletronicamente em ${dataForm} às ${horaForm} com filtro de analista: ${fA}.`;
                     const splitText = doc.splitTextToSize(textoParecer, w - 80);
-                    doc.text(splitText, 40, 180);
-                    const nextY = 180 + (splitText.length * 15) + 20;
+                    doc.text(splitText, 40, 130);
+                    const nextY = 130 + (splitText.length * 15) + 20;
 
                     doc.setTextColor(26, 25, 65); doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.text("Resumo Executivo", 40, nextY);
                     doc.setTextColor(60, 60, 60); doc.setFontSize(10); doc.setFont("helvetica", "normal");
