@@ -81,6 +81,7 @@
                     <i class="fa-solid fa-toolbox"></i> Painel de Ferramentas
                 </button>
 
+                <!-- BOTÃO DE LOGOUT -->
                 <button id="btn-logout" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded transition shadow flex items-center gap-2 text-sm font-semibold border border-white border-opacity-20">
                     <i class="fa-solid fa-arrow-right-from-bracket"></i> Sair
                 </button>
@@ -261,7 +262,7 @@
                             <div class="w-full">
                                 <h3 class="font-bold text-lg text-green-800 dark:text-green-400 mb-2">Auditoria e Fiscalização de Contrato (IMR)</h3>
                                 <p class="text-sm text-green-700 dark:text-green-300 mb-4 leading-relaxed">
-                                    O sistema atuará como fiscal virtual: ele lerá todos os chamados da base correspondentes ao <strong>ciclo de medição fiscal</strong> selecionado (do dia 04 ao dia 03 do mês subsequente), processará a matemática linha a linha e verificará se a empresa cumpriu os Níveis Mínimos de Serviços (INS1 ao INS7).
+                                    O sistema atuará como fiscal virtual: ele lerá os chamados da base utilizando a <strong>Data de Encerramento</strong> para definir a qual ciclo de medição (dia 04 ao dia 03) o serviço pertence.
                                 </p>
                                 
                                 <div class="flex flex-col sm:flex-row gap-3 items-end mt-2 pt-4 border-t border-green-200 dark:border-green-800">
@@ -682,7 +683,10 @@
             
             let dadosAuditoria = dadosGlobais;
             if(mesSelecionado !== 'Todos') {
-                dadosAuditoria = dadosGlobais.filter(d => obterMesAnoFiscal(d['Data Abertura']) === mesSelecionado);
+                dadosAuditoria = dadosGlobais.filter(d => {
+                    const dataAlvo = d['Data Encerramento'] || d['Data Solução'] || d['Data Abertura'];
+                    return obterMesAnoFiscal(dataAlvo) === mesSelecionado;
+                });
             }
 
             const total = dadosAuditoria.length;
@@ -815,7 +819,7 @@
                     doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.text("Parecer e Metodologia de Cálculo", 40, 165);
                     doc.setTextColor(60, 60, 60); doc.setFontSize(10); doc.setFont("helvetica", "normal");
                     
-                    const textoParecer = `A presente medição avaliou o universo de ${total} chamados registrados na base referentes ao ciclo de medição selecionado (${mesTexto}, que compreende do dia 04 ao dia 03 do mês subsequente). Os indicadores matemáticos foram processados de forma automatizada linha a linha, em estrita conformidade com as regras do Instrumento de Medição de Resultados (IMR). O indicador INS1 assumiu nota 5 automática na ausência de avaliações manuais. Os índices INS4, INS5 e INS7 não se aplicam à fila em questão.\n\nDocumento processado eletronicamente em ${dataForm} às ${horaForm}.`;
+                    const textoParecer = `A presente medição avaliou o universo de ${total} chamados encerrados dentro do ciclo de faturamento selecionado (${mesTexto}, que compreende do dia 04 ao dia 03 do mês subsequente). Os indicadores matemáticos foram processados de forma automatizada linha a linha, em estrita conformidade com as regras do Instrumento de Medição de Resultados (IMR). O indicador INS1 assumiu nota 5 automática na ausência de avaliações manuais. Os índices INS4, INS5 e INS7 não se aplicam à fila em questão.\n\nDocumento processado eletronicamente em ${dataForm} às ${horaForm}.`;
                     
                     const splitText = doc.splitTextToSize(textoParecer, w - 80);
                     doc.text(splitText, 40, 180);
@@ -828,12 +832,15 @@
                     const getRow = (ind, den, f, t, m, at, fm, pt) => [ind, den, f, t, m, at, fm, pt];
                     
                     const linhasTabela = [];
+                    let totalPontosGlosa = 0;
+                    let detalhesGlosa = [];
 
                     const ins1_media = countNotas > 0 ? (sumNotas / countNotas) : 5.0;
                     linhasTabela.push(getRow('INS1', '-', '-', total, '4,0', ins1_media.toFixed(2).replace('.', ','), '0,00', '0'));
                     
                     const ins2_ating = total > 0 ? (ins2_dentro / total) : 1;
                     const ins2_pontos = ins2_ating < 0.95 ? Math.floor((0.95 - ins2_ating)/0.01)*5 : 0;
+                    if(ins2_pontos > 0) { totalPontosGlosa += ins2_pontos; detalhesGlosa.push(`INS2: ${(0.95 - ins2_ating)*100}% fora da meta (${ins2_pontos} pontos)`); }
                     linhasTabela.push(getRow('INS2', ins2_dentro, (total - ins2_dentro), total, '95,00%', fPct(ins2_ating), '0,00', String(ins2_pontos)));
 
                     const ins3_ating = total > 0 ? (ins3_dentro / total) : 1;
@@ -851,6 +858,7 @@
                     const ins6_dentro = total - ins6_fora;
                     const ins6_ating = total > 0 ? (ins6_fora / total) : 0;
                     const ins6_pontos = ins6_ating > 0.03 ? Math.floor((ins6_ating - 0.03)/0.01)*3 : 0;
+                    if(ins6_pontos > 0) { totalPontosGlosa += ins6_pontos; detalhesGlosa.push(`INS6: ${(ins6_ating - 0.03)*100}% fora da meta (${ins6_pontos} pontos)`); }
                     linhasTabela.push(getRow('INS6', ins6_dentro, ins6_fora, total, '3,00%', fPct(ins6_ating), '0,00', String(ins6_pontos)));
 
                     linhasTabela.push(['INS7', {content: 'Não se aplica', colSpan: 6, styles: {halign: 'center', fontStyle: 'bold', fillColor: [240, 240, 240]}}, '0']);
@@ -868,8 +876,31 @@
                         },
                         styles: { fontSize: 9, cellPadding: 4 }, 
                         alternateRowStyles: { fillColor: [247, 248, 250] }, 
-                        margin: { left: 40, right: 40 } 
+                        margin: { left: 40, right: 40 },
+                        didDrawPage: function(data) {
+                            if (data.cursor.y > 0 && data.table.id === 'fiscalTable') {
+                                // Reservado para footer
+                            }
+                        }
                     });
+
+                    // ==========================================
+                    // CONCLUSÃO DE GLOSA
+                    // ==========================================
+                    const finalY = doc.lastAutoTable.finalY + 30;
+                    doc.setTextColor(26, 25, 65); doc.setFontSize(12); doc.setFont("helvetica", "bold"); 
+                    doc.text("Conclusão do Fiscal", 40, finalY);
+                    
+                    doc.setTextColor(60, 60, 60); doc.setFontSize(10); doc.setFont("helvetica", "normal");
+                    
+                    let textoConclusao = "";
+                    if (totalPontosGlosa === 0) {
+                        textoConclusao = "Após análise rigorosa dos índices apresentados no período aferido, atesta-se que a empresa cumpriu com todos os Níveis Mínimos de Serviços (NMS) previstos contratualmente. Portanto, NÃO SERÁ APLICADA GLOSA (0 pontos computados), devendo o faturamento prosseguir em sua integralidade.";
+                    } else {
+                        textoConclusao = `Após análise dos índices no período aferido, constatou-se o descumprimento de Níveis Mínimos de Serviços (NMS). SERÁ APLICADA GLOSA correspondente a um total de ${totalPontosGlosa} pontos.\n\nDetalhamento da falha:\n- ` + detalhesGlosa.join('\n- ');
+                    }
+                    
+                    doc.text(doc.splitTextToSize(textoConclusao, w - 80), 40, finalY + 15);
 
                     doc.save(`Auditoria_Fiscalizacao_IMR.pdf`);
                 } catch (err) { alert("Erro ao gerar PDF de Fiscalização."); } finally { 
@@ -879,12 +910,12 @@
         });
 
         // -----------------------------------------------------
-        // FUNÇÕES DE TEMPO E FILTROS (REVERTIDAS E SEPARADAS)
+        // FUNÇÕES DE TEMPO E FILTROS 
         // -----------------------------------------------------
         
         function parseHoras(str) { if(!str) return 0; const p = String(str).split(':'); return p.length === 3 ? parseInt(p[0]) + (parseInt(p[1])/60) + (parseInt(p[2])/3600) : 0; }
         
-        // 1. MÊS CIVIL (Calendário normal 01 a 31) - Usado no Painel Operacional e Gerencial
+        // 1. MÊS CIVIL (Calendário normal) - Usado no Painel Operacional e Gerencial PDF
         function obterMesAno(str) { 
             if (str && str.includes('-')) { 
                 const p = str.split(' ')[0].split('-'); 
@@ -940,8 +971,11 @@
             const m = new Set(), mFiscal = new Set(), a = new Set(), p = new Set(), ass = new Set(), tp = new Set();
             
             dadosGlobais.forEach(d => { 
-                m.add(obterMesAno(d['Data Abertura'])); // Lê civil
-                mFiscal.add(obterMesAnoFiscal(d['Data Abertura'])); // Lê fiscal
+                const dataAlvo = d['Data Encerramento'] || d['Data Solução'] || d['Data Abertura'];
+                
+                m.add(obterMesAno(dataAlvo)); // Lê civil
+                mFiscal.add(obterMesAnoFiscal(dataAlvo)); // Lê fiscal
+                
                 if(d['Analista']) a.add(d['Analista']); if(d['Prioridade']) p.add(d['Prioridade']); 
                 if(d['Categoria']) ass.add(d['Categoria']); if(d['Tipo']) tp.add(d['Tipo']);
             });
@@ -988,18 +1022,29 @@
             const dFim = document.getElementById('filtro-data-fim').value;
 
             const filtrados = dadosGlobais.filter(d => {
-                const mesChamado = obterMesAno(d['Data Abertura']);
+                const dataAlvo = d['Data Encerramento'] || d['Data Solução'] || d['Data Abertura'];
+                const mesChamado = obterMesAno(dataAlvo);
+                
                 let match = (fM_array.includes("Todos") || fM_array.includes(mesChamado)) && 
                             (fA === "Todos" || d['Analista'] === fA) && 
                             (fP === "Todos" || d['Prioridade'] === fP) &&
                             (fAss === "Todos" || d['Categoria'] === fAss) && 
                             (fTp === "Todos" || d['Tipo'] === fTp);
-                if(match && (dIn || dFim) && d['Data Abertura']) {
-                    const n = parseInt(d['Data Abertura'].split(' ')[0].replace(/-/g, ''));
-                    if(dIn && n < parseInt(dIn.replace(/-/g, ''))) match = false; if(dFim && n > parseInt(dFim.replace(/-/g, ''))) match = false;
-                } return match;
+                            
+                if(match && (dIn || dFim) && dataAlvo) {
+                    const dataVal = dataAlvo.split(' ')[0].replace(/-/g, '');
+                    const n = parseInt(dataVal);
+                    if(dIn && n < parseInt(dIn.replace(/-/g, ''))) match = false; 
+                    if(dFim && n > parseInt(dFim.replace(/-/g, ''))) match = false;
+                } 
+                return match;
             });
-            filtrados.sort((a,b) => { const da = a['Data Abertura'] || ""; const db = b['Data Abertura'] || ""; return da > db ? -1 : (da < db ? 1 : 0); });
+            
+            filtrados.sort((a,b) => { 
+                const da = a['Data Encerramento'] || a['Data Abertura'] || ""; 
+                const db = b['Data Encerramento'] || b['Data Abertura'] || ""; 
+                return da > db ? -1 : (da < db ? 1 : 0); 
+            });
             dadosFiltradosCache = filtrados;
 
             const total = filtrados.length; document.getElementById('kpi-total').innerText = dadosGlobais.length.toLocaleString('pt-BR'); document.getElementById('kpi-filtrado').innerText = total.toLocaleString('pt-BR');
@@ -1009,7 +1054,7 @@
             slaGlobalTexto = total > 0 ? ((at / total) * 100).toFixed(1) + '%' : '0%'; incGlobalTexto = total > 0 ? ((inc / total) * 100).toFixed(1) + '%' : '0%';
             document.getElementById('kpi-sla').innerText = slaGlobalTexto; document.getElementById('kpi-incidentes').innerText = incGlobalTexto;
 
-            let dMes = agruparPor(filtrados, d => obterMesAno(d['Data Abertura'])); const indOrd = dMes.labels.map((val, ind) => ({val, ind})).sort((a,b) => cvDtOrd(a.val) - cvDtOrd(b.val)); dMes.labels = indOrd.map(i => i.val); dMes.values = indOrd.map(i => dMes.values[i.ind]);
+            let dMes = agruparPor(filtrados, d => obterMesAno(d['Data Encerramento'] || d['Data Solução'] || d['Data Abertura'])); const indOrd = dMes.labels.map((val, ind) => ({val, ind})).sort((a,b) => cvDtOrd(a.val) - cvDtOrd(b.val)); dMes.labels = indOrd.map(i => i.val); dMes.values = indOrd.map(i => dMes.values[i.ind]);
             let dAnaBruto = agruparPor(filtrados, 'Analista'); let dAna = { labels: [], values: [] }; dAnaBruto.labels.forEach((l, i) => { if(equipeFocoStr.toLowerCase().includes(l.toLowerCase())) { dAna.labels.push(l); dAna.values.push(dAnaBruto.values[i]); } });
 
             const dAss = agruparPor(filtrados, 'Categoria', 15); const dReq = agruparPor(filtrados, 'Requerente', 10); const dTipo = agruparPor(filtrados, 'Tipo');
@@ -1076,7 +1121,7 @@
             
             const fA = document.getElementById('relatorio-analista').value;
             const dadosExp = dadosGlobais.filter(d => 
-                (fM_array.includes("Todos") || fM_array.includes(obterMesAno(d['Data Abertura']))) && 
+                (fM_array.includes("Todos") || fM_array.includes(obterMesAno(d['Data Encerramento'] || d['Data Solução'] || d['Data Abertura']))) && 
                 (fA === "Todos" || d['Analista'] === fA)
             );
             
@@ -1084,6 +1129,9 @@
             const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(dadosExp), "Relatorio"); XLSX.writeFile(wb, `Base_Extraida.xlsx`);
         });
 
+        // ==========================================
+        // RELATÓRIO GERENCIAL
+        // ==========================================
         document.getElementById('btn-gerar-pdf').addEventListener('click', () => {
             const checkboxes = document.querySelectorAll('#relatorio-mes-container input:checked');
             const fM_array = Array.from(checkboxes).map(cb => cb.value);
@@ -1107,76 +1155,89 @@
                     const dadosExp = dadosFiltradosCache; if(dadosExp.length === 0) { alert("Nenhum dado."); btn.innerHTML = conteudoOriginal; btn.disabled = false; mesesRelatorioOverride = null; atualizarDashboard(); return; }
                     const { jsPDF } = window.jspdf; const doc = new jsPDF('p', 'pt', 'a4'); const w = doc.internal.pageSize.width;
                     
-                    doc.setFillColor(26, 25, 65); doc.rect(0, 0, w, 95, 'F'); doc.setTextColor(255, 255, 255); 
+                    doc.setFillColor(26, 25, 65); doc.rect(0, 0, w, 85, 'F'); doc.setTextColor(255, 255, 255); 
                     
                     doc.setFontSize(14); doc.setFont("helvetica", "bold"); doc.text("MINISTÉRIO DA JUSTIÇA E SEGURANÇA PÚBLICA", 40, 32);
                     doc.setFontSize(9.5); doc.setFont("helvetica", "normal"); doc.text("Polícia Rodoviária Federal - Diretoria de Tecnologia da Informação e Comunicação (DTIC)", 40, 52);
-                    doc.setFontSize(10.5); doc.setFont("helvetica", "bold"); doc.text("Relatório Gerencial Analítico - Suporte N2 - Serviço de Pronto Atendimento (SETIC)", 40, 74);
+                    doc.setFontSize(10.5); doc.setFont("helvetica", "bold"); doc.text("Relatório Gerencial Analítico - Suporte N2 - Serviço de Pronto Atendimento (SETIC)", 40, 72);
                     
                     try { 
                         let imgData = localStorage.getItem('dashLogo');
-                        if (imgData) {
-                            doc.addImage(imgData, 'PNG', w - 80, 20, 40, 40);
-                        } else {
+                        if (imgData) { doc.addImage(imgData, 'PNG', w - 80, 20, 40, 40); } 
+                        else {
                             const imgEl = document.querySelector('#header-logo-container img');
                             if(imgEl) {
-                                const canvas = document.createElement('canvas');
-                                canvas.width = imgEl.naturalWidth || imgEl.width;
-                                canvas.height = imgEl.naturalHeight || imgEl.height;
-                                const ctx = canvas.getContext('2d');
-                                ctx.drawImage(imgEl, 0, 0);
-                                const b64 = canvas.toDataURL('image/png');
-                                doc.addImage(b64, 'PNG', w - 80, 20, 40, 40);
+                                const canvas = document.createElement('canvas'); canvas.width = imgEl.naturalWidth || imgEl.width; canvas.height = imgEl.naturalHeight || imgEl.height; const ctx = canvas.getContext('2d'); ctx.drawImage(imgEl, 0, 0); const b64 = canvas.toDataURL('image/png'); doc.addImage(b64, 'PNG', w - 80, 20, 40, 40);
                             }
                         }
                     } catch(e) {}
+
+                    let periodoAfericao = "Base Completa";
+                    if (!fM_array.includes('Todos')) {
+                        const p = fM_array[0].split('/');
+                        const ldia = new Date(parseInt(p[1]), parseInt(p[0]), 0).getDate();
+                        periodoAfericao = `01/${p[0]}/${p[1]} a ${ldia}/${p[0]}/${p[1]}`;
+                    }
+
+                    doc.setTextColor(26, 25, 65); doc.setFontSize(10); 
+                    doc.setFont("helvetica", "bold"); doc.text("Empresa:", 40, 105); doc.setFont("helvetica", "normal"); doc.text("IOS Informática", 95, 105);
+                    doc.setFont("helvetica", "bold"); doc.text("Contrato:", 40, 120); doc.setFont("helvetica", "normal"); doc.text("14/2025", 95, 120);
+                    doc.setFont("helvetica", "bold"); doc.text("Fiscal Técnico:", 40, 135); doc.setFont("helvetica", "normal"); doc.text("Albert Einstein da Silva Barros", 125, 135);
+                    doc.setFont("helvetica", "bold"); doc.text("Mês Referente:", 330, 105); doc.setFont("helvetica", "normal"); doc.text(fM_text, 420, 105);
+                    doc.setFont("helvetica", "bold"); doc.text("Período de Aferição:", 330, 120); doc.setFont("helvetica", "normal"); doc.text(periodoAfericao, 445, 120);
+
 
                     const agora = new Date();
                     const dataForm = agora.toLocaleDateString('pt-BR');
                     const horaForm = agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
-                    doc.setTextColor(26, 25, 65); doc.setFontSize(11); doc.setFont("helvetica", "bold"); doc.text("Parâmetros da Extração", 40, 115);
-                    doc.setTextColor(100, 100, 100); doc.setFontSize(9); doc.setFont("helvetica", "normal");
-                    doc.text(`Documento gerado em ${dataForm} às ${horaForm} (Filtro Aplicado: Meses ${fM_text} | Analista: ${fA}).`, 40, 130);
-
-                    doc.setTextColor(26, 25, 65); doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.text("Resumo Executivo", 40, 155);
+                    doc.setTextColor(26, 25, 65); doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.text("Parecer e Metodologia de Cálculo", 40, 165);
                     doc.setTextColor(60, 60, 60); doc.setFontSize(10); doc.setFont("helvetica", "normal");
-                    doc.text(doc.splitTextToSize(`O período processou um total de ${dadosExp.length} tickets. A eficiência registrou um TMA de ${tmaGlobalTexto}, garantindo que ${slaGlobalTexto} das demandas fossem solucionadas no prazo. A taxa de incidentes correspondeu a ${incGlobalTexto}.`, w - 80), 40, 170);
                     
-                    const mesesUnicos = new Set(dadosExp.map(d => obterMesAno(d['Data Abertura']))).size || 1; 
+                    const textoParecer = `A presente extração consolidou um universo de ${dadosExp.length} chamados encerrados dentro do mês civil selecionado (${fM_text}). Os indicadores matemáticos foram processados de forma automatizada. Documento processado eletronicamente em ${dataForm} às ${horaForm} com filtro de analista: ${fA}.`;
+                    const splitText = doc.splitTextToSize(textoParecer, w - 80);
+                    doc.text(splitText, 40, 180);
+                    const nextY = 180 + (splitText.length * 15) + 20;
+
+                    doc.setTextColor(26, 25, 65); doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.text("Resumo Executivo", 40, nextY);
+                    doc.setTextColor(60, 60, 60); doc.setFontSize(10); doc.setFont("helvetica", "normal");
+                    doc.text(doc.splitTextToSize(`O período processou um total de ${dadosExp.length} tickets. A eficiência registrou um TMA de ${tmaGlobalTexto}, garantindo que ${slaGlobalTexto} das demandas fossem solucionadas no prazo. A taxa de incidentes correspondeu a ${incGlobalTexto}.`, w - 80), 40, nextY + 15);
+                    
+                    const mesesUnicos = new Set(dadosExp.map(d => obterMesAno(d['Data Encerramento'] || d['Data Abertura']))).size || 1; 
                     const mediaMes = Math.round(dadosExp.length / mesesUnicos);
                     
+                    const blockY = nextY + 55;
                     doc.setFillColor(245, 247, 250); 
-                    doc.rect(40, 210, 120, 50, 'F');
-                    doc.rect(171, 210, 120, 50, 'F');
-                    doc.rect(302, 210, 120, 50, 'F');
-                    doc.rect(433, 210, 120, 50, 'F');
+                    doc.rect(40, blockY, 120, 50, 'F');
+                    doc.rect(171, blockY, 120, 50, 'F');
+                    doc.rect(302, blockY, 120, 50, 'F');
+                    doc.rect(433, blockY, 120, 50, 'F');
 
                     doc.setFontSize(8); doc.setTextColor(120, 120, 120); doc.setFont("helvetica", "bold"); 
-                    doc.text("VOLUME TOTAL", 100, 230, {align: 'center'}); 
-                    doc.text("MÉDIA / MÊS", 231, 230, {align: 'center'}); 
-                    doc.text("TMA (HORAS)", 362, 230, {align: 'center'}); 
-                    doc.text("SLA ATENDIDO", 493, 230, {align: 'center'});
+                    doc.text("VOLUME TOTAL", 100, blockY+20, {align: 'center'}); 
+                    doc.text("MÉDIA / MÊS", 231, blockY+20, {align: 'center'}); 
+                    doc.text("TMA (HORAS)", 362, blockY+20, {align: 'center'}); 
+                    doc.text("SLA ATENDIDO", 493, blockY+20, {align: 'center'});
                     
                     doc.setFontSize(16); doc.setTextColor(26, 25, 65); 
-                    doc.text(String(dadosExp.length), 100, 250, {align: 'center'}); 
-                    doc.text(String(mediaMes), 231, 250, {align: 'center'}); 
-                    doc.text(String(tmaGlobalTexto), 362, 250, {align: 'center'}); 
+                    doc.text(String(dadosExp.length), 100, blockY+40, {align: 'center'}); 
+                    doc.text(String(mediaMes), 231, blockY+40, {align: 'center'}); 
+                    doc.text(String(tmaGlobalTexto), 362, blockY+40, {align: 'center'}); 
                     doc.setTextColor(22, 163, 74); 
-                    doc.text(String(slaGlobalTexto), 493, 250, {align: 'center'});
+                    doc.text(String(slaGlobalTexto), 493, blockY+40, {align: 'center'});
 
-                    doc.setFontSize(12); doc.setTextColor(26, 25, 65); doc.text("Análise Visual", 40, 290); doc.setFontSize(9); doc.setTextColor(100, 100, 100);
+                    doc.addPage(); doc.setFontSize(12); doc.setTextColor(26, 25, 65); doc.text("Análise Visual", 40, 40); doc.setFontSize(9); doc.setTextColor(100, 100, 100);
                     const getImg = (id) => { try { const c = document.getElementById(id); return c ? c.toDataURL('image/jpeg', 1.0) : null; } catch(e) { return null; } };
                     
-                    doc.text("Evolução Histórica", 40, 310); const i1 = getImg('chart-meses'); if(i1) doc.addImage(i1, 'JPEG', 40, 315, 240, 130);
-                    doc.text("Volume Foco", 305, 310); const i2 = getImg('chart-analistas'); if(i2) doc.addImage(i2, 'JPEG', 305, 315, 240, 130);
-                    doc.text("Assuntos Top 15", 40, 465); const i3 = getImg('chart-assuntos'); if(i3) doc.addImage(i3, 'JPEG', 40, 470, 240, 130);
-                    doc.text("SLA vs Criticidade", 305, 465); const i4 = getImg('chart-prioridade'); if(i4) doc.addImage(i4, 'JPEG', 305, 470, 240, 130);
+                    doc.text("Evolução Histórica", 40, 60); const i1 = getImg('chart-meses'); if(i1) doc.addImage(i1, 'JPEG', 40, 65, 240, 130);
+                    doc.text("Volume Foco", 305, 60); const i2 = getImg('chart-analistas'); if(i2) doc.addImage(i2, 'JPEG', 305, 65, 240, 130);
+                    doc.text("Assuntos Top 15", 40, 215); const i3 = getImg('chart-assuntos'); if(i3) doc.addImage(i3, 'JPEG', 40, 220, 240, 130);
+                    doc.text("SLA vs Criticidade", 305, 215); const i4 = getImg('chart-prioridade'); if(i4) doc.addImage(i4, 'JPEG', 305, 220, 240, 130);
 
                     doc.addPage(); doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.setTextColor(26, 25, 65); doc.text("Detalhamento dos Chamados Extraídos", 40, 40);
                     const linhas = dadosExp.map(d => [ String(d['Ticket']||'-'), String((d['Data Abertura']||'').split(' ')[0]), String((d['Analista']||'-').split('.')[0]), String((d['Assunto']||'').substring(0, 35)), String(d['Prioridade']||'-'), String(d['SLA Atendido']||'-') ]);
                     doc.autoTable({ startY: 55, head: [["Ticket", "Abertura", "Analista", "Assunto", "Prioridade", "SLA Ok?"]], body: linhas, theme: 'striped', headStyles: { fillColor: [26, 25, 65] }, styles: { fontSize: 8 }, alternateRowStyles: { fillColor: [247, 248, 250] }, margin: { top: 30, right: 40, bottom: 40, left: 40 }, didDrawPage: function (dt) { doc.setFontSize(8); doc.setTextColor(150, 150, 150); doc.text(`Página ${doc.internal.getNumberOfPages()}`, w/2, doc.internal.pageSize.height - 20, {align:'center'}); } });
-                    doc.save(`Relatorio_Oficial_SETIC.pdf`);
+                    doc.save(`Relatorio_Gerencial_SETIC.pdf`);
                 } catch (err) { alert("Erro ao gerar PDF."); } finally { 
                     btn.innerHTML = conteudoOriginal; btn.disabled = false; 
                     mesesRelatorioOverride = null; atualizarDashboard();
