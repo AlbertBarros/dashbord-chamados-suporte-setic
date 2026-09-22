@@ -829,27 +829,36 @@
                     doc.setTextColor(26, 25, 65); doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.text("3. Resumo de indicadores", 40, nextY);
                     
                     const fPct = (v) => (v * 100).toFixed(2).replace('.', ',') + '%';
-                    const getRow = (ind, den, f, t, m, at, fm, pt) => [ind, den, f, t, m, at, fm, pt];
+                    
+                    // NOVA FUNÇÃO GETROW COM COR VERDE/VERMELHO NA COLUNA ATINGIDO
+                    const getRow = (ind, den, f, t, m, at, fm, pt, isOk) => {
+                        const color = isOk ? [22, 163, 74] : [220, 38, 38]; // Verde = Ok, Vermelho = Fora
+                        return [
+                            ind, den, f, t, m, 
+                            { content: at, styles: { textColor: color, fontStyle: 'bold' } }, 
+                            fm, pt
+                        ];
+                    };
                     
                     const linhasTabela = [];
                     let totalPontosGlosa = 0;
                     let detalhesGlosa = [];
 
                     const ins1_media = countNotas > 0 ? (sumNotas / countNotas) : 5.0;
-                    linhasTabela.push(getRow('INS1', '-', '-', total, '4,0', ins1_media.toFixed(2).replace('.', ','), '0,00', '0'));
+                    linhasTabela.push(getRow('INS1', '-', '-', total, '4,0', ins1_media.toFixed(2).replace('.', ','), '0,00', '0', ins1_media >= 4.0));
                     
                     const ins2_ating = total > 0 ? (ins2_dentro / total) : 1;
                     const ins2_pontos = ins2_ating < 0.95 ? Math.floor((0.95 - ins2_ating)/0.01)*5 : 0;
-                    if(ins2_pontos > 0) { totalPontosGlosa += ins2_pontos; detalhesGlosa.push(`INS2: ${(0.95 - ins2_ating)*100}% fora da meta (${ins2_pontos} pontos)`); }
-                    linhasTabela.push(getRow('INS2', ins2_dentro, (total - ins2_dentro), total, '95,00%', fPct(ins2_ating), '0,00', String(ins2_pontos)));
+                    if(ins2_pontos > 0) { totalPontosGlosa += ins2_pontos; detalhesGlosa.push(`INS2: ${((0.95 - ins2_ating)*100).toFixed(2).replace('.',',')}% fora da meta (${ins2_pontos} pontos)`); }
+                    linhasTabela.push(getRow('INS2', ins2_dentro, (total - ins2_dentro), total, '95,00%', fPct(ins2_ating), '0,00', String(ins2_pontos), ins2_ating >= 0.95));
 
                     const ins3_ating = total > 0 ? (ins3_dentro / total) : 1;
-                    linhasTabela.push(getRow('INS3', ins3_dentro, (total - ins3_dentro), total, '90,00%', fPct(ins3_ating), '0,00', '0'));
+                    linhasTabela.push(getRow('INS3', ins3_dentro, (total - ins3_dentro), total, '90,00%', fPct(ins3_ating), '0,00', '0', ins3_ating >= 0.90));
                     
                     ['P1', 'P2', 'P3', 'P4', 'P5'].forEach(p => {
                         const s = p_stats[p];
                         const atg = s.total > 0 ? (s.dentro / s.total) : 1;
-                        linhasTabela.push(getRow(`INS3 - ${p}`, s.dentro, (s.total - s.dentro), s.total, '90,00%', fPct(atg), '0,00', '0'));
+                        linhasTabela.push(getRow(`INS3 - ${p}`, s.dentro, (s.total - s.dentro), s.total, '90,00%', fPct(atg), '0,00', '0', atg >= 0.90));
                     });
 
                     linhasTabela.push(['INS4', {content: 'Não se aplica', colSpan: 6, styles: {halign: 'center', fontStyle: 'bold', fillColor: [240, 240, 240]}}, '0']);
@@ -858,8 +867,8 @@
                     const ins6_dentro = total - ins6_fora;
                     const ins6_ating = total > 0 ? (ins6_fora / total) : 0;
                     const ins6_pontos = ins6_ating > 0.03 ? Math.floor((ins6_ating - 0.03)/0.01)*3 : 0;
-                    if(ins6_pontos > 0) { totalPontosGlosa += ins6_pontos; detalhesGlosa.push(`INS6: ${(ins6_ating - 0.03)*100}% fora da meta (${ins6_pontos} pontos)`); }
-                    linhasTabela.push(getRow('INS6', ins6_dentro, ins6_fora, total, '3,00%', fPct(ins6_ating), '0,00', String(ins6_pontos)));
+                    if(ins6_pontos > 0) { totalPontosGlosa += ins6_pontos; detalhesGlosa.push(`INS6: ${((ins6_ating - 0.03)*100).toFixed(2).replace('.',',')}% fora da meta (${ins6_pontos} pontos)`); }
+                    linhasTabela.push(getRow('INS6', ins6_dentro, ins6_fora, total, '3,00%', fPct(ins6_ating), '0,00', String(ins6_pontos), ins6_ating <= 0.03));
 
                     linhasTabela.push(['INS7', {content: 'Não se aplica', colSpan: 6, styles: {halign: 'center', fontStyle: 'bold', fillColor: [240, 240, 240]}}, '0']);
 
@@ -878,9 +887,7 @@
                         alternateRowStyles: { fillColor: [247, 248, 250] }, 
                         margin: { left: 40, right: 40 },
                         didDrawPage: function(data) {
-                            if (data.cursor.y > 0 && data.table.id === 'fiscalTable') {
-                                // Reservado para footer
-                            }
+                            if (data.cursor.y > 0 && data.table.id === 'fiscalTable') { }
                         }
                     });
 
@@ -1163,11 +1170,18 @@
                     
                     try { 
                         let imgData = localStorage.getItem('dashLogo');
-                        if (imgData) { doc.addImage(imgData, 'PNG', w - 80, 20, 40, 40); } 
-                        else {
+                        if (imgData) {
+                            doc.addImage(imgData, 'PNG', w - 80, 20, 40, 40);
+                        } else {
                             const imgEl = document.querySelector('#header-logo-container img');
                             if(imgEl) {
-                                const canvas = document.createElement('canvas'); canvas.width = imgEl.naturalWidth || imgEl.width; canvas.height = imgEl.naturalHeight || imgEl.height; const ctx = canvas.getContext('2d'); ctx.drawImage(imgEl, 0, 0); const b64 = canvas.toDataURL('image/png'); doc.addImage(b64, 'PNG', w - 80, 20, 40, 40);
+                                const canvas = document.createElement('canvas');
+                                canvas.width = imgEl.naturalWidth || imgEl.width;
+                                canvas.height = imgEl.naturalHeight || imgEl.height;
+                                const ctx = canvas.getContext('2d');
+                                ctx.drawImage(imgEl, 0, 0);
+                                const b64 = canvas.toDataURL('image/png');
+                                doc.addImage(b64, 'PNG', w - 80, 20, 40, 40);
                             }
                         }
                     } catch(e) {}
