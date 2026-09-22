@@ -7,18 +7,15 @@
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        // Habilita o suporte a Dark Mode no Tailwind
         tailwind.config = { darkMode: 'class' }
     </script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     
-    <!-- Excel & PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     
-    <!-- Ícones FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
@@ -37,7 +34,6 @@
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 flex flex-col min-h-screen">
 
-    <!-- Cabeçalho -->
     <header id="header-bg" class="bg-[#1a1941] text-white p-4 shadow-md flex justify-between items-center sticky top-0 z-40 transition-colors">
         <div class="flex items-center gap-3 ml-4">
             <i class="fa-solid fa-chart-line text-2xl"></i>
@@ -46,8 +42,7 @@
         <div class="flex items-center gap-4 mr-4">
             <span id="badge-status" class="text-xs font-bold px-2 py-1 bg-yellow-500 rounded text-white shadow"><i class="fa-solid fa-spinner fa-spin"></i> A Ligar</span>
             
-            <!-- Botão Dark Mode -->
-            <button id="btn-theme" class="bg-black bg-opacity-20 hover:bg-opacity-40 p-2 rounded-full transition shadow w-10 h-10 flex items-center justify-center" title="Alternar Tema Escuro/Claro">
+            <button id="btn-theme" class="bg-black bg-opacity-20 hover:bg-opacity-40 p-2 rounded-full transition shadow w-10 h-10 flex items-center justify-center" title="Alternar Tema">
                 <i class="fa-solid fa-moon text-lg" id="icon-theme"></i>
             </button>
             
@@ -59,13 +54,12 @@
 
     <main class="flex-grow max-w-[98%] mx-auto mt-6 w-full pb-10">
         
-        <!-- Filtros Dinâmicos -->
         <div class="card bg-white dark:bg-gray-800 mb-6 border-t-4 border-[#1a1941]" id="card-filtros">
             <div class="flex justify-between items-center mb-4 border-b dark:border-gray-700 pb-2">
                 <div class="flex items-center gap-2 text-[#1a1941] dark:text-indigo-400 font-bold text-lg">
                     <i class="fa-solid fa-filter"></i>
                     <h2>Filtros Dinâmicos</h2>
-                    <span id="tag-ano-atual" class="ml-2 text-xs bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-1 rounded">Visualizando: Ano Corrente</span>
+                    <span id="tag-ano-atual" class="ml-2 text-xs bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-1 rounded">Visualizando: 2026</span>
                 </div>
                 <button id="btn-limpar-filtros" class="text-red-500 hover:text-red-700 bg-red-50 dark:bg-red-900/30 dark:hover:bg-red-900/50 px-3 py-1 rounded text-sm font-semibold transition">
                     <i class="fa-solid fa-eraser"></i> Limpar Filtros
@@ -83,16 +77,14 @@
             </div>
         </div>
 
-        <!-- KPIs Cards -->
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
-            <div class="card bg-white dark:bg-gray-800 flex items-center gap-4" title="Volume total na base."><div class="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 dark:text-blue-400 text-xl"><i class="fa-solid fa-ticket"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">Total (Geral)</p><p id="kpi-total" class="text-2xl font-black text-gray-800 dark:text-gray-100">0</p></div></div>
+            <div class="card bg-white dark:bg-gray-800 flex items-center gap-4" title="Volume total na base."><div class="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 dark:text-blue-400 text-xl"><i class="fa-solid fa-ticket"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">Total (2026)</p><p id="kpi-total" class="text-2xl font-black text-gray-800 dark:text-gray-100">0</p></div></div>
             <div class="card bg-white dark:bg-gray-800 flex items-center gap-4" title="Volume filtrado."><div class="w-12 h-12 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400 text-xl"><i class="fa-solid fa-filter"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">Filtrados</p><p id="kpi-filtrado" class="text-2xl font-black text-gray-800 dark:text-gray-100">0</p></div></div>
             <div class="card bg-white dark:bg-gray-800 flex items-center gap-4" title="Tempo Médio."><div class="w-12 h-12 rounded-full bg-yellow-100 dark:bg-yellow-900/50 flex items-center justify-center text-yellow-600 dark:text-yellow-400 text-xl"><i class="fa-regular fa-clock"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">TMA (Horas)</p><p id="kpi-tma" class="text-2xl font-black text-gray-800 dark:text-gray-100">0.0h</p></div></div>
             <div class="card bg-white dark:bg-gray-800 flex items-center gap-4" title="No prazo."><div class="w-12 h-12 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center text-green-500 dark:text-green-400 text-xl"><i class="fa-solid fa-stopwatch"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">SLA Atendido</p><p id="kpi-sla" class="text-2xl font-black text-gray-800 dark:text-gray-100">0%</p></div></div>
             <div class="card bg-white dark:bg-gray-800 flex items-center gap-4" title="Incidentes."><div class="w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center text-purple-600 dark:text-purple-400 text-xl"><i class="fa-solid fa-triangle-exclamation"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">Incidentes</p><p id="kpi-incidentes" class="text-2xl font-black text-gray-800 dark:text-gray-100">0%</p></div></div>
         </div>
 
-        <!-- Gráficos -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <div class="card bg-white dark:bg-gray-800 flex flex-col"><h3 class="font-bold text-gray-700 dark:text-gray-300 mb-4 border-b dark:border-gray-700 pb-2 text-sm uppercase">Evolução de Chamados</h3><div class="chart-container" title="Clique num ponto para filtrar por mês"><canvas id="chart-meses"></canvas></div></div>
             <div class="card bg-white dark:bg-gray-800 flex flex-col"><h3 class="font-bold text-gray-700 dark:text-gray-300 mb-4 border-b dark:border-gray-700 pb-2 text-sm uppercase">Volume por Analista Foco (Clique para Filtrar)</h3><div class="chart-container" title="Clique numa barra para filtrar por analista"><canvas id="chart-analistas"></canvas></div></div>
@@ -108,7 +100,6 @@
             <div class="card bg-white dark:bg-gray-800 flex flex-col items-center justify-center"><h3 class="font-bold text-gray-700 dark:text-gray-300 mb-4 w-full border-b dark:border-gray-700 pb-2 text-sm uppercase">Natureza do Chamado</h3><div class="chart-container-small" title="Clique para filtrar por tipo"><canvas id="chart-tipo"></canvas></div></div>
         </div>
 
-        <!-- Tabela -->
         <div class="card bg-white dark:bg-gray-800">
             <div class="flex justify-between items-end mb-4 border-b dark:border-gray-700 pb-2">
                 <h3 class="font-bold text-gray-700 dark:text-gray-300 text-sm uppercase"><i class="fa-solid fa-table-list mr-2 text-[#1a1941] dark:text-indigo-400"></i>Detalhamento Operacional</h3>
@@ -165,11 +156,6 @@
                     <div id="loader-upload" class="mt-4 flex items-center justify-center gap-2 text-sm font-semibold text-[#1a1941] dark:text-indigo-300 hidden">
                         <div class="loader !border-t-current !border-4 !w-5 !h-5 inline-block"></div> Gravando no Firebase...
                     </div>
-                    <div class="mt-6 text-center border-t dark:border-gray-700 pt-4">
-                        <button id="btn-carregar-historico" class="bg-gray-800 dark:bg-gray-600 hover:bg-black text-white px-4 py-2 rounded text-sm font-semibold transition shadow-sm">
-                            <i class="fa-solid fa-database"></i> Carregar Histórico Completo
-                        </button>
-                    </div>
                 </div>
 
                 <div id="conteudo-aparencia" class="hidden">
@@ -221,17 +207,16 @@
 
             <div class="flex justify-end gap-3 p-5 border-t dark:border-gray-700 bg-gray-50 dark:bg-gray-900 rounded-b-lg">
                 <button id="btn-fechar-config" class="px-5 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded font-bold text-sm">Fechar</button>
-                <button id="btn-guardar-config" class="px-5 py-2 bg-[#1a1941] text-white rounded font-bold text-sm hidden">Salvar</button>
+                <button id="btn-guardar-config" class="px-5 py-2 bg-[#1a1941] text-white rounded font-bold text-sm hidden">Salvar Preferências</button>
             </div>
         </div>
     </div>
 
-    <!-- Scripts -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
         import { getFirestore, collection, getDocs, doc, writeBatch } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
-        // === DARK MODE LOGIC ===
+        // === DARK MODE ===
         let isDark = localStorage.getItem('darkMode') === 'true';
         if (isDark) { document.documentElement.classList.add('dark'); document.getElementById('icon-theme').className = "fa-solid fa-sun text-yellow-400 text-lg"; }
         
@@ -253,7 +238,6 @@
             setChartColors(); atualizarDashboard();
         });
 
-        // Configurações do Firebase SETIC
         const firebaseConfig = { 
             apiKey: "AIzaSyBmi5IQIl0WwwrGGqq8Q-lB2gcou8TDqaU", 
             authDomain: "dashboard-chamado-setic.firebaseapp.com", 
@@ -265,7 +249,7 @@
         
         let app, db; try { app = initializeApp(firebaseConfig); db = getFirestore(app); } catch (e) { console.error(e); }
 
-        let dadosGlobais = []; let dadosFiltradosCache = []; let historicoCompletoCarregado = false;
+        let dadosGlobais = []; let dadosFiltradosCache = [];
         let corPrincipal = localStorage.getItem('dashCor') || '#1a1941';
         let equipeFocoStr = localStorage.getItem('equipeFoco') || 'fabio.palma.prestador, edison.neto.prestador, antonio.muniz.prestador, jose.andrade.prestador';
         let graficos = {}; let tabelaPaginaAtual = 1; const tabelaItensPorPagina = 50;
@@ -311,20 +295,24 @@
 
         function definirStatus(bHtml, cClasse) { const b = document.getElementById('badge-status'); b.className = `text-xs font-bold px-2 py-1 ${cClasse} rounded text-white shadow ml-2`; b.innerHTML = bHtml; b.classList.remove('hidden'); }
 
-        async function carregarDadosNuvem(forcar = false) {
+        async function carregarDadosNuvem() {
             if(!db) { definirStatus('<i class="fa-solid fa-xmark"></i> Erro DB', 'bg-red-600'); return; }
             try {
-                const anoAtual = new Date().getFullYear().toString(); const q = await getDocs(collection(db, "chamados")); dadosGlobais = [];
-                q.forEach((doc) => { const d = doc.data(); const dS = String(d['Data Abertura'] || d['Ticket'] || ""); if (forcar || dS.includes(anoAtual) || dS.includes(anoAtual.substring(2))) dadosGlobais.push(d); });
+                const q = await getDocs(collection(db, "chamados")); dadosGlobais = [];
+                q.forEach((doc) => { 
+                    const d = doc.data(); 
+                    const dS = String(d['Data Abertura'] || d['Ticket'] || ""); 
+                    // FILTRO ESTRITO PARA IGNORAR 2025 E MANTER APENAS 2026
+                    if (dS.includes('2026') || dS.includes('/26')) {
+                        dadosGlobais.push(d); 
+                    }
+                });
                 if(dadosGlobais.length > 0) {
                     definirStatus('<i class="fa-solid fa-check-circle"></i> Sincronizado', 'bg-green-500');
-                    document.getElementById('tag-ano-atual').innerText = forcar ? "Histórico Completo" : `Ano ${anoAtual}`;
                     preencherFiltros(); atualizarDashboard();
-                } else { definirStatus('<i class="fa-solid fa-triangle-exclamation"></i> Vazio', 'bg-red-500'); } historicoCompletoCarregado = forcar;
-            } catch (e) { definirStatus('<i class="fa-solid fa-xmark"></i> Erro', 'bg-red-600'); console.error("Erro Firebase:", e); }
+                } else { definirStatus('<i class="fa-solid fa-triangle-exclamation"></i> Vazio', 'bg-red-500'); } 
+            } catch (e) { definirStatus('<i class="fa-solid fa-xmark"></i> Erro', 'bg-red-600'); console.error(e); }
         }
-
-        document.getElementById('btn-carregar-historico').addEventListener('click', () => { document.getElementById('btn-carregar-historico').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>...'; carregarDadosNuvem(true).then(() => { document.getElementById('btn-carregar-historico').innerHTML = 'Concluído'; setTimeout(() => modal.classList.add('hidden'), 1000); }); });
 
         document.getElementById('file-upload').addEventListener('change', (e) => {
             const file = e.target.files[0]; if (!file) return; document.getElementById('loader-upload').classList.remove('hidden');
@@ -334,7 +322,7 @@
                     const ba = [writeBatch(db)]; let c = 0, b = 0;
                     rows.forEach(r => { if(r.Ticket) { ba[b].set(doc(db, "chamados", String(r.Ticket)), r); c++; if (c === 490) { ba.push(writeBatch(db)); b++; c = 0; } } });
                     for (const batch of ba) await batch.commit();
-                    document.getElementById('loader-upload').classList.add('hidden'); e.target.value = ""; await carregarDadosNuvem(historicoCompletoCarregado); 
+                    document.getElementById('loader-upload').classList.add('hidden'); e.target.value = ""; await carregarDadosNuvem(); 
                 } catch (err) { document.getElementById('loader-upload').classList.add('hidden'); }
             }; reader.readAsArrayBuffer(file);
         });
@@ -466,7 +454,6 @@
             const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(dadosExp), "Relatorio"); XLSX.writeFile(wb, `Base_Extraida.xlsx`);
         });
 
-        // === RELATÓRIO PDF COM 4 CAIXAS DE INDICADORES ALINHADOS ===
         document.getElementById('btn-gerar-pdf').addEventListener('click', () => {
             const fM = document.getElementById('relatorio-mes').value; const fA = document.getElementById('relatorio-analista').value;
             const btn = document.getElementById('btn-gerar-pdf'); const conteudoOriginal = btn.innerHTML; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xl"></i> <div><p class="text-sm">A processar...</p></div>'; btn.disabled = true;
@@ -481,7 +468,9 @@
                     
                     doc.setFontSize(14); doc.setFont("helvetica", "bold"); doc.text("MINISTÉRIO DA JUSTIÇA E SEGURANÇA PÚBLICA", 40, 32);
                     doc.setFontSize(9.5); doc.setFont("helvetica", "normal"); doc.text("Polícia Rodoviária Federal - Diretoria de Tecnologia da Informação e Comunicação (DTIC)", 40, 52);
-                    doc.setFontSize(11); doc.setFont("helvetica", "bold"); doc.text("Relatório Gerencial Analítico - Suporte", 40, 74);
+                    
+                    // NOME DO RELATÓRIO ATUALIZADO COMO SOLICITADO
+                    doc.setFontSize(10.5); doc.setFont("helvetica", "bold"); doc.text("Relatório Gerencial Analítico - Suporte N2 - Serviço de Pronto Atendimento (SETIC)", 40, 74);
                     
                     try { const urlLogo = 'https://raw.githubusercontent.com/AlbertBarros/dashbord-chamados-suporte-setic/main/bras%C3%A3o.png.png'; doc.addImage(urlLogo, 'PNG', 40, 20, 40, 40); } catch(e) {}
 
@@ -490,10 +479,8 @@
                     const mesesUnicos = new Set(dadosExp.map(d => obterMesAno(d['Data Abertura']))).size || 1; 
                     const mediaMes = Math.round(dadosExp.length / mesesUnicos);
                     
-                    // Texto do Relatório sem a Média por Mês (movido para as caixas abaixo)
                     doc.text(doc.splitTextToSize(`Documento gerado em ${new Date().toLocaleDateString('pt-BR')} (Filtro Aplicado: Mês ${fM} | Analista: ${fA}). O período processou um total de ${dadosExp.length} tickets. A eficiência registrou um TMA de ${tmaGlobalTexto}, garantindo que ${slaGlobalTexto} das demandas fossem solucionadas no prazo. A taxa de incidentes correspondeu a ${incGlobalTexto}.`, w - 80), 40, 145);
                     
-                    // 4 CAIXAS DE INDICADORES ALINHADAS E PROPORCIONAIS
                     doc.setFillColor(245, 247, 250); 
                     doc.rect(40, 195, 120, 50, 'F');
                     doc.rect(171, 195, 120, 50, 'F');
