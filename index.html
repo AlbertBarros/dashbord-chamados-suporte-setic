@@ -168,19 +168,20 @@
         </main>
     </div> <!-- Fim Tela Dashboard -->
 
-    <!-- Modal Painel de Ferramentas -->
+    <!-- Modal Painel de Ferramentas - COM LARGURA AUMENTADA PARA EVITAR QUEBRA DE LINHA -->
     <div id="modal-config" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-2xl w-full max-w-2xl flex flex-col max-h-[90vh]">
+        <!-- Alterado max-w-2xl para max-w-3xl para dar mais espaço às abas -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-2xl w-full max-w-3xl flex flex-col max-h-[90vh]">
             <div class="flex justify-between items-center p-5 border-b dark:border-gray-700 bg-gray-50 dark:bg-gray-900 rounded-t-lg">
                 <h2 class="text-xl font-bold text-[#1a1941] dark:text-indigo-400 flex items-center gap-2"><i class="fa-solid fa-toolbox"></i> Painel Administrativo</h2>
                 <button id="btn-fechar-config-icon" class="text-gray-400 hover:text-red-500 transition"><i class="fa-solid fa-xmark text-2xl"></i></button>
             </div>
             
             <div class="flex flex-wrap gap-1 px-5 pt-4 border-b dark:border-gray-700">
-                <button id="aba-dados" class="px-4 py-2 tab-active text-[#1a1941] dark:text-indigo-400 border-[#1a1941] dark:border-indigo-400 focus:outline-none font-semibold text-sm">Atualizar Base</button>
-                <button id="aba-aparencia" class="px-4 py-2 tab-inactive focus:outline-none font-semibold text-sm">Preferências (Equipe)</button>
-                <button id="aba-relatorios" class="px-4 py-2 tab-inactive focus:outline-none font-semibold text-sm">Emissão Relatórios</button>
-                <button id="aba-admin" class="px-4 py-2 tab-inactive focus:outline-none font-semibold text-sm text-red-600 hover:text-red-500 ml-auto"><i class="fa-solid fa-shield-halved"></i> Avançado / Segurança</button>
+                <button id="aba-dados" class="px-3 py-2 tab-active text-[#1a1941] dark:text-indigo-400 border-[#1a1941] dark:border-indigo-400 focus:outline-none font-semibold text-sm whitespace-nowrap">Atualizar Base</button>
+                <button id="aba-aparencia" class="px-3 py-2 tab-inactive focus:outline-none font-semibold text-sm whitespace-nowrap">Preferências (Equipe)</button>
+                <button id="aba-relatorios" class="px-3 py-2 tab-inactive focus:outline-none font-semibold text-sm whitespace-nowrap">Emissão Relatórios</button>
+                <button id="aba-admin" class="px-3 py-2 tab-inactive focus:outline-none font-semibold text-sm text-red-600 hover:text-red-500 ml-auto flex items-center gap-2 whitespace-nowrap"><i class="fa-solid fa-shield-halved"></i> Avançado / Segurança</button>
             </div>
 
             <div class="p-6 overflow-y-auto flex-grow">
@@ -412,10 +413,10 @@
 
         function switchTab(activeId, contentId) {
             ['aba-dados', 'aba-aparencia', 'aba-relatorios', 'aba-admin'].forEach(id => {
-                const el = document.getElementById(id); el.className = id === 'aba-admin' ? 'px-4 py-2 tab-inactive focus:outline-none font-semibold text-sm text-red-600 hover:text-red-500 ml-auto flex items-center gap-2' : 'px-4 py-2 tab-inactive focus:outline-none font-semibold text-sm'; el.style.color = ''; el.style.borderColor = '';
+                const el = document.getElementById(id); el.className = id === 'aba-admin' ? 'px-3 py-2 tab-inactive focus:outline-none font-semibold text-sm text-red-600 hover:text-red-500 ml-auto flex items-center gap-2 whitespace-nowrap' : 'px-3 py-2 tab-inactive focus:outline-none font-semibold text-sm whitespace-nowrap'; el.style.color = ''; el.style.borderColor = '';
             });
             const activeTab = document.getElementById(activeId);
-            activeTab.className = activeId === 'aba-admin' ? `px-4 py-2 tab-active text-red-700 border-red-700 focus:outline-none font-semibold text-sm ml-auto flex items-center gap-2` : `px-4 py-2 tab-active text-[${corPrincipal}] border-[${corPrincipal}] focus:outline-none font-semibold text-sm`;
+            activeTab.className = activeId === 'aba-admin' ? `px-3 py-2 tab-active text-red-700 border-red-700 focus:outline-none font-semibold text-sm ml-auto flex items-center gap-2 whitespace-nowrap` : `px-3 py-2 tab-active text-[${corPrincipal}] border-[${corPrincipal}] focus:outline-none font-semibold text-sm whitespace-nowrap`;
             if (activeId !== 'aba-admin' && !isDark) { activeTab.style.color = corPrincipal; activeTab.style.borderColor = corPrincipal; }
             if (activeId !== 'aba-admin' && isDark) { activeTab.style.color = '#818cf8'; activeTab.style.borderColor = '#818cf8'; }
             ['conteudo-dados', 'conteudo-aparencia', 'conteudo-relatorios', 'conteudo-admin'].forEach(id => document.getElementById(id).classList.add('hidden'));
