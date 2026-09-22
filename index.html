@@ -267,7 +267,7 @@
                                 
                                 <div class="flex flex-col sm:flex-row gap-3 items-end mt-2 pt-4 border-t border-green-200 dark:border-green-800">
                                     <div class="w-full sm:w-1/3">
-                                        <label class="block text-xs font-bold text-green-800 dark:text-green-400 uppercase mb-1">Ciclo Fiscal</label>
+                                        <label class="block text-xs font-bold text-green-800 dark:text-green-700 uppercase mb-1">Ciclo Fiscal</label>
                                         <select id="fiscal-mes" class="w-full border border-green-300 dark:border-green-700 rounded p-3 text-sm bg-white dark:bg-gray-800 focus:outline-none focus:border-green-500 transition">
                                             <option value="Todos">Todos os Ciclos</option>
                                         </select>
@@ -578,7 +578,8 @@
             selectExclusao.innerHTML = '<option value="TUDO">Base Completa (Apagar TUDO)</option>';
             const mesesDisponiveis = new Set();
             dadosGlobais.forEach(d => {
-                const m = obterMesAno(d['Data Abertura']);
+                const dataAlvo = d['Data Encerramento'] || d['Data Solução'] || d['Data Abertura'];
+                const m = obterMesAno(dataAlvo);
                 if (m !== "Desc") mesesDisponiveis.add(m);
             });
             const mArr = Array.from(mesesDisponiveis).sort((x,y) => cvDtOrd(x) - cvDtOrd(y));
@@ -643,7 +644,8 @@
                 
                 q.docs.forEach((d) => { 
                     const data = d.data();
-                    const mesDoc = obterMesAno(data['Data Abertura']);
+                    const dataAlvo = data['Data Encerramento'] || data['Data Solução'] || data['Data Abertura'];
+                    const mesDoc = obterMesAno(dataAlvo);
                     
                     if (valorSelecionado === 'TUDO' || mesDoc === valorSelecionado) {
                         b.delete(d.ref); 
@@ -676,7 +678,7 @@
         });
 
         // ==========================================
-        // AUDITORIA E FISCALIZAÇÃO IMR
+        // AUDITORIA E FISCALIZAÇÃO IMR (COM CORES E NEGRITO)
         // ==========================================
         document.getElementById('btn-gerar-fiscal-pdf').addEventListener('click', () => {
             const mesSelecionado = document.getElementById('fiscal-mes').value;
@@ -778,7 +780,7 @@
                     } catch(e) {}
 
                     // ==========================================
-                    // BLOCO DE METADADOS DO CONTRATO
+                    // METADADOS DO CONTRATO
                     // ==========================================
                     const mesTexto = mesSelecionado === 'Todos' ? 'Base Completa' : mesSelecionado;
                     let periodoAfericao = "Base Completa";
@@ -830,9 +832,8 @@
                     
                     const fPct = (v) => (v * 100).toFixed(2).replace('.', ',') + '%';
                     
-                    // NOVA FUNÇÃO GETROW COM COR VERDE/VERMELHO NA COLUNA ATINGIDO
                     const getRow = (ind, den, f, t, m, at, fm, pt, isOk) => {
-                        const color = isOk ? [22, 163, 74] : [220, 38, 38]; // Verde = Ok, Vermelho = Fora
+                        const color = isOk ? [22, 163, 74] : [220, 38, 38]; 
                         return [
                             ind, den, f, t, m, 
                             { content: at, styles: { textColor: color, fontStyle: 'bold' } }, 
@@ -885,29 +886,34 @@
                         },
                         styles: { fontSize: 9, cellPadding: 4 }, 
                         alternateRowStyles: { fillColor: [247, 248, 250] }, 
-                        margin: { left: 40, right: 40 },
-                        didDrawPage: function(data) {
-                            if (data.cursor.y > 0 && data.table.id === 'fiscalTable') { }
-                        }
+                        margin: { left: 40, right: 40 }
                     });
 
                     // ==========================================
-                    // CONCLUSÃO DE GLOSA
+                    // CONCLUSÃO DE GLOSA (COM NEGRITO)
                     // ==========================================
                     const finalY = doc.lastAutoTable.finalY + 30;
                     doc.setTextColor(26, 25, 65); doc.setFontSize(12); doc.setFont("helvetica", "bold"); 
                     doc.text("Conclusão do Fiscal", 40, finalY);
                     
-                    doc.setTextColor(60, 60, 60); doc.setFontSize(10); doc.setFont("helvetica", "normal");
-                    
-                    let textoConclusao = "";
+                    const posY = finalY + 15;
+                    doc.setFontSize(10); doc.setFont("helvetica", "normal"); doc.setTextColor(60, 60, 60);
+
                     if (totalPontosGlosa === 0) {
-                        textoConclusao = "Após análise rigorosa dos índices apresentados no período aferido, atesta-se que a empresa cumpriu com todos os Níveis Mínimos de Serviços (NMS) previstos contratualmente. Portanto, NÃO SERÁ APLICADA GLOSA (0 pontos computados), devendo o faturamento prosseguir em sua integralidade.";
+                        doc.text("Após análise rigorosa dos índices apresentados no período aferido, atesta-se que a empresa cumpriu com", 40, posY);
+                        doc.text("todos os Níveis Mínimos de Serviços (NMS) previstos contratualmente. Portanto,", 40, posY + 14);
+                        
+                        doc.setFont("helvetica", "bold");
+                        doc.text("NÃO SERÁ APLICADA GLOSA", 324, posY + 14);
+                        
+                        doc.setFont("helvetica", "normal");
+                        doc.text("(0 pontos computados), devendo o faturamento prosseguir em sua integralidade.", 463, posY + 14);
                     } else {
-                        textoConclusao = `Após análise dos índices no período aferido, constatou-se o descumprimento de Níveis Mínimos de Serviços (NMS). SERÁ APLICADA GLOSA correspondente a um total de ${totalPontosGlosa} pontos.\n\nDetalhamento da falha:\n- ` + detalhesGlosa.join('\n- ');
+                        doc.text(`Após análise dos índices no período aferido, constatou-se descumprimento de NMS.`, 40, posY);
+                        
+                        doc.setFont("helvetica", "bold");
+                        doc.text(`SERÁ APLICADA GLOSA correspondente a um total de ${totalPontosGlosa} pontos.`, 40, posY + 14);
                     }
-                    
-                    doc.text(doc.splitTextToSize(textoConclusao, w - 80), 40, finalY + 15);
 
                     doc.save(`Auditoria_Fiscalizacao_IMR.pdf`);
                 } catch (err) { alert("Erro ao gerar PDF de Fiscalização."); } finally { 
@@ -949,7 +955,15 @@
             return "Desc";
         }
 
-        function cvDtOrd(m) { return (!m || m==="Desc") ? 0 : parseInt(m.split('/')[1])*100 + parseInt(m.split('/')[0]); }
+        // CORREÇÃO DA ORDENAÇÃO CRONOLÓGICA DO DROPDOWN
+        function cvDtOrd(m) { 
+            if (!m || m === "Desc") return 0; 
+            const parts = m.split('/');
+            if (parts.length === 2) {
+                return parseInt(parts[1]) * 100 + parseInt(parts[0]);
+            }
+            return 0; 
+        }
 
         function preencherCheckboxes(id, arr) {
             const container = document.getElementById(id);
@@ -980,13 +994,14 @@
             dadosGlobais.forEach(d => { 
                 const dataAlvo = d['Data Encerramento'] || d['Data Solução'] || d['Data Abertura'];
                 
-                m.add(obterMesAno(dataAlvo)); // Lê civil
-                mFiscal.add(obterMesAnoFiscal(dataAlvo)); // Lê fiscal
+                m.add(obterMesAno(dataAlvo)); 
+                mFiscal.add(obterMesAnoFiscal(dataAlvo)); 
                 
                 if(d['Analista']) a.add(d['Analista']); if(d['Prioridade']) p.add(d['Prioridade']); 
                 if(d['Categoria']) ass.add(d['Categoria']); if(d['Tipo']) tp.add(d['Tipo']);
             });
             
+            // Ordenação cronológica correta usando cvDtOrd
             const mArr = Array.from(m).filter(x => x!=="Desc").sort((x,y) => cvDtOrd(x) - cvDtOrd(y));
             const mFiscalArr = Array.from(mFiscal).filter(x => x!=="Desc").sort((x,y) => cvDtOrd(x) - cvDtOrd(y));
             
