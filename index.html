@@ -173,12 +173,48 @@
         </main>
     </div>
 
-    <!-- MODAL LIMITE DIÁRIO FIREBASE -->
-    <div id="modal-limite" class="hidden fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4">
+    <!-- MODAIS DO SISTEMA -->
+    
+    <!-- Modal Limite Diário Firebase -->
+    <div id="modal-limite" class="hidden fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-[70] p-4">
         <div class="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-2xl text-center max-w-md border-t-4 border-red-600">
             <i class="fa-solid fa-triangle-exclamation text-red-600 text-5xl mb-4"></i>
             <h2 class="text-2xl font-black text-gray-800 dark:text-gray-100 mb-2">Limite Diário Excedido</h2>
             <p class="text-gray-600 dark:text-gray-400 text-sm mb-6">O sistema atingiu a cota máxima de leituras gratuitas do banco de dados (Firebase) permitidas para hoje. Por favor, retorne amanhã quando a cota for renovada.</p>
+        </div>
+    </div>
+
+    <!-- Modal Revisão de Glosa (INTERCEÇÃO) -->
+    <div id="modal-revisao-glosa" class="hidden fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-[60] p-4">
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-2xl w-full max-w-2xl border-t-4 border-yellow-500 flex flex-col max-h-[90vh]">
+            <h2 class="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2 flex items-center gap-2"><i class="fa-solid fa-triangle-exclamation text-yellow-500"></i> Descumprimento de NMS Detetado</h2>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">A auditoria encontrou indicadores fora da meta contratual. Como fiscal, você pode reescrever a conclusão ou abonar pontos mediante justificativa válida da empresa.</p>
+            
+            <div class="bg-red-50 dark:bg-red-900/20 p-3 rounded border border-red-200 dark:border-red-800 mb-4">
+                <p class="text-xs font-bold text-red-800 dark:text-red-400 mb-1">Indicadores Afetados:</p>
+                <p class="text-sm font-mono font-bold text-red-700 dark:text-red-300" id="revisao-indicadores"></p>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase mb-1 flex justify-between">
+                    <span>Parecer Descritivo do Fiscal</span>
+                    <span class="text-[10px] text-gray-400 font-normal">Editável</span>
+                </label>
+                <textarea id="revisao-texto" rows="5" class="w-full border border-gray-300 dark:border-gray-600 rounded p-3 text-sm bg-gray-50 dark:bg-gray-700 focus:outline-none focus:border-yellow-500 transition leading-relaxed"></textarea>
+            </div>
+
+            <div class="flex items-center gap-4 mb-6 bg-gray-50 dark:bg-gray-700 p-4 rounded border dark:border-gray-600">
+                <div class="flex-grow">
+                    <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase mb-1">Total de Pontos a Aplicar (Matemática Final)</label>
+                    <p class="text-[10px] text-gray-500 dark:text-gray-400">Se aceitou a justificativa para abonar a glosa, altere para 0. O PDF aplicará o desconto financeiro com base no número abaixo.</p>
+                </div>
+                <input type="number" id="revisao-pontos" min="0" class="w-24 text-center font-bold text-xl border border-gray-300 dark:border-gray-600 rounded p-2 bg-white dark:bg-gray-800 text-red-600 dark:text-red-400">
+            </div>
+
+            <div class="flex justify-end gap-3 mt-auto pt-4 border-t dark:border-gray-700">
+                <button id="btn-cancelar-revisao" class="px-5 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded font-bold text-sm hover:bg-gray-300 dark:hover:bg-gray-600 transition">Cancelar Auditoria</button>
+                <button id="btn-confirmar-revisao" class="px-5 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded font-bold text-sm shadow transition flex items-center gap-2"><i class="fa-solid fa-file-pdf"></i> Confirmar e Gerar PDF</button>
+            </div>
         </div>
     </div>
 
@@ -199,7 +235,7 @@
             </div>
 
             <div class="p-6 overflow-y-auto flex-grow">
-                <!-- Aba Atualizar Base (CENTRALIZAÇÃO DE TODOS OS UPLOADS) -->
+                <!-- Aba Atualizar Base -->
                 <div id="conteudo-dados" class="block">
                     <h3 class="font-bold text-gray-700 dark:text-gray-300 mb-2 text-sm uppercase">Base Operacional Primária</h3>
                     <label class="bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 text-[#1a1941] dark:text-indigo-300 border-2 border-dashed border-[#1a1941] dark:border-indigo-400 w-full p-6 rounded-lg font-semibold cursor-pointer transition flex flex-col items-center justify-center gap-3 mb-4">
@@ -427,18 +463,20 @@
         let dadosSatisfacao = []; let dadosReabertos = []; 
         let historicoCompletoCarregado = false;
         
-        // RECUPERAÇÃO ROBUSTA DAS VARIÁVEIS DO LOCALSTORAGE
+        // RECUPERAÇÃO ROBUSTA DAS VARIÁVEIS
         let corPrincipal = localStorage.getItem('dashCor') || '#1a1941';
         let equipeFocoStr = localStorage.getItem('equipeFoco') || 'fabio.palma.prestador, edison.neto.prestador, antonio.muniz.prestador, jose.andrade.prestador';
         let tituloOficial = localStorage.getItem('dashTitulo') || 'Analytics Suporte SETIC';
         let iconeCabecalho = localStorage.getItem('dashIcon') || 'fa-chart-line';
         
+        // VARIÁVEIS GLOBAIS DE AUDITORIA
+        let objAuditoriaTemp = null; 
+
         let graficos = {}; let tabelaPaginaAtual = 1; const tabelaItensPorPagina = 50;
         const paletaAssuntos = ['#4f46e5', '#3b82f6', '#0ea5e9', '#06b6d4', '#14b8a6', '#10b981', '#22c55e', '#84cc16', '#eab308', '#f59e0b', '#f97316', '#ef4444', '#f43f5e', '#d946ef', '#a855f7'];
         const coresPrioridade = { 'Muito Alto': '#b91c1c', 'Alto': '#ef4444', 'Médio': '#f59e0b', 'Baixo': '#22c55e', 'Muito Baixo': '#94a3b8' };
         const coresTipo = { 'Requisição': '#6366f1', 'Incidente': '#f43f5e' };
 
-        // APLICAÇÃO IMEDIATA DA PERSONALIZAÇÃO
         function aplicarPersonalizacao() {
             tituloOficial = localStorage.getItem('dashTitulo') || 'Analytics Suporte SETIC';
             corPrincipal = localStorage.getItem('dashCor') || '#1a1941';
@@ -568,7 +606,6 @@
             reader.readAsDataURL(file);
         });
 
-        // SALVAR AS PREFERÊNCIAS NA MEMÓRIA PERSISTENTE
         document.getElementById('btn-guardar-config').addEventListener('click', () => {
             localStorage.setItem('dashTitulo', document.getElementById('input-titulo').value);
             localStorage.setItem('dashCor', document.getElementById('input-cor').value);
@@ -612,7 +649,6 @@
                 historicoCompletoCarregado = forcarCompleto;
             } catch (e) { 
                 console.error(e);
-                // SISTEMA DE CAPTURA DO LIMITE DO FIREBASE (SPARK PLAN QUOTA)
                 if (e.code === 'resource-exhausted' || (e.message && (e.message.includes('quota') || e.message.includes('Quota')))) {
                     document.getElementById('modal-limite').classList.remove('hidden');
                     definirStatus('<i class="fa-solid fa-ban"></i> Limite Excedido', 'bg-red-700');
@@ -630,7 +666,7 @@
             }); 
         });
 
-        // UPLOADS DE MÚLTIPLOS ARQUIVOS (BASE PRIMÁRIA) COM VALIDAÇÃO E FEEDBACK VISUAL
+        // UPLOADS
         document.getElementById('file-upload').addEventListener('change', async (e) => {
             const files = e.target.files; 
             if (files.length === 0) return; 
@@ -649,16 +685,12 @@
                         try {
                             const wb = XLSX.read(new Uint8Array(ev.target.result), { type: 'array' }); 
                             const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: "" });
-                            
-                            // Validação Estrutural Lixo (Impede subir planilhas sem "Ticket")
                             if (rows.length > 0 && !('Ticket' in rows[0] || 'ticket' in rows[0] || 'TICKET' in rows[0] || 'Nº Chamado' in rows[0] || 'chamado' in rows[0])) {
                                 errorFiles.push(file.name);
                             } else {
                                 allRows = allRows.concat(rows);
                             }
-                        } catch(err) {
-                            errorFiles.push(file.name);
-                        }
+                        } catch(err) { errorFiles.push(file.name); }
                         resolve();
                     }; 
                     reader.readAsArrayBuffer(file);
@@ -668,12 +700,8 @@
             await Promise.all(readFiles);
 
             if (errorFiles.length > 0) {
-                alert(`ATENÇÃO: Os seguintes arquivos foram ignorados por não possuírem a estrutura correta (falta a coluna "Ticket"):\n\n${errorFiles.join('\n')}`);
-                if (allRows.length === 0) {
-                    loader.classList.add('hidden');
-                    e.target.value = "";
-                    return;
-                }
+                alert(`ATENÇÃO: Os seguintes arquivos foram ignorados por não possuírem a estrutura correta:\n\n${errorFiles.join('\n')}`);
+                if (allRows.length === 0) { loader.classList.add('hidden'); e.target.value = ""; return; }
             }
 
             loader.innerHTML = '<div class="loader !border-t-current !border-4 !w-5 !h-5 inline-block"></div> Gravando na nuvem...';
@@ -682,22 +710,16 @@
                 const ba = [writeBatch(db)]; let c = 0, b = 0;
                 allRows.forEach(r => { 
                     const ticketStr = String(r.Ticket || r.ticket || r.TICKET || r['Nº Chamado'] || r['chamado'] || "");
-                    if(ticketStr) { 
-                        ba[b].set(doc(db, "chamados", ticketStr), r); 
-                        c++; 
-                        if (c === 490) { ba.push(writeBatch(db)); b++; c = 0; } 
-                    } 
+                    if(ticketStr) { ba[b].set(doc(db, "chamados", ticketStr), r); c++; if (c === 490) { ba.push(writeBatch(db)); b++; c = 0; } } 
                 });
                 const pr = ba.map(batch => batch.commit());
                 await Promise.all(pr);
                 
-                // Feedback Visual de Sucesso
                 loader.innerHTML = '<i class="fa-solid fa-check text-green-500 text-lg"></i> <span class="text-green-600 dark:text-green-400 font-bold">Upload Concluído com Sucesso!</span>';
                 setTimeout(async () => {
                     loader.classList.add('hidden'); 
                     loader.innerHTML = '<div class="loader !border-t-current !border-4 !w-5 !h-5 inline-block"></div> Gravando base primária no Firebase...';
-                    e.target.value = ""; 
-                    await carregarDadosNuvem(historicoCompletoCarregado); 
+                    e.target.value = ""; await carregarDadosNuvem(historicoCompletoCarregado); 
                 }, 2500);
 
             } catch (err) { 
@@ -706,7 +728,6 @@
             }
         });
 
-        // UPLOADS DE MÚLTIPLOS ARQUIVOS (BASES AUXILIARES) COM VALIDAÇÃO E FEEDBACK VISUAL
         function handleUploadAux(inputId, colName) {
             const el = document.getElementById(inputId);
             if(!el) return;
@@ -728,13 +749,9 @@
                             try {
                                 const wb = XLSX.read(new Uint8Array(ev.target.result), { type: 'array' }); 
                                 const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: "" });
-                                
-                                // Validar Ticket
                                 if (rows.length > 0 && !('Ticket' in rows[0] || 'ticket' in rows[0] || 'TICKET' in rows[0] || 'Nº Chamado' in rows[0] || 'chamado' in rows[0])) {
                                     errorFiles.push(file.name);
-                                } else {
-                                    allRows = allRows.concat(rows);
-                                }
+                                } else { allRows = allRows.concat(rows); }
                             } catch(err) { errorFiles.push(file.name); }
                             resolve();
                         }; 
@@ -755,11 +772,7 @@
                     const ba = [writeBatch(db)]; let c = 0, b = 0;
                     allRows.forEach(r => { 
                         const ticketId = String(r.Ticket || r.ticket || r.TICKET || r['Nº Chamado'] || r['chamado'] || "");
-                        if(ticketId) { 
-                            ba[b].set(doc(db, colName, ticketId), r); 
-                            c++; 
-                            if (c === 490) { ba.push(writeBatch(db)); b++; c = 0; } 
-                        } 
+                        if(ticketId) { ba[b].set(doc(db, colName, ticketId), r); c++; if (c === 490) { ba.push(writeBatch(db)); b++; c = 0; } } 
                     });
                     const pr = ba.map(batch => batch.commit());
                     await Promise.all(pr);
@@ -768,8 +781,7 @@
                     setTimeout(async () => {
                         loader.classList.add('hidden'); 
                         loader.innerHTML = '<div class="loader !border-t-current !border-4 !w-5 !h-5 inline-block"></div> Gravando dados auxiliares no Firebase...';
-                        e.target.value = ""; 
-                        await carregarDadosNuvem(historicoCompletoCarregado); 
+                        e.target.value = ""; await carregarDadosNuvem(historicoCompletoCarregado); 
                     }, 2500);
 
                 } catch (err) { 
@@ -800,50 +812,33 @@
                 if (m !== "Desc") mesesDisponiveis.add(m);
             });
             const mArr = Array.from(mesesDisponiveis).sort((x,y) => cvDtOrd(x) - cvDtOrd(y));
-            mArr.forEach(m => {
-                selectExclusao.innerHTML += `<option value="${m}">Apenas Dados do Mês ${m}</option>`;
-            });
-            
+            mArr.forEach(m => { selectExclusao.innerHTML += `<option value="${m}">Apenas Dados do Mês ${m}</option>`; });
             selectExclusao.innerHTML += `<option value="SATISFACAO">Apagar Base de Satisfação (INS1)</option>`;
             selectExclusao.innerHTML += `<option value="REABERTOS">Apagar Base de Reabertos (INS6)</option>`;
         }
 
         inSenha.addEventListener('input', (e) => { 
             if (e.target.value === 'setic2026') {
-                areaGestaoBanco.classList.remove('hidden');
-                areaGestaoUsuarios.classList.remove('hidden');
-                popularDropdownExclusao();
+                areaGestaoBanco.classList.remove('hidden'); areaGestaoUsuarios.classList.remove('hidden'); popularDropdownExclusao();
             } else {
-                areaGestaoBanco.classList.add('hidden');
-                areaGestaoUsuarios.classList.add('hidden');
+                areaGestaoBanco.classList.add('hidden'); areaGestaoUsuarios.classList.add('hidden');
             }
         });
 
         btnCriarUsuario.addEventListener('click', async () => {
             const emailNovo = document.getElementById('novo-email').value;
             const senhaNova = document.getElementById('novo-senha').value;
-            
-            if (!emailNovo || senhaNova.length < 6) {
-                return alert("Atenção: Introduza um e-mail válido e uma senha com pelo menos 6 caracteres.");
-            }
-
-            btnCriarUsuario.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
-            btnCriarUsuario.disabled = true;
-
+            if (!emailNovo || senhaNova.length < 6) return alert("Atenção: Introduza um e-mail válido e uma senha com pelo menos 6 caracteres.");
+            btnCriarUsuario.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; btnCriarUsuario.disabled = true;
             try {
                 await createUserWithEmailAndPassword(secondaryAuth, emailNovo, senhaNova);
                 await signOut(secondaryAuth);
-                
                 alert(`✅ Sucesso!\nO acesso para ${emailNovo} foi criado.\nJá pode partilhar essas credenciais com o analista.`);
-                document.getElementById('novo-email').value = '';
-                document.getElementById('novo-senha').value = '';
+                document.getElementById('novo-email').value = ''; document.getElementById('novo-senha').value = '';
             } catch (error) {
                 if(error.code === 'auth/email-already-in-use') alert("Este e-mail já tem um acesso criado no sistema.");
                 else alert("Erro ao criar utilizador. Verifique a sua conexão.");
-            } finally {
-                btnCriarUsuario.innerHTML = '<i class="fa-solid fa-check"></i> Criar';
-                btnCriarUsuario.disabled = false;
-            }
+            } finally { btnCriarUsuario.innerHTML = '<i class="fa-solid fa-check"></i> Criar'; btnCriarUsuario.disabled = false; }
         });
 
         btnReset.addEventListener('click', async () => {
@@ -855,9 +850,7 @@
             else textoConfirmacao = `OS DADOS DO MÊS ${valorSelecionado}`;
             
             if(!confirm(`⚠️ ALERTA DE SEGURANÇA ⚠️\n\nTEM A CERTEZA ABSOLUTA QUE DESEJA APAGAR ${textoConfirmacao}? Esta ação não pode ser desfeita.`)) return;
-            
-            btnReset.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> A apagar...';
-            btnReset.disabled = true;
+            btnReset.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> A apagar...'; btnReset.disabled = true;
 
             try { 
                 let colName = "chamados";
@@ -865,9 +858,7 @@
                 if (valorSelecionado === 'REABERTOS') colName = "reabertos";
 
                 const q = await getDocs(collection(db, colName)); 
-                let b = writeBatch(db); 
-                let c = 0; 
-                const pr = []; 
+                let b = writeBatch(db); let c = 0; const pr = []; 
                 
                 q.docs.forEach((d) => { 
                     let del = false;
@@ -876,43 +867,33 @@
                         const dataAlvo = data['Data Encerramento'] || data['Data Solução'] || data['Data Abertura'];
                         const mesDoc = obterMesAno(dataAlvo);
                         if (valorSelecionado === 'TUDO' || mesDoc === valorSelecionado) del = true;
-                    } else {
-                        del = true; 
-                    }
+                    } else { del = true; }
 
-                    if (del) {
-                        b.delete(d.ref); 
-                        c++; 
-                        if(c === 490) { 
-                            pr.push(b.commit()); 
-                            b = writeBatch(db); 
-                            c = 0; 
-                        } 
-                    }
+                    if (del) { b.delete(d.ref); c++; if(c === 490) { pr.push(b.commit()); b = writeBatch(db); c = 0; } }
                 }); 
-                
                 if(c > 0) pr.push(b.commit()); 
                 await Promise.all(pr); 
                 
                 alert(`Exclusão de ${textoConfirmacao} concluída com sucesso!`); 
-                inSenha.value = '';
-                areaGestaoBanco.classList.add('hidden');
-                areaGestaoUsuarios.classList.add('hidden');
-                btnReset.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Apagar';
-                btnReset.disabled = false;
+                inSenha.value = ''; areaGestaoBanco.classList.add('hidden'); areaGestaoUsuarios.classList.add('hidden');
+                btnReset.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Apagar'; btnReset.disabled = false;
                 
                 if (colName === "chamados") dadosGlobais = []; 
                 await carregarDadosNuvem(historicoCompletoCarregado); 
-            } catch(e) { 
-                alert("Erro ao tentar apagar os dados."); 
-                btnReset.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Apagar';
-                btnReset.disabled = false;
-            }
+            } catch(e) { alert("Erro ao tentar apagar os dados."); btnReset.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Apagar'; btnReset.disabled = false; }
         });
 
         // ==========================================
-        // AUDITORIA E FISCALIZAÇÃO IMR COM CÁLCULO FINANCEIRO
+        // AUDITORIA E FISCALIZAÇÃO IMR COM SISTEMA DE INTERCEÇÃO (REVISÃO DE GLOSA)
         // ==========================================
+        
+        // Evento do Modal de Cancelar Revisão
+        document.getElementById('btn-cancelar-revisao').addEventListener('click', () => {
+            document.getElementById('modal-revisao-glosa').classList.add('hidden');
+            objAuditoriaTemp = null;
+        });
+
+        // Evento Principal do Botão de Gerar Relatório
         document.getElementById('btn-gerar-fiscal-pdf').addEventListener('click', () => {
             const mesSelecionado = document.getElementById('fiscal-mes').value;
             
@@ -962,7 +943,7 @@
             dadosAuditoria.forEach(d => {
                 const tId = String(d['Ticket'] || d['ticket'] || "");
 
-                // Lógica Blindada do INS1 (Satisfação)
+                // Lógica de Notas do INS1
                 let nota = 5.0; 
                 if (mapSat.has(tId)) {
                     const satRec = mapSat.get(tId);
@@ -970,18 +951,14 @@
                     
                     if (rawVal === undefined || rawVal === null || String(rawVal).trim() === "") {
                         for(let key in satRec) {
-                            if (key.toLowerCase().includes('satisfa')) {
-                                rawVal = satRec[key]; break;
-                            }
+                            if (key.toLowerCase().includes('satisfa')) { rawVal = satRec[key]; break; }
                         }
                     }
                     if (rawVal !== undefined && rawVal !== null && String(rawVal).trim() !== "") {
                         const numMatch = String(rawVal).match(/\d+(\.\d+)?/);
                         if (numMatch) {
                             let parsed = parseFloat(numMatch[0]);
-                            if (!isNaN(parsed) && parsed >= 0 && parsed <= 5) {
-                                nota = parsed;
-                            }
+                            if (!isNaN(parsed) && parsed >= 0 && parsed <= 5) nota = parsed;
                         }
                     }
                 }
@@ -1015,273 +992,287 @@
             });
 
             setTimeout(() => {
-                try {
-                    const { jsPDF } = window.jspdf; 
-                    const doc = new jsPDF('p', 'pt', 'a4'); 
-                    const w = doc.internal.pageSize.width;
-                    
-                    doc.setFillColor(26, 25, 65); doc.rect(0, 0, w, 85, 'F'); doc.setTextColor(255, 255, 255); 
-                    doc.setFontSize(14); doc.setFont("helvetica", "bold"); doc.text("MINISTÉRIO DA JUSTIÇA E SEGURANÇA PÚBLICA", 40, 32);
-                    doc.setFontSize(9.5); doc.setFont("helvetica", "normal"); doc.text("Polícia Rodoviária Federal - Diretoria de Tecnologia da Informação e Comunicação (DTIC)", 40, 52);
-                    doc.setFontSize(10.5); doc.setFont("helvetica", "bold"); doc.text("Relatório de Fiscalização de Contrato - IMR (Níveis Mínimos de Serviço)", 40, 72);
-                    
-                    try { 
-                        let imgData = localStorage.getItem('dashLogo');
-                        if (imgData) { doc.addImage(imgData, 'PNG', w - 80, 20, 40, 40); } 
-                        else {
-                            const imgEl = document.querySelector('#header-logo-container img');
-                            if(imgEl) {
-                                const canvas = document.createElement('canvas'); canvas.width = imgEl.naturalWidth || imgEl.width; canvas.height = imgEl.naturalHeight || imgEl.height; const ctx = canvas.getContext('2d'); ctx.drawImage(imgEl, 0, 0); const b64 = canvas.toDataURL('image/png'); doc.addImage(b64, 'PNG', w - 80, 20, 40, 40);
-                            }
-                        }
-                    } catch(e) {}
+                const fPct = (v) => (v * 100).toFixed(2).replace('.', ',') + '%';
+                const getRow = (ind, den, f, t, m, at_str, fm, pt, isOk, isNA = false) => {
+                    let color = isOk ? [22, 163, 74] : [220, 38, 38]; 
+                    if (isNA) color = [100, 100, 100]; 
+                    return [ind, den, f, t, m, { content: at_str, styles: { textColor: color, fontStyle: 'bold' } }, fm, pt];
+                };
+                
+                const linhasTabela = [];
+                let totalPontosGlosa = 0;
+                let descumprimentos = []; 
 
-                    const mesTexto = mesSelecionado === 'Todos' ? 'Base Completa' : mesSelecionado;
-                    let periodoAfericao = "Base Completa";
-                    if (mesSelecionado !== 'Todos') {
-                        const p = mesSelecionado.split('/');
-                        let mm = parseInt(p[0], 10); let yy = parseInt(p[1], 10);
-                        let mmNext = mm + 1; let yyNext = yy;
-                        if (mmNext > 12) { mmNext = 1; yyNext++; }
-                        const m1 = mm < 10 ? '0'+mm : mm;
-                        const m2 = mmNext < 10 ? '0'+mmNext : mmNext;
-                        periodoAfericao = `04/${m1}/${yy} a 03/${m2}/${yyNext}`;
-                    }
+                // MATEMÁTICA DE GLOSA
+                const ins1_media = countNotas > 0 ? (sumNotas / countNotas) : 5.0;
+                const ins1_missed = 4.0 - ins1_media;
+                const ins1_fm_str = ins1_missed > 0 ? ins1_missed.toFixed(2).replace('.', ',') : '0,00';
+                const ins1_pontos = ins1_missed > 0 ? Math.floor(ins1_missed / 0.1) * 5 : 0;
+                if(ins1_pontos > 0) { totalPontosGlosa += ins1_pontos; descumprimentos.push('INS1'); }
+                linhasTabela.push(getRow('INS1', '-', '-', total, '4,0', ins1_media.toFixed(2).replace('.', ','), ins1_fm_str, String(ins1_pontos), ins1_media >= 4.0));
+                
+                const ins2_ating = total > 0 ? (ins2_dentro / total) : 1;
+                const ins2_missed = (0.95 - ins2_ating) * 100;
+                const ins2_fm_str = ins2_missed > 0 ? ins2_missed.toFixed(2).replace('.', ',') + '%' : '0,00';
+                const ins2_pontos = ins2_missed > 0 ? Math.floor(ins2_missed) * 5 : 0; 
+                if(ins2_pontos > 0) { totalPontosGlosa += ins2_pontos; descumprimentos.push('INS2'); }
+                linhasTabela.push(getRow('INS2', ins2_dentro, (total - ins2_dentro), total, '95,00%', fPct(ins2_ating), ins2_fm_str, String(ins2_pontos), ins2_ating >= 0.95));
 
-                    doc.setTextColor(26, 25, 65); doc.setFontSize(10); 
-                    
-                    // Coluna Esquerda
-                    doc.setFont("helvetica", "bold"); doc.text("Empresa:", 40, 105);
-                    doc.setFont("helvetica", "normal"); doc.text("IOS Informática", 115, 105);
-
-                    doc.setFont("helvetica", "bold"); doc.text("Contrato:", 40, 120);
-                    doc.setFont("helvetica", "normal"); doc.text("14/2025", 115, 120);
-
-                    doc.setFont("helvetica", "bold"); doc.text("Fiscal Técnico:", 40, 135);
-                    doc.setFont("helvetica", "normal"); doc.text("Albert Einstein da Silva Barros", 115, 135);
-
-                    // Coluna Direita (Ajustada para o valor do contrato)
-                    doc.setFont("helvetica", "bold"); doc.text("Mês Referente:", 330, 105);
-                    doc.setFont("helvetica", "normal"); doc.text(mesTexto, 435, 105);
-
-                    doc.setFont("helvetica", "bold"); doc.text("Período de Aferição:", 330, 120);
-                    doc.setFont("helvetica", "normal"); doc.text(periodoAfericao, 435, 120);
-
-                    doc.setFont("helvetica", "bold"); doc.text("Valor Mensal:", 330, 135);
-                    doc.setFont("helvetica", "normal"); doc.text("R$ 26.971,30", 435, 135);
-
-                    const agora = new Date();
-                    const dataForm = agora.toLocaleDateString('pt-BR');
-                    const horaForm = agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-
-                    doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.text("Parecer e Metodologia de Cálculo", 40, 165);
-                    doc.setTextColor(60, 60, 60); doc.setFontSize(10); doc.setFont("helvetica", "normal");
-                    
-                    const textoParecer = `A presente medição avaliou o universo de ${total} chamados encerrados dentro do ciclo de faturamento selecionado (${mesTexto}, que compreende do dia 04 ao dia 03 do mês subsequente). Os indicadores matemáticos foram processados de forma automatizada linha a linha, em estrita conformidade com as regras do Instrumento de Medição de Resultados (IMR). O indicador INS1 assumiu nota 5 automática na ausência de avaliações manuais. Os índices INS4, INS5 e INS7 não se aplicam à fila em questão.\n\nDocumento processado eletronicamente em ${dataForm} às ${horaForm}.`;
-                    
-                    const splitText = doc.splitTextToSize(textoParecer, w - 80);
-                    doc.text(splitText, 40, 180);
-                    
-                    const nextY = 180 + (splitText.length * 15) + 20;
-
-                    doc.setTextColor(26, 25, 65); doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.text("3. Resumo de indicadores", 40, nextY);
-                    
-                    const fPct = (v) => (v * 100).toFixed(2).replace('.', ',') + '%';
-                    
-                    const getRow = (ind, den, f, t, m, at_str, fm, pt, isOk, isNA = false) => {
-                        let color = isOk ? [22, 163, 74] : [220, 38, 38]; 
-                        if (isNA) color = [100, 100, 100]; 
-                        return [
-                            ind, den, f, t, m, 
-                            { content: at_str, styles: { textColor: color, fontStyle: 'bold' } }, 
-                            fm, pt
-                        ];
-                    };
-                    
-                    const linhasTabela = [];
-                    let totalPontosGlosa = 0;
-                    let descumprimentos = []; // Array que guardará o nome dos índices que falharam
-
-                    // MATEMÁTICA DE GLOSA
-                    // INS1 (Meta = 4.0)
-                    const ins1_media = countNotas > 0 ? (sumNotas / countNotas) : 5.0;
-                    const ins1_missed = 4.0 - ins1_media;
-                    const ins1_fm_str = ins1_missed > 0 ? ins1_missed.toFixed(2).replace('.', ',') : '0,00';
-                    const ins1_pontos = ins1_missed > 0 ? Math.floor(ins1_missed / 0.1) * 5 : 0;
-                    if(ins1_pontos > 0) { totalPontosGlosa += ins1_pontos; descumprimentos.push('INS1'); }
-                    linhasTabela.push(getRow('INS1', '-', '-', total, '4,0', ins1_media.toFixed(2).replace('.', ','), ins1_fm_str, String(ins1_pontos), ins1_media >= 4.0));
-                    
-                    // INS2 (Meta = 95%)
-                    const ins2_ating = total > 0 ? (ins2_dentro / total) : 1;
-                    const ins2_missed = (0.95 - ins2_ating) * 100;
-                    const ins2_fm_str = ins2_missed > 0 ? ins2_missed.toFixed(2).replace('.', ',') + '%' : '0,00';
-                    const ins2_pontos = ins2_missed > 0 ? Math.floor(ins2_missed) * 5 : 0; 
-                    if(ins2_pontos > 0) { totalPontosGlosa += ins2_pontos; descumprimentos.push('INS2'); }
-                    linhasTabela.push(getRow('INS2', ins2_dentro, (total - ins2_dentro), total, '95,00%', fPct(ins2_ating), ins2_fm_str, String(ins2_pontos), ins2_ating >= 0.95));
-
-                    // INS3 Geral (Meta = 90%)
-                    const ins3_ating = total > 0 ? (ins3_dentro / total) : 1;
-                    const ins3_missed = (0.90 - ins3_ating) * 100;
-                    const ins3_fm_str = ins3_missed > 0 ? ins3_missed.toFixed(2).replace('.', ',') + '%' : '0,00';
-                    const ins3_pontos = ins3_missed > 0 ? Math.floor(ins3_missed) * 5 : 0; 
-                    if(ins3_pontos > 0) { totalPontosGlosa += ins3_pontos; descumprimentos.push('INS3 (Geral)'); }
-                    linhasTabela.push(getRow('INS3', ins3_dentro, (total - ins3_dentro), total, '90,00%', fPct(ins3_ating), ins3_fm_str, String(ins3_pontos), ins3_ating >= 0.90));
-                    
-                    // INS3 por Criticidade
-                    ['P1', 'P2', 'P3', 'P4', 'P5'].forEach(p => {
-                        const s = p_stats[p];
-                        if (s.total === 0) {
-                            linhasTabela.push(getRow(`INS3 - ${p}`, 0, 0, 0, '90,00%', 'N/A', '0,00', '0', true, true));
-                        } else {
-                            const atg = s.dentro / s.total;
-                            const missed = (0.90 - atg) * 100;
-                            const fm_str = missed > 0 ? missed.toFixed(2).replace('.', ',') + '%' : '0,00';
-                            const pts = missed > 0 ? Math.floor(missed) * 5 : 0; 
-                            if(pts > 0) { totalPontosGlosa += pts; descumprimentos.push(`INS3 - ${p}`); }
-                            linhasTabela.push(getRow(`INS3 - ${p}`, s.dentro, (s.total - s.dentro), s.total, '90,00%', fPct(atg), fm_str, String(pts), atg >= 0.90));
-                        }
-                    });
-
-                    // INS4 e INS5 
-                    linhasTabela.push(['INS4', {content: 'Não se aplica', colSpan: 6, styles: {halign: 'center', fontStyle: 'bold', fillColor: [240, 240, 240]}}, '0']);
-                    linhasTabela.push(['INS5', {content: 'Não se aplica', colSpan: 6, styles: {halign: 'center', fontStyle: 'bold', fillColor: [240, 240, 240]}}, '0']);
-
-                    // INS6 (Meta = 3% máximo)
-                    const ins6_dentro = total - ins6_fora;
-                    const ins6_ating = total > 0 ? (ins6_fora / total) : 0;
-                    const ins6_missed = (ins6_ating - 0.03) * 100;
-                    const ins6_fm_str = ins6_missed > 0 ? ins6_missed.toFixed(2).replace('.', ',') + '%' : '0,00';
-                    const ins6_pontos = ins6_missed > 0 ? Math.floor(ins6_missed) * 3 : 0;
-                    if(ins6_pontos > 0) { totalPontosGlosa += ins6_pontos; descumprimentos.push('INS6'); }
-                    linhasTabela.push(getRow('INS6', ins6_dentro, ins6_fora, total, '3,00%', fPct(ins6_ating), ins6_fm_str, String(ins6_pontos), ins6_ating <= 0.03));
-
-                    // INS7 
-                    linhasTabela.push(['INS7', {content: 'Não se aplica', colSpan: 6, styles: {halign: 'center', fontStyle: 'bold', fillColor: [240, 240, 240]}}, '0']);
-
-                    doc.autoTable({ 
-                        startY: nextY + 15, 
-                        head: [["Indicadores", "Dentro da meta", "Fora da meta", "Total", "% Meta", "Atingido", "Fora da Meta", "Pontos"]], 
-                        body: linhasTabela, 
-                        theme: 'grid', 
-                        headStyles: { fillColor: [150, 150, 150], textColor: 20, fontStyle: 'bold', halign: 'center' }, 
-                        columnStyles: {
-                            0: { fontStyle: 'bold' },
-                            1: { halign: 'center' }, 2: { halign: 'center' }, 3: { halign: 'center' },
-                            4: { halign: 'center' }, 5: { halign: 'center' }, 6: { halign: 'center' }, 7: { halign: 'center' }
-                        },
-                        styles: { fontSize: 8, cellPadding: 3 }, 
-                        alternateRowStyles: { fillColor: [247, 248, 250] }, 
-                        margin: { left: 40, right: 40 }
-                    });
-
-                    // ==========================================
-                    // TABELA DE REGRAS DE GLOSA 
-                    // ==========================================
-                    const rulesY = doc.lastAutoTable.finalY + 15;
-                    
-                    doc.setTextColor(26, 25, 65); doc.setFontSize(10); doc.setFont("helvetica", "bold"); 
-                    doc.text("Regras de Pontuação e Glosa", 40, rulesY);
-                    
-                    doc.setFontSize(8); doc.setTextColor(60, 60, 60); doc.setFont("helvetica", "normal");
-                    const ruleText = "A cada 10 (dez) pontos inteiros acumulados será descontado 1% (um por cento) do montante mensal a ser pago à CONTRATADA pelos serviços prestados. O limite máximo para as glosas é de 30% (trinta por cento) do valor mensal a ser pago à CONTRATADA.";
-                    const splitRule = doc.splitTextToSize(ruleText, w - 80);
-                    doc.text(splitRule, 40, rulesY + 12);
-                    
-                    const tableRulesY = rulesY + 12 + (splitRule.length * 10) + 4;
-
-                    const regrasLinhas = [
-                        [{content: "Redução de 1% (um por cento) sobre o valor do pagamento mensal devido a cada 10 (dez) pontos acumulados no período de faturamento, limitado a 30% do valor total devido.", colSpan: 2, styles: {halign: 'center', fontStyle: 'bold', fillColor: [240, 240, 240]}}],
-                        ["INS1", "5 pontos a cada 0,1 ponto fora da meta"],
-                        ["INS2", "5 pontos a cada 1% fora da meta"],
-                        ["INS3", "5 pontos a cada 1% fora da meta para cada nível de prioridade."],
-                        ["INS4", "3 pontos a cada 1% fora da meta"],
-                        ["INS5", "3 pontos a cada 1% fora da meta"],
-                        ["INS6", "3 pontos a cada 1% fora da meta"],
-                        ["INS7", "3 pontos a cada 1% fora da meta"]
-                    ];
-
-                    doc.autoTable({ 
-                        startY: tableRulesY, 
-                        head: [["INDICADOR DE NÍVEL DE SERVIÇO", "PONTUAÇÃO ACUMULÁVEL"]], 
-                        body: regrasLinhas, 
-                        theme: 'grid', 
-                        headStyles: { fillColor: [150, 150, 150], textColor: 20, fontStyle: 'bold', halign: 'center' }, 
-                        columnStyles: { 0: { fontStyle: 'bold', halign: 'center', cellWidth: 140 }, 1: { halign: 'center' } },
-                        styles: { fontSize: 7.5, cellPadding: 3 }, 
-                        margin: { left: 40, right: 40 }
-                    });
-
-                    // ==========================================
-                    // CONCLUSÃO DE GLOSA COM CÁLCULO FINANCEIRO
-                    // ==========================================
-                    const finalY = doc.lastAutoTable.finalY + 20;
-                    doc.setTextColor(26, 25, 65); doc.setFontSize(12); doc.setFont("helvetica", "bold"); 
-                    doc.text("Conclusão do Fiscal", 40, finalY);
-                    
-                    let cursorX = 40;
-                    let cursorY = finalY + 16;
-                    const maxWidth = w - 80;
-                    doc.setFontSize(10); doc.setTextColor(60, 60, 60);
-
-                    function printWrapped(text, isBold) {
-                        doc.setFont("helvetica", isBold ? "bold" : "normal");
-                        const tokens = text.match(/\S+|\s/g) || []; 
-                        tokens.forEach(token => {
-                            if (token === " ") {
-                                let spaceW = doc.getTextWidth(" ");
-                                if (cursorX + spaceW <= 40 + maxWidth) cursorX += spaceW;
-                            } else {
-                                let wordW = doc.getTextWidth(token);
-                                if (cursorX + wordW > 40 + maxWidth) {
-                                    cursorX = 40;
-                                    cursorY += 14;
-                                }
-                                doc.text(token, cursorX, cursorY);
-                                cursorX += wordW;
-                            }
-                        });
-                    }
-
-                    if (totalPontosGlosa === 0) {
-                        printWrapped("Após análise rigorosa dos índices apresentados no período aferido, atesta-se que a empresa cumpriu com todos os Níveis Mínimos de Serviços (NMS) previstos contratualmente. Portanto, ", false);
-                        printWrapped("NÃO SERÁ APLICADA GLOSA", true);
-                        printWrapped(" (0 pontos computados), devendo o faturamento prosseguir em sua integralidade.", false);
+                const ins3_ating = total > 0 ? (ins3_dentro / total) : 1;
+                const ins3_missed = (0.90 - ins3_ating) * 100;
+                const ins3_fm_str = ins3_missed > 0 ? ins3_missed.toFixed(2).replace('.', ',') + '%' : '0,00';
+                const ins3_pontos = ins3_missed > 0 ? Math.floor(ins3_missed) * 5 : 0; 
+                if(ins3_pontos > 0) { totalPontosGlosa += ins3_pontos; descumprimentos.push('INS3 (Geral)'); }
+                linhasTabela.push(getRow('INS3', ins3_dentro, (total - ins3_dentro), total, '90,00%', fPct(ins3_ating), ins3_fm_str, String(ins3_pontos), ins3_ating >= 0.90));
+                
+                ['P1', 'P2', 'P3', 'P4', 'P5'].forEach(p => {
+                    const s = p_stats[p];
+                    if (s.total === 0) {
+                        linhasTabela.push(getRow(`INS3 - ${p}`, 0, 0, 0, '90,00%', 'N/A', '0,00', '0', true, true));
                     } else {
-                        // CÁLCULO DA GLOSA EM REAIS (R$)
-                        const valorContrato = 26971.30;
-                        let percentualGlosa = Math.floor(totalPontosGlosa / 10) * 1.0;
-                        if (percentualGlosa > 30.0) percentualGlosa = 30.0;
-                        
-                        const valorDesconto = valorContrato * (percentualGlosa / 100);
-                        const valorDescontoStr = valorDesconto.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-                        
-                        const nomesIndicadores = descumprimentos.join(', ');
-
-                        printWrapped(`Após análise dos índices no período aferido, constatou-se descumprimento nos seguintes indicadores: `, false);
-                        printWrapped(`${nomesIndicadores}. `, true);
-                        
-                        if (percentualGlosa === 0) {
-                            // Houve descumprimento, mas os pontos não chegaram a 10 (ex: 5 pontos), logo, não gera desconto financeiro.
-                            printWrapped(`Embora tenham sido acumulados ${totalPontosGlosa} pontos, a quantidade é insuficiente para atingir a régua de desconto (mínimo de 10 pontos). Portanto, `, false);
-                            printWrapped("NÃO SERÁ APLICADA GLOSA", true);
-                            printWrapped(" e o faturamento deve prosseguir em sua integralidade.", false);
-                        } else {
-                            // Houve 10 pontos ou mais, gera glosa.
-                            printWrapped("SERÁ APLICADA GLOSA", true);
-                            printWrapped(` correspondente a um total de ${totalPontosGlosa} pontos acumulados. Com base nas regras contratuais, aplica-se uma redução de `, false);
-                            printWrapped(`${percentualGlosa}%`, true);
-                            printWrapped(` sobre o valor do pagamento mensal, o que corresponde a um desconto de `, false);
-                            printWrapped(`${valorDescontoStr}`, true);
-                            printWrapped(`.`, false);
-                        }
+                        const atg = s.dentro / s.total;
+                        const missed = (0.90 - atg) * 100;
+                        const fm_str = missed > 0 ? missed.toFixed(2).replace('.', ',') + '%' : '0,00';
+                        const pts = missed > 0 ? Math.floor(missed) * 5 : 0; 
+                        if(pts > 0) { totalPontosGlosa += pts; descumprimentos.push(`INS3 - ${p}`); }
+                        linhasTabela.push(getRow(`INS3 - ${p}`, s.dentro, (s.total - s.dentro), s.total, '90,00%', fPct(atg), fm_str, String(pts), atg >= 0.90));
                     }
+                });
 
-                    doc.save(`Auditoria_Fiscalizacao_IMR.pdf`);
-                } catch (err) { alert("Erro ao gerar PDF de Fiscalização."); } finally { 
-                    btn.innerHTML = conteudoOriginal; btn.disabled = false; 
+                linhasTabela.push(['INS4', {content: 'Não se aplica', colSpan: 6, styles: {halign: 'center', fontStyle: 'bold', fillColor: [240, 240, 240]}}, '0']);
+                linhasTabela.push(['INS5', {content: 'Não se aplica', colSpan: 6, styles: {halign: 'center', fontStyle: 'bold', fillColor: [240, 240, 240]}}, '0']);
+
+                const ins6_dentro = total - ins6_fora;
+                const ins6_ating = total > 0 ? (ins6_fora / total) : 0;
+                const ins6_missed = (ins6_ating - 0.03) * 100;
+                const ins6_fm_str = ins6_missed > 0 ? ins6_missed.toFixed(2).replace('.', ',') + '%' : '0,00';
+                const ins6_pontos = ins6_missed > 0 ? Math.floor(ins6_missed) * 3 : 0;
+                if(ins6_pontos > 0) { totalPontosGlosa += ins6_pontos; descumprimentos.push('INS6'); }
+                linhasTabela.push(getRow('INS6', ins6_dentro, ins6_fora, total, '3,00%', fPct(ins6_ating), ins6_fm_str, String(ins6_pontos), ins6_ating <= 0.03));
+
+                linhasTabela.push(['INS7', {content: 'Não se aplica', colSpan: 6, styles: {halign: 'center', fontStyle: 'bold', fillColor: [240, 240, 240]}}, '0']);
+
+                // FORMATAR DADOS GERAIS
+                const mesTexto = mesSelecionado === 'Todos' ? 'Base Completa' : mesSelecionado;
+                let periodoAfericao = "Base Completa";
+                if (mesSelecionado !== 'Todos') {
+                    const p = mesSelecionado.split('/');
+                    let mm = parseInt(p[0], 10); let yy = parseInt(p[1], 10);
+                    let mmNext = mm + 1; let yyNext = yy;
+                    if (mmNext > 12) { mmNext = 1; yyNext++; }
+                    const m1 = mm < 10 ? '0'+mm : mm;
+                    const m2 = mmNext < 10 ? '0'+mmNext : mmNext;
+                    periodoAfericao = `04/${m1}/${yy} a 03/${m2}/${yyNext}`;
                 }
+
+                // SALVAR OBJETO TEMPORÁRIO PARA O PDF
+                objAuditoriaTemp = {
+                    totalChamados: total,
+                    mesTexto: mesTexto,
+                    periodoAfericao: periodoAfericao,
+                    linhasTabela: linhasTabela
+                };
+
+                btn.innerHTML = conteudoOriginal; btn.disabled = false;
+
+                // INTERCEÇÃO DE ESTADO SE HOUVER PONTOS DE GLOSA
+                if (totalPontosGlosa > 0) {
+                    const nomesIndicadores = descumprimentos.join(', ');
+                    const textoSugestao = `Após análise dos índices no período aferido, constatou-se descumprimento nos seguintes indicadores: ${nomesIndicadores}.\n\n[Espaço para justificação ou análise do fiscal]`;
+                    
+                    document.getElementById('revisao-indicadores').innerText = nomesIndicadores;
+                    document.getElementById('revisao-texto').value = textoSugestao;
+                    document.getElementById('revisao-pontos').value = totalPontosGlosa;
+                    
+                    document.getElementById('modal-revisao-glosa').classList.remove('hidden');
+                } else {
+                    // CAMINHO FELIZ (Zero Glosas) - Gera direto
+                    const txtFeliz = "Após análise rigorosa dos índices apresentados no período aferido, atesta-se que a empresa cumpriu com todos os Níveis Mínimos de Serviços (NMS) previstos contratualmente. A justificativa de glosa não se aplica neste ciclo.";
+                    gerarPDFFiscalFinal(0, txtFeliz, objAuditoriaTemp);
+                }
+
             }, 800); 
         });
+
+        // Evento de Confirmação da Revisão
+        document.getElementById('btn-confirmar-revisao').addEventListener('click', () => {
+            if(!objAuditoriaTemp) return;
+            const ptsFinais = parseInt(document.getElementById('revisao-pontos').value, 10);
+            const txtFinal = document.getElementById('revisao-texto').value;
+            
+            document.getElementById('modal-revisao-glosa').classList.add('hidden');
+            gerarPDFFiscalFinal(ptsFinais, txtFinal, objAuditoriaTemp);
+        });
+
+        // MOTOR DE GERAÇÃO DO PDF (ISOLADO E REUTILIZÁVEL)
+        function gerarPDFFiscalFinal(ptsAplicados, textoConclusao, dados) {
+            try {
+                const { jsPDF } = window.jspdf; 
+                const doc = new jsPDF('p', 'pt', 'a4'); 
+                const w = doc.internal.pageSize.width;
+                
+                doc.setFillColor(26, 25, 65); doc.rect(0, 0, w, 85, 'F'); doc.setTextColor(255, 255, 255); 
+                doc.setFontSize(14); doc.setFont("helvetica", "bold"); doc.text("MINISTÉRIO DA JUSTIÇA E SEGURANÇA PÚBLICA", 40, 32);
+                doc.setFontSize(9.5); doc.setFont("helvetica", "normal"); doc.text("Polícia Rodoviária Federal - Diretoria de Tecnologia da Informação e Comunicação (DTIC)", 40, 52);
+                doc.setFontSize(10.5); doc.setFont("helvetica", "bold"); doc.text("Relatório de Fiscalização de Contrato - IMR (Níveis Mínimos de Serviço)", 40, 72);
+                
+                try { 
+                    let imgData = localStorage.getItem('dashLogo');
+                    if (imgData) { doc.addImage(imgData, 'PNG', w - 80, 20, 40, 40); } 
+                    else {
+                        const imgEl = document.querySelector('#header-logo-container img');
+                        if(imgEl) {
+                            const canvas = document.createElement('canvas'); canvas.width = imgEl.naturalWidth || imgEl.width; canvas.height = imgEl.naturalHeight || imgEl.height; const ctx = canvas.getContext('2d'); ctx.drawImage(imgEl, 0, 0); const b64 = canvas.toDataURL('image/png'); doc.addImage(b64, 'PNG', w - 80, 20, 40, 40);
+                        }
+                    }
+                } catch(e) {}
+
+                doc.setTextColor(26, 25, 65); doc.setFontSize(10); 
+                
+                // Coluna Esquerda
+                doc.setFont("helvetica", "bold"); doc.text("Empresa:", 40, 105); doc.setFont("helvetica", "normal"); doc.text("IOS Informática", 115, 105);
+                doc.setFont("helvetica", "bold"); doc.text("Contrato:", 40, 120); doc.setFont("helvetica", "normal"); doc.text("14/2025", 115, 120);
+                doc.setFont("helvetica", "bold"); doc.text("Fiscal Técnico:", 40, 135); doc.setFont("helvetica", "normal"); doc.text("Albert Einstein da Silva Barros", 115, 135);
+
+                // Coluna Direita
+                doc.setFont("helvetica", "bold"); doc.text("Mês Referente:", 330, 105); doc.setFont("helvetica", "normal"); doc.text(dados.mesTexto, 435, 105);
+                doc.setFont("helvetica", "bold"); doc.text("Período de Aferição:", 330, 120); doc.setFont("helvetica", "normal"); doc.text(dados.periodoAfericao, 435, 120);
+                doc.setFont("helvetica", "bold"); doc.text("Valor Mensal:", 330, 135); doc.setFont("helvetica", "normal"); doc.text("R$ 26.971,30", 435, 135);
+
+                const agora = new Date();
+                const dataForm = agora.toLocaleDateString('pt-BR');
+                const horaForm = agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+                doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.text("Parecer e Metodologia de Cálculo", 40, 165);
+                doc.setTextColor(60, 60, 60); doc.setFontSize(10); doc.setFont("helvetica", "normal");
+                
+                const textoParecer = `A presente medição avaliou o universo de ${dados.totalChamados} chamados encerrados dentro do ciclo de faturamento selecionado (${dados.mesTexto}, que compreende do dia 04 ao dia 03 do mês subsequente). Os indicadores matemáticos foram processados de forma automatizada linha a linha, em estrita conformidade com as regras do Instrumento de Medição de Resultados (IMR). O indicador INS1 assumiu nota 5 automática na ausência de avaliações manuais. Os índices INS4, INS5 e INS7 não se aplicam à fila em questão.\n\nDocumento processado eletronicamente em ${dataForm} às ${horaForm}.`;
+                
+                const splitText = doc.splitTextToSize(textoParecer, w - 80);
+                doc.text(splitText, 40, 180);
+                
+                const nextY = 180 + (splitText.length * 15) + 20;
+
+                doc.setTextColor(26, 25, 65); doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.text("3. Resumo de indicadores", 40, nextY);
+
+                doc.autoTable({ 
+                    startY: nextY + 15, 
+                    head: [["Indicadores", "Dentro da meta", "Fora da meta", "Total", "% Meta", "Atingido", "Fora da Meta", "Pontos"]], 
+                    body: dados.linhasTabela, 
+                    theme: 'grid', 
+                    headStyles: { fillColor: [150, 150, 150], textColor: 20, fontStyle: 'bold', halign: 'center' }, 
+                    columnStyles: {
+                        0: { fontStyle: 'bold' },
+                        1: { halign: 'center' }, 2: { halign: 'center' }, 3: { halign: 'center' },
+                        4: { halign: 'center' }, 5: { halign: 'center' }, 6: { halign: 'center' }, 7: { halign: 'center' }
+                    },
+                    styles: { fontSize: 8, cellPadding: 3 }, 
+                    alternateRowStyles: { fillColor: [247, 248, 250] }, 
+                    margin: { left: 40, right: 40 }
+                });
+
+                // TABELA DE REGRAS DE GLOSA 
+                const rulesY = doc.lastAutoTable.finalY + 15;
+                
+                doc.setTextColor(26, 25, 65); doc.setFontSize(10); doc.setFont("helvetica", "bold"); 
+                doc.text("Regras de Pontuação e Glosa", 40, rulesY);
+                
+                doc.setFontSize(8); doc.setTextColor(60, 60, 60); doc.setFont("helvetica", "normal");
+                const ruleText = "A cada 10 (dez) pontos inteiros acumulados será descontado 1% (um por cento) do montante mensal a ser pago à CONTRATADA pelos serviços prestados. O limite máximo para as glosas é de 30% (trinta por cento) do valor mensal a ser pago à CONTRATADA.";
+                const splitRule = doc.splitTextToSize(ruleText, w - 80);
+                doc.text(splitRule, 40, rulesY + 12);
+                
+                const tableRulesY = rulesY + 12 + (splitRule.length * 10) + 4;
+
+                const regrasLinhas = [
+                    [{content: "Redução de 1% (um por cento) sobre o valor do pagamento mensal devido a cada 10 (dez) pontos acumulados no período de faturamento, limitado a 30% do valor total devido.", colSpan: 2, styles: {halign: 'center', fontStyle: 'bold', fillColor: [240, 240, 240]}}],
+                    ["INS1", "5 pontos a cada 0,1 ponto fora da meta"],
+                    ["INS2", "5 pontos a cada 1% fora da meta"],
+                    ["INS3", "5 pontos a cada 1% fora da meta para cada nível de prioridade."],
+                    ["INS4", "3 pontos a cada 1% fora da meta"],
+                    ["INS5", "3 pontos a cada 1% fora da meta"],
+                    ["INS6", "3 pontos a cada 1% fora da meta"],
+                    ["INS7", "3 pontos a cada 1% fora da meta"]
+                ];
+
+                doc.autoTable({ 
+                    startY: tableRulesY, 
+                    head: [["INDICADOR DE NÍVEL DE SERVIÇO", "PONTUAÇÃO ACUMULÁVEL"]], 
+                    body: regrasLinhas, 
+                    theme: 'grid', 
+                    headStyles: { fillColor: [150, 150, 150], textColor: 20, fontStyle: 'bold', halign: 'center' }, 
+                    columnStyles: { 0: { fontStyle: 'bold', halign: 'center', cellWidth: 140 }, 1: { halign: 'center' } },
+                    styles: { fontSize: 7.5, cellPadding: 3 }, 
+                    margin: { left: 40, right: 40 }
+                });
+
+                // CONCLUSÃO EDITÁVEL E CÁLCULO FINANCEIRO
+                const finalY = doc.lastAutoTable.finalY + 20;
+                doc.setTextColor(26, 25, 65); doc.setFontSize(12); doc.setFont("helvetica", "bold"); 
+                doc.text("Conclusão do Fiscal", 40, finalY);
+                
+                let cursorX = 40;
+                let cursorY = finalY + 16;
+                const maxWidth = w - 80;
+                doc.setFontSize(10); doc.setTextColor(60, 60, 60);
+
+                function printWrapped(text, isBold) {
+                    doc.setFont("helvetica", isBold ? "bold" : "normal");
+                    const tokens = text.match(/\S+|\s/g) || []; 
+                    tokens.forEach(token => {
+                        if (token === " ") {
+                            let spaceW = doc.getTextWidth(" ");
+                            if (cursorX + spaceW <= 40 + maxWidth) cursorX += spaceW;
+                        } else if (token === "\n") {
+                            cursorX = 40; cursorY += 14;
+                        } else {
+                            let wordW = doc.getTextWidth(token);
+                            if (cursorX + wordW > 40 + maxWidth) {
+                                cursorX = 40; cursorY += 14;
+                            }
+                            doc.text(token, cursorX, cursorY);
+                            cursorX += wordW;
+                        }
+                    });
+                }
+
+                // Imprime a narrativa do usuário
+                const paragrafos = textoConclusao.split('\n');
+                paragrafos.forEach(pg => {
+                    if(pg.trim() !== '') printWrapped(pg + " ", false);
+                    cursorX = 40; cursorY += 14;
+                });
+
+                // Imprime a Matemática de Desconto baseada nos Pontos Finais
+                cursorY += 4;
+                const valorContrato = 26971.30;
+                let percentualGlosa = Math.floor(ptsAplicados / 10) * 1.0;
+                if (percentualGlosa > 30.0) percentualGlosa = 30.0;
+                
+                const valorDesconto = valorContrato * (percentualGlosa / 100);
+                const valorDescontoStr = valorDesconto.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+                if (ptsAplicados === 0) {
+                    printWrapped(`Parecer Financeiro: Foram contabilizados 0 pontos. `, false);
+                    printWrapped("NÃO SERÁ APLICADA GLOSA", true);
+                    printWrapped(" neste período. O faturamento deve prosseguir na íntegra.", false);
+                } else if (percentualGlosa === 0) {
+                    printWrapped(`Parecer Financeiro: Foram contabilizados ${ptsAplicados} pontos. Por não atingir a régua mínima de 10 pontos, `, false);
+                    printWrapped("NÃO SERÁ APLICADA GLOSA", true);
+                    printWrapped(" neste período. O faturamento deve prosseguir na íntegra.", false);
+                } else {
+                    printWrapped(`Parecer Financeiro: Com base no total de ${ptsAplicados} pontos, `, false);
+                    printWrapped("SERÁ APLICADA GLOSA", true);
+                    printWrapped(` equivalente a `, false);
+                    printWrapped(`${percentualGlosa}%`, true);
+                    printWrapped(` sobre o valor do contrato (R$ 26.971,30). O desconto final é de `, false);
+                    printWrapped(`${valorDescontoStr}.`, true);
+                }
+
+                doc.save(`Auditoria_Fiscalizacao_IMR.pdf`);
+                objAuditoriaTemp = null;
+            } catch (err) { alert("Erro ao gerar PDF de Fiscalização."); }
+        }
 
         // -----------------------------------------------------
         // FUNÇÕES DE TEMPO E FILTROS 
