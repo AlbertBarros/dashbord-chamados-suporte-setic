@@ -83,7 +83,6 @@
                     <i class="fa-solid fa-toolbox"></i> Painel de Ferramentas
                 </button>
 
-                <!-- BOTÃO DE LOGOUT -->
                 <button id="btn-logout" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded transition shadow flex items-center gap-2 text-sm font-semibold border border-white border-opacity-20">
                     <i class="fa-solid fa-arrow-right-from-bracket"></i> Sair
                 </button>
@@ -117,28 +116,28 @@
 
             <!-- QUADRO DE INDICADORES (KPIs) -->
             <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-6">
-                <div class="card bg-white dark:bg-gray-800 flex items-center gap-4" title="Volume total de chamados registados na base de dados atual."><div class="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 dark:text-blue-400 text-xl"><i class="fa-solid fa-ticket"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">Total (Geral)</p><p id="kpi-total" class="text-2xl font-black text-gray-800 dark:text-gray-100">0</p></div></div>
-                <div class="card bg-white dark:bg-gray-800 flex items-center gap-4" title="Volume total de chamados filtrados de acordo com os parâmetros selecionados."><div class="w-12 h-12 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400 text-xl"><i class="fa-solid fa-filter"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">Filtrados</p><p id="kpi-filtrado" class="text-2xl font-black text-gray-800 dark:text-gray-100">0</p></div></div>
-                <div class="card bg-white dark:bg-gray-800 flex items-center gap-4" title="Tempo Médio de Atendimento (TMA): Média de horas gastas para a resolução dos chamados."><div class="w-12 h-12 rounded-full bg-yellow-100 dark:bg-yellow-900/50 flex items-center justify-center text-yellow-600 dark:text-yellow-400 text-xl"><i class="fa-regular fa-clock"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">TMA (Horas)</p><p id="kpi-tma" class="text-2xl font-black text-gray-800 dark:text-gray-100">0.0h</p></div></div>
-                <div class="card bg-white dark:bg-gray-800 flex items-center gap-4" title="SLA Atendido: Percentagem de chamados solucionados dentro do prazo acordado."><div class="w-12 h-12 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center text-green-500 dark:text-green-400 text-xl"><i class="fa-solid fa-stopwatch"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">SLA Atendido</p><p id="kpi-sla" class="text-2xl font-black text-gray-800 dark:text-gray-100">0%</p></div></div>
-                <div class="card bg-white dark:bg-gray-800 flex items-center gap-4" title="Incidentes: Taxa proporcional de chamados abertos classificados como interrupção ou falha (Incidentes)."><div class="w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center text-purple-600 dark:text-purple-400 text-xl"><i class="fa-solid fa-triangle-exclamation"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">Incidentes</p><p id="kpi-incidentes" class="text-2xl font-black text-gray-800 dark:text-gray-100">0%</p></div></div>
-                <div class="card bg-white dark:bg-gray-800 flex items-center gap-4" title="Média de Satisfação do Usuário (INS1). Escala 1 a 5. Nota 5.0 assumida por padrão em chamados sem avaliação."><div class="w-12 h-12 rounded-full bg-pink-100 dark:bg-pink-900/50 flex items-center justify-center text-pink-600 dark:text-pink-400 text-xl"><i class="fa-solid fa-star"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">Satisfação</p><p id="kpi-satisfacao" class="text-2xl font-black text-gray-800 dark:text-gray-100">0,00</p></div></div>
-                <div class="card bg-white dark:bg-gray-800 flex items-center gap-4" title="Taxa de Reabertura (INS6). Percentagem de chamados reabertos no filtro selecionado."><div class="w-12 h-12 rounded-full bg-orange-100 dark:bg-orange-900/50 flex items-center justify-center text-orange-600 dark:text-orange-400 text-xl"><i class="fa-solid fa-rotate-left"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">Reabertos</p><p id="kpi-reabertos" class="text-2xl font-black text-gray-800 dark:text-gray-100">0%</p></div></div>
+                <div class="card bg-white dark:bg-gray-800 flex items-center gap-4"><div class="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 dark:text-blue-400 text-xl"><i class="fa-solid fa-ticket"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">Total (Geral)</p><p id="kpi-total" class="text-2xl font-black text-gray-800 dark:text-gray-100">0</p></div></div>
+                <div class="card bg-white dark:bg-gray-800 flex items-center gap-4"><div class="w-12 h-12 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400 text-xl"><i class="fa-solid fa-filter"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">Filtrados</p><p id="kpi-filtrado" class="text-2xl font-black text-gray-800 dark:text-gray-100">0</p></div></div>
+                <div class="card bg-white dark:bg-gray-800 flex items-center gap-4"><div class="w-12 h-12 rounded-full bg-yellow-100 dark:bg-yellow-900/50 flex items-center justify-center text-yellow-600 dark:text-yellow-400 text-xl"><i class="fa-regular fa-clock"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">TMA (Horas)</p><p id="kpi-tma" class="text-2xl font-black text-gray-800 dark:text-gray-100">0.0h</p></div></div>
+                <div class="card bg-white dark:bg-gray-800 flex items-center gap-4"><div class="w-12 h-12 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center text-green-500 dark:text-green-400 text-xl"><i class="fa-solid fa-stopwatch"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">SLA Atendido</p><p id="kpi-sla" class="text-2xl font-black text-gray-800 dark:text-gray-100">0%</p></div></div>
+                <div class="card bg-white dark:bg-gray-800 flex items-center gap-4"><div class="w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center text-purple-600 dark:text-purple-400 text-xl"><i class="fa-solid fa-triangle-exclamation"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">Incidentes</p><p id="kpi-incidentes" class="text-2xl font-black text-gray-800 dark:text-gray-100">0%</p></div></div>
+                <div class="card bg-white dark:bg-gray-800 flex items-center gap-4"><div class="w-12 h-12 rounded-full bg-pink-100 dark:bg-pink-900/50 flex items-center justify-center text-pink-600 dark:text-pink-400 text-xl"><i class="fa-solid fa-star"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">Satisfação</p><p id="kpi-satisfacao" class="text-2xl font-black text-gray-800 dark:text-gray-100">0,00</p></div></div>
+                <div class="card bg-white dark:bg-gray-800 flex items-center gap-4"><div class="w-12 h-12 rounded-full bg-orange-100 dark:bg-orange-900/50 flex items-center justify-center text-orange-600 dark:text-orange-400 text-xl"><i class="fa-solid fa-rotate-left"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">Reabertos</p><p id="kpi-reabertos" class="text-2xl font-black text-gray-800 dark:text-gray-100">0%</p></div></div>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                <div class="card bg-white dark:bg-gray-800 flex flex-col"><h3 class="font-bold text-gray-700 dark:text-gray-300 mb-4 border-b dark:border-gray-700 pb-2 text-sm uppercase">Evolução de Chamados</h3><div class="chart-container" title="Clique num ponto para filtrar por mês"><canvas id="chart-meses"></canvas></div></div>
-                <div class="card bg-white dark:bg-gray-800 flex flex-col"><h3 class="font-bold text-gray-700 dark:text-gray-300 mb-4 border-b dark:border-gray-700 pb-2 text-sm uppercase">Volume por Analista</h3><div class="chart-container" title="Clique numa barra para filtrar por analista"><canvas id="chart-analistas"></canvas></div></div>
+                <div class="card bg-white dark:bg-gray-800 flex flex-col"><h3 class="font-bold text-gray-700 dark:text-gray-300 mb-4 border-b dark:border-gray-700 pb-2 text-sm uppercase">Evolução de Chamados</h3><div class="chart-container"><canvas id="chart-meses"></canvas></div></div>
+                <div class="card bg-white dark:bg-gray-800 flex flex-col"><h3 class="font-bold text-gray-700 dark:text-gray-300 mb-4 border-b dark:border-gray-700 pb-2 text-sm uppercase">Volume por Analista</h3><div class="chart-container"><canvas id="chart-analistas"></canvas></div></div>
             </div>
             
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                <div class="card bg-white dark:bg-gray-800 flex flex-col"><h3 class="font-bold text-gray-700 dark:text-gray-300 mb-4 border-b dark:border-gray-700 pb-2 text-sm uppercase">Top 15 Assuntos (Categorias)</h3><div class="chart-container" title="Clique numa barra para filtrar por assunto"><canvas id="chart-assuntos"></canvas></div></div>
-                <div class="card bg-white dark:bg-gray-800 flex flex-col"><h3 class="font-bold text-gray-700 dark:text-gray-300 mb-2 border-b dark:border-gray-700 pb-2 text-sm uppercase">Eficiência SLA por Criticidade</h3><p class="text-[10px] text-gray-500 dark:text-gray-400 mb-2">Compara chamados dentro do prazo vs estourados.</p><div class="chart-container" title="Clique para filtrar por criticidade"><canvas id="chart-prioridade"></canvas></div></div>
+                <div class="card bg-white dark:bg-gray-800 flex flex-col"><h3 class="font-bold text-gray-700 dark:text-gray-300 mb-4 border-b dark:border-gray-700 pb-2 text-sm uppercase">Top 15 Assuntos (Categorias)</h3><div class="chart-container"><canvas id="chart-assuntos"></canvas></div></div>
+                <div class="card bg-white dark:bg-gray-800 flex flex-col"><h3 class="font-bold text-gray-700 dark:text-gray-300 mb-2 border-b dark:border-gray-700 pb-2 text-sm uppercase">Eficiência SLA por Criticidade</h3><div class="chart-container"><canvas id="chart-prioridade"></canvas></div></div>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                 <div class="card bg-white dark:bg-gray-800 flex flex-col"><h3 class="font-bold text-gray-700 dark:text-gray-300 mb-4 border-b dark:border-gray-700 pb-2 text-sm uppercase">Top Maiores Requerentes</h3><div class="chart-container"><canvas id="chart-requerentes"></canvas></div></div>
-                <div class="card bg-white dark:bg-gray-800 flex flex-col items-center justify-center"><h3 class="font-bold text-gray-700 dark:text-gray-300 mb-4 w-full border-b dark:border-gray-700 pb-2 text-sm uppercase">Natureza do Chamado</h3><div class="chart-container-small" title="Clique para filtrar por tipo"><canvas id="chart-tipo"></canvas></div></div>
+                <div class="card bg-white dark:bg-gray-800 flex flex-col items-center justify-center"><h3 class="font-bold text-gray-700 dark:text-gray-300 mb-4 w-full border-b dark:border-gray-700 pb-2 text-sm uppercase">Natureza do Chamado</h3><div class="chart-container-small"><canvas id="chart-tipo"></canvas></div></div>
             </div>
 
             <div class="card bg-white dark:bg-gray-800">
@@ -169,7 +168,6 @@
                     <button id="btn-tab-next" class="px-3 py-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-xs font-semibold transition disabled:opacity-50">Próxima <i class="fa-solid fa-chevron-right"></i></button>
                 </div>
             </div>
-
         </main>
     </div>
 
@@ -184,36 +182,53 @@
         </div>
     </div>
 
-    <!-- Modal Revisão de Glosa (INTERCEÇÃO) -->
+    <!-- Modal Revisão de Glosa (INTERCEÇÃO SOBERANA) -->
     <div id="modal-revisao-glosa" class="hidden fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-[60] p-4">
         <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-2xl w-full max-w-2xl border-t-4 border-yellow-500 flex flex-col max-h-[90vh]">
             <h2 class="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2 flex items-center gap-2"><i class="fa-solid fa-triangle-exclamation text-yellow-500"></i> Descumprimento de NMS Detetado</h2>
-            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">A auditoria encontrou indicadores fora da meta contratual. Como fiscal, você pode reescrever a conclusão ou abonar pontos mediante justificativa válida da empresa.</p>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">A auditoria encontrou indicadores fora da meta contratual. Como fiscal, decida como o parecer será impresso no relatório final.</p>
             
             <div class="bg-red-50 dark:bg-red-900/20 p-3 rounded border border-red-200 dark:border-red-800 mb-4">
                 <p class="text-xs font-bold text-red-800 dark:text-red-400 mb-1">Indicadores Afetados:</p>
                 <p class="text-sm font-mono font-bold text-red-700 dark:text-red-300" id="revisao-indicadores"></p>
             </div>
 
-            <div class="mb-4">
+            <!-- OPÇÕES DE CONCLUSÃO -->
+            <div class="mb-4 bg-gray-50 dark:bg-gray-700 p-4 rounded border dark:border-gray-600">
+                <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 uppercase mb-3">Formato da Conclusão a Imprimir</label>
+                <div class="flex flex-col gap-3">
+                    <label class="flex items-center gap-3 cursor-pointer text-sm text-gray-700 dark:text-gray-300">
+                        <input type="radio" name="tipo_conclusao" value="automatica" checked class="w-4 h-4 cursor-pointer">
+                        <span><strong>Parecer Automático:</strong> Cita as falhas, calcula os pontos, % de glosa e desconta R$ do contrato.</span>
+                    </label>
+                    <label class="flex items-center gap-3 cursor-pointer text-sm text-gray-700 dark:text-gray-300">
+                        <input type="radio" name="tipo_conclusao" value="personalizada" class="w-4 h-4 cursor-pointer">
+                        <span><strong>Parecer Personalizado:</strong> Você escreve a justificativa livremente (Não imprime cálculos de Glosa).</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- ÁREA TEXTO PERSONALIZADO -->
+            <div id="area-texto-personalizado" class="mb-4 hidden flex-grow">
                 <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase mb-1 flex justify-between">
-                    <span>Parecer Descritivo do Fiscal</span>
+                    <span>Justificativa do Fiscal</span>
                     <span class="text-[10px] text-gray-400 font-normal">Editável</span>
                 </label>
-                <textarea id="revisao-texto" rows="5" class="w-full border border-gray-300 dark:border-gray-600 rounded p-3 text-sm bg-gray-50 dark:bg-gray-700 focus:outline-none focus:border-yellow-500 transition leading-relaxed"></textarea>
+                <textarea id="revisao-texto" rows="6" class="w-full border border-gray-300 dark:border-gray-600 rounded p-3 text-sm bg-gray-50 dark:bg-gray-700 focus:outline-none focus:border-yellow-500 transition leading-relaxed"></textarea>
             </div>
 
-            <div class="flex items-center gap-4 mb-6 bg-gray-50 dark:bg-gray-700 p-4 rounded border dark:border-gray-600">
-                <div class="flex-grow">
-                    <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase mb-1">Total de Pontos a Aplicar (Matemática Final)</label>
-                    <p class="text-[10px] text-gray-500 dark:text-gray-400">Se aceitou a justificativa para abonar a glosa, altere para 0. O PDF aplicará o desconto financeiro com base no número abaixo.</p>
+            <!-- ÁREA TEXTO AUTOMÁTICO (Visualização de Variáveis) -->
+            <div id="area-texto-automatico" class="mb-4">
+                <div class="flex items-center justify-between mb-2">
+                    <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase">Pontos da Glosa a aplicar</label>
+                    <input type="number" id="revisao-pontos" min="0" class="w-24 text-center font-bold text-xl border border-gray-300 dark:border-gray-600 rounded p-1 bg-white dark:bg-gray-800 text-red-600 dark:text-red-400">
                 </div>
-                <input type="number" id="revisao-pontos" min="0" class="w-24 text-center font-bold text-xl border border-gray-300 dark:border-gray-600 rounded p-2 bg-white dark:bg-gray-800 text-red-600 dark:text-red-400">
+                <p class="text-[10px] text-gray-500 dark:text-gray-400">O sistema usará este valor de pontos para calcular os descontos de 1% (limite 30%) em R$. Altere para 0 para abonar a glosa.</p>
             </div>
 
-            <div class="flex justify-end gap-3 mt-auto pt-4 border-t dark:border-gray-700">
+            <div class="flex justify-end gap-3 pt-4 border-t dark:border-gray-700">
                 <button id="btn-cancelar-revisao" class="px-5 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded font-bold text-sm hover:bg-gray-300 dark:hover:bg-gray-600 transition">Cancelar Auditoria</button>
-                <button id="btn-confirmar-revisao" class="px-5 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded font-bold text-sm shadow transition flex items-center gap-2"><i class="fa-solid fa-file-pdf"></i> Confirmar e Gerar PDF</button>
+                <button id="btn-confirmar-revisao" class="px-5 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded font-bold text-sm shadow transition flex items-center gap-2"><i class="fa-solid fa-file-pdf"></i> Imprimir e Gerar PDF</button>
             </div>
         </div>
     </div>
@@ -375,7 +390,6 @@
                         </div>
                     </div>
 
-                    <!-- GESTÃO DE UTILIZADORES -->
                     <div id="area-gestao-usuarios" class="hidden bg-white dark:bg-gray-800 p-5 rounded border border-blue-200 dark:border-gray-700 border-l-4 border-l-blue-500 shadow-sm mb-4">
                         <h4 class="font-bold text-blue-800 dark:text-blue-400 mb-2 flex items-center gap-2"><i class="fa-solid fa-user-plus"></i> Criar Acesso de Analista</h4>
                         <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">Registe o e-mail e a senha provisória para um colega aceder ao Analytics.</p>
@@ -388,7 +402,6 @@
                         </div>
                     </div>
 
-                    <!-- ZONA DE PERIGO / EXCLUSÃO -->
                     <div id="area-gestao-banco" class="hidden bg-white dark:bg-gray-800 p-5 rounded border border-red-200 dark:border-gray-700 border-l-4 border-l-red-500 shadow-sm">
                         <h4 class="font-bold text-red-700 dark:text-red-400 mb-2 flex items-center gap-2"><i class="fa-solid fa-trash-can"></i> Gestão da Base de Dados</h4>
                         <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">Selecione o mês correspondente à planilha ou a base auxiliar que deseja apagar.</p>
@@ -469,7 +482,6 @@
         let tituloOficial = localStorage.getItem('dashTitulo') || 'Analytics Suporte SETIC';
         let iconeCabecalho = localStorage.getItem('dashIcon') || 'fa-chart-line';
         
-        // VARIÁVEIS GLOBAIS DE AUDITORIA
         let objAuditoriaTemp = null; 
 
         let graficos = {}; let tabelaPaginaAtual = 1; const tabelaItensPorPagina = 50;
@@ -477,423 +489,28 @@
         const coresPrioridade = { 'Muito Alto': '#b91c1c', 'Alto': '#ef4444', 'Médio': '#f59e0b', 'Baixo': '#22c55e', 'Muito Baixo': '#94a3b8' };
         const coresTipo = { 'Requisição': '#6366f1', 'Incidente': '#f43f5e' };
 
-        function aplicarPersonalizacao() {
-            tituloOficial = localStorage.getItem('dashTitulo') || 'Analytics Suporte SETIC';
-            corPrincipal = localStorage.getItem('dashCor') || '#1a1941';
-            iconeCabecalho = localStorage.getItem('dashIcon') || 'fa-chart-line';
-            equipeFocoStr = localStorage.getItem('equipeFoco') || 'fabio.palma.prestador, edison.neto.prestador, antonio.muniz.prestador, jose.andrade.prestador';
-
-            document.getElementById('titulo-painel').innerText = tituloOficial;
-            if(document.getElementById('login-titulo')) document.getElementById('login-titulo').innerText = tituloOficial;
-            
-            document.getElementById('header-default-icon').className = `fa-solid ${iconeCabecalho} text-2xl`;
-            document.getElementById('input-icone').value = iconeCabecalho;
-            
-            document.getElementById('input-titulo').value = tituloOficial;
-            document.getElementById('input-cor').value = corPrincipal; 
-            document.getElementById('hex-view').innerText = corPrincipal;
-            document.getElementById('input-equipe').value = equipeFocoStr;
-            document.getElementById('header-bg').style.backgroundColor = isDark ? '#111827' : corPrincipal;
-            document.getElementById('card-filtros').style.borderTopColor = corPrincipal;
-
-            const savedLogo = localStorage.getItem('dashLogo');
-            if (savedLogo) {
-                document.getElementById('header-logo-container').innerHTML = `<img src="${savedLogo}" alt="Logo" class="h-9 w-9 object-contain mr-2">`;
-                if(document.getElementById('login-logo')) document.getElementById('login-logo').src = savedLogo;
-            } else {
-                document.getElementById('header-logo-container').innerHTML = `<img src="https://raw.githubusercontent.com/AlbertBarros/dashbord-chamados-suporte-setic/main/bras%C3%A3o.png" alt="Logo" class="h-9 w-9 object-contain mr-2" crossorigin="anonymous">`;
-                if(document.getElementById('login-logo')) document.getElementById('login-logo').src = "https://raw.githubusercontent.com/AlbertBarros/dashbord-chamados-suporte-setic/main/bras%C3%A3o.png";
-            }
-        }
-        aplicarPersonalizacao();
-
-        // ==========================================
-        // GESTÃO DE AUTENTICAÇÃO
-        // ==========================================
-        const telaLogin = document.getElementById('tela-login');
-        const telaDashboard = document.getElementById('tela-dashboard');
-
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                telaLogin.classList.add('hidden');
-                telaLogin.classList.remove('flex'); 
-                telaDashboard.classList.remove('hidden');
-                telaDashboard.classList.add('flex'); 
-                carregarDadosNuvem();
-            } else {
-                telaDashboard.classList.add('hidden');
-                telaDashboard.classList.remove('flex'); 
-                telaLogin.classList.remove('hidden');
-                telaLogin.classList.add('flex'); 
-            }
-        });
-
-        document.getElementById('btn-entrar').addEventListener('click', async () => {
-            const email = document.getElementById('login-email').value;
-            const senha = document.getElementById('login-senha').value;
-            const btn = document.getElementById('btn-entrar');
-
-            if (!email || !senha) return alert("Por favor, preencha o e-mail e a senha.");
-
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Autenticando...';
-            btn.disabled = true;
-
-            try {
-                await signInWithEmailAndPassword(auth, email, senha);
-            } catch (error) {
-                alert("Acesso negado: E-mail ou senha incorretos.");
-            } finally {
-                btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Entrar no Sistema';
-                btn.disabled = false;
-            }
-        });
-
-        document.getElementById('btn-logout').addEventListener('click', () => {
-            signOut(auth).then(() => {
-                dadosGlobais = [];
-                document.getElementById('login-senha').value = '';
-            });
-        });
-
-        // ==========================================
-        // LÓGICA DO MODAL DE CONFIGURAÇÕES
-        // ==========================================
-        const modal = document.getElementById('modal-config');
-        document.getElementById('btn-config').addEventListener('click', () => { modal.classList.remove('hidden'); switchTab('aba-dados', 'conteudo-dados'); });
-        ['btn-fechar-config', 'btn-fechar-config-icon'].forEach(id => document.getElementById(id).addEventListener('click', () => modal.classList.add('hidden')));
-
-        function switchTab(activeId, contentId) {
-            ['aba-dados', 'aba-aparencia', 'aba-relatorios', 'aba-fiscal', 'aba-admin'].forEach(id => {
-                const el = document.getElementById(id); 
-                if (id === 'aba-admin') {
-                    el.className = 'px-3 py-2 tab-inactive focus:outline-none font-semibold text-sm text-red-600 hover:text-red-500 ml-auto flex items-center gap-2 whitespace-nowrap';
-                } else if (id === 'aba-fiscal') {
-                    el.className = 'px-3 py-2 tab-inactive focus:outline-none font-semibold text-sm text-green-700 dark:text-green-500 hover:text-green-600 flex items-center gap-2 whitespace-nowrap';
+        // Eventos dos Radio Buttons do Modal
+        document.getElementsByName('tipo_conclusao').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                if(e.target.value === 'personalizada') {
+                    document.getElementById('area-texto-personalizado').classList.remove('hidden');
+                    document.getElementById('area-texto-automatico').classList.add('hidden');
                 } else {
-                    el.className = 'px-3 py-2 tab-inactive focus:outline-none font-semibold text-sm whitespace-nowrap'; 
-                }
-                el.style.color = ''; el.style.borderColor = '';
-            });
-            
-            const activeTab = document.getElementById(activeId);
-            
-            if (activeId === 'aba-admin') {
-                activeTab.className = `px-3 py-2 tab-active text-red-700 border-red-700 focus:outline-none font-semibold text-sm ml-auto flex items-center gap-2 whitespace-nowrap`;
-            } else if (activeId === 'aba-fiscal') {
-                activeTab.className = `px-3 py-2 tab-active text-green-700 border-green-700 dark:text-green-500 dark:border-green-500 focus:outline-none font-semibold text-sm flex items-center gap-2 whitespace-nowrap`;
-            } else {
-                activeTab.className = `px-3 py-2 tab-active text-[${corPrincipal}] border-[${corPrincipal}] focus:outline-none font-semibold text-sm whitespace-nowrap`;
-                if (!isDark) { activeTab.style.color = corPrincipal; activeTab.style.borderColor = corPrincipal; }
-                if (isDark) { activeTab.style.color = '#818cf8'; activeTab.style.borderColor = '#818cf8'; }
-            }
-            
-            ['conteudo-dados', 'conteudo-aparencia', 'conteudo-relatorios', 'conteudo-fiscal', 'conteudo-admin'].forEach(id => document.getElementById(id).classList.add('hidden'));
-            document.getElementById(contentId).classList.remove('hidden');
-            document.getElementById('btn-guardar-config').style.display = contentId === 'conteudo-aparencia' ? 'block' : 'none';
-        }
-
-        ['aba-dados', 'aba-aparencia', 'aba-relatorios', 'aba-fiscal', 'aba-admin'].forEach(id => document.getElementById(id).addEventListener('click', () => switchTab(id, 'conteudo-' + id.split('-')[1])));
-        document.getElementById('input-cor').addEventListener('input', (e) => document.getElementById('hex-view').innerText = e.target.value);
-
-        document.getElementById('input-logo-file').addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(ev) {
-                localStorage.setItem('dashLogo', ev.target.result);
-                aplicarPersonalizacao();
-            };
-            reader.readAsDataURL(file);
-        });
-
-        document.getElementById('btn-guardar-config').addEventListener('click', () => {
-            localStorage.setItem('dashTitulo', document.getElementById('input-titulo').value);
-            localStorage.setItem('dashCor', document.getElementById('input-cor').value);
-            localStorage.setItem('dashIcon', document.getElementById('input-icone').value);
-            localStorage.setItem('equipeFoco', document.getElementById('input-equipe').value);
-            
-            aplicarPersonalizacao(); 
-            preencherFiltros(); 
-            atualizarDashboard(); 
-            modal.classList.add('hidden');
-        });
-
-        function definirStatus(bHtml, cClasse) { const b = document.getElementById('badge-status'); b.className = `text-xs font-bold px-2 py-1 ${cClasse} rounded text-white shadow ml-2`; b.innerHTML = bHtml; b.classList.remove('hidden'); }
-
-        async function carregarDadosNuvem(forcarCompleto = false) {
-            if(!db) { definirStatus('<i class="fa-solid fa-xmark"></i> Erro DB', 'bg-red-600'); return; }
-            try {
-                const q = await getDocs(collection(db, "chamados")); dadosGlobais = [];
-                q.forEach((doc) => { 
-                    const d = doc.data(); 
-                    const dS = String(d['Data Abertura'] || d['Ticket'] || ""); 
-                    if (forcarCompleto || dS.includes('2026') || dS.includes('/26')) {
-                        dadosGlobais.push(d); 
-                    }
-                });
-                
-                try {
-                    const qs = await getDocs(collection(db, "satisfacao")); dadosSatisfacao = [];
-                    qs.forEach(doc => dadosSatisfacao.push(doc.data()));
-                } catch(e) {}
-                try {
-                    const qr = await getDocs(collection(db, "reabertos")); dadosReabertos = [];
-                    qr.forEach(doc => dadosReabertos.push(doc.data()));
-                } catch(e) {}
-
-                if(dadosGlobais.length > 0) {
-                    definirStatus('<i class="fa-solid fa-check-circle"></i> Sincronizado', 'bg-green-500');
-                    document.getElementById('tag-ano-atual').innerText = forcarCompleto ? "Visualizando: Histórico Completo" : "Visualizando: 2026";
-                    preencherFiltros(); atualizarDashboard();
-                } else { definirStatus('<i class="fa-solid fa-triangle-exclamation"></i> Vazio', 'bg-red-500'); } 
-                historicoCompletoCarregado = forcarCompleto;
-            } catch (e) { 
-                console.error(e);
-                if (e.code === 'resource-exhausted' || (e.message && (e.message.includes('quota') || e.message.includes('Quota')))) {
-                    document.getElementById('modal-limite').classList.remove('hidden');
-                    definirStatus('<i class="fa-solid fa-ban"></i> Limite Excedido', 'bg-red-700');
-                } else {
-                    definirStatus('<i class="fa-solid fa-xmark"></i> Erro', 'bg-red-600'); 
-                }
-            }
-        }
-
-        document.getElementById('btn-carregar-historico').addEventListener('click', () => { 
-            document.getElementById('btn-carregar-historico').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Carregando...'; 
-            carregarDadosNuvem(true).then(() => { 
-                document.getElementById('btn-carregar-historico').innerHTML = '<i class="fa-solid fa-check"></i> Concluído'; 
-                setTimeout(() => modal.classList.add('hidden'), 1000); 
-            }); 
-        });
-
-        // UPLOADS
-        document.getElementById('file-upload').addEventListener('change', async (e) => {
-            const files = e.target.files; 
-            if (files.length === 0) return; 
-            
-            const loader = document.getElementById('loader-upload');
-            loader.classList.remove('hidden');
-            loader.innerHTML = '<div class="loader !border-t-current !border-4 !w-5 !h-5 inline-block"></div> Processando arquivo(s)...';
-            
-            let allRows = [];
-            let errorFiles = [];
-
-            const readFiles = Array.from(files).map(file => {
-                return new Promise((resolve) => {
-                    const reader = new FileReader(); 
-                    reader.onload = function(ev) {
-                        try {
-                            const wb = XLSX.read(new Uint8Array(ev.target.result), { type: 'array' }); 
-                            const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: "" });
-                            if (rows.length > 0 && !('Ticket' in rows[0] || 'ticket' in rows[0] || 'TICKET' in rows[0] || 'Nº Chamado' in rows[0] || 'chamado' in rows[0])) {
-                                errorFiles.push(file.name);
-                            } else {
-                                allRows = allRows.concat(rows);
-                            }
-                        } catch(err) { errorFiles.push(file.name); }
-                        resolve();
-                    }; 
-                    reader.readAsArrayBuffer(file);
-                });
-            });
-
-            await Promise.all(readFiles);
-
-            if (errorFiles.length > 0) {
-                alert(`ATENÇÃO: Os seguintes arquivos foram ignorados por não possuírem a estrutura correta:\n\n${errorFiles.join('\n')}`);
-                if (allRows.length === 0) { loader.classList.add('hidden'); e.target.value = ""; return; }
-            }
-
-            loader.innerHTML = '<div class="loader !border-t-current !border-4 !w-5 !h-5 inline-block"></div> Gravando na nuvem...';
-
-            try {
-                const ba = [writeBatch(db)]; let c = 0, b = 0;
-                allRows.forEach(r => { 
-                    const ticketStr = String(r.Ticket || r.ticket || r.TICKET || r['Nº Chamado'] || r['chamado'] || "");
-                    if(ticketStr) { ba[b].set(doc(db, "chamados", ticketStr), r); c++; if (c === 490) { ba.push(writeBatch(db)); b++; c = 0; } } 
-                });
-                const pr = ba.map(batch => batch.commit());
-                await Promise.all(pr);
-                
-                loader.innerHTML = '<i class="fa-solid fa-check text-green-500 text-lg"></i> <span class="text-green-600 dark:text-green-400 font-bold">Upload Concluído com Sucesso!</span>';
-                setTimeout(async () => {
-                    loader.classList.add('hidden'); 
-                    loader.innerHTML = '<div class="loader !border-t-current !border-4 !w-5 !h-5 inline-block"></div> Gravando base primária no Firebase...';
-                    e.target.value = ""; await carregarDadosNuvem(historicoCompletoCarregado); 
-                }, 2500);
-
-            } catch (err) { 
-                loader.innerHTML = '<i class="fa-solid fa-xmark text-red-500 text-lg"></i> <span class="text-red-600 font-bold">Erro na gravação.</span>';
-                setTimeout(() => { loader.classList.add('hidden'); e.target.value = ""; }, 3000);
-            }
-        });
-
-        function handleUploadAux(inputId, colName) {
-            const el = document.getElementById(inputId);
-            if(!el) return;
-            el.addEventListener('change', async (e) => {
-                const files = e.target.files; 
-                if (files.length === 0) return;
-                
-                const loader = document.getElementById('loader-fiscal-upload');
-                loader.classList.remove('hidden');
-                loader.innerHTML = '<div class="loader !border-t-current !border-4 !w-5 !h-5 inline-block"></div> Processando arquivo(s) auxiliar(es)...';
-                
-                let allRows = [];
-                let errorFiles = [];
-
-                const readFiles = Array.from(files).map(file => {
-                    return new Promise((resolve) => {
-                        const reader = new FileReader(); 
-                        reader.onload = function(ev) {
-                            try {
-                                const wb = XLSX.read(new Uint8Array(ev.target.result), { type: 'array' }); 
-                                const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: "" });
-                                if (rows.length > 0 && !('Ticket' in rows[0] || 'ticket' in rows[0] || 'TICKET' in rows[0] || 'Nº Chamado' in rows[0] || 'chamado' in rows[0])) {
-                                    errorFiles.push(file.name);
-                                } else { allRows = allRows.concat(rows); }
-                            } catch(err) { errorFiles.push(file.name); }
-                            resolve();
-                        }; 
-                        reader.readAsArrayBuffer(file);
-                    });
-                });
-
-                await Promise.all(readFiles);
-
-                if (errorFiles.length > 0) {
-                    alert(`ATENÇÃO: Os seguintes arquivos auxiliares foram ignorados por não possuírem a coluna Ticket:\n\n${errorFiles.join('\n')}`);
-                    if (allRows.length === 0) { loader.classList.add('hidden'); e.target.value = ""; return; }
-                }
-
-                loader.innerHTML = '<div class="loader !border-t-current !border-4 !w-5 !h-5 inline-block"></div> Gravando base auxiliar na nuvem...';
-
-                try {
-                    const ba = [writeBatch(db)]; let c = 0, b = 0;
-                    allRows.forEach(r => { 
-                        const ticketId = String(r.Ticket || r.ticket || r.TICKET || r['Nº Chamado'] || r['chamado'] || "");
-                        if(ticketId) { ba[b].set(doc(db, colName, ticketId), r); c++; if (c === 490) { ba.push(writeBatch(db)); b++; c = 0; } } 
-                    });
-                    const pr = ba.map(batch => batch.commit());
-                    await Promise.all(pr);
-                    
-                    loader.innerHTML = '<i class="fa-solid fa-check text-green-500 text-lg"></i> <span class="text-green-600 dark:text-green-400 font-bold">Upload Auxiliar Concluído!</span>';
-                    setTimeout(async () => {
-                        loader.classList.add('hidden'); 
-                        loader.innerHTML = '<div class="loader !border-t-current !border-4 !w-5 !h-5 inline-block"></div> Gravando dados auxiliares no Firebase...';
-                        e.target.value = ""; await carregarDadosNuvem(historicoCompletoCarregado); 
-                    }, 2500);
-
-                } catch (err) { 
-                    loader.innerHTML = '<i class="fa-solid fa-xmark text-red-500 text-lg"></i> <span class="text-red-600 font-bold">Erro na gravação.</span>';
-                    setTimeout(() => { loader.classList.add('hidden'); e.target.value = ""; }, 3000);
+                    document.getElementById('area-texto-personalizado').classList.add('hidden');
+                    document.getElementById('area-texto-automatico').classList.remove('hidden');
                 }
             });
-        }
-        handleUploadAux('upload-satisfacao', 'satisfacao');
-        handleUploadAux('upload-reabertos', 'reabertos');
-
-        // ==========================================
-        // ÁREA DE ADMINISTRAÇÃO
-        // ==========================================
-        const inSenha = document.getElementById('input-senha-admin'); 
-        const areaGestaoBanco = document.getElementById('area-gestao-banco');
-        const areaGestaoUsuarios = document.getElementById('area-gestao-usuarios');
-        const btnReset = document.getElementById('btn-zerar-banco');
-        const selectExclusao = document.getElementById('select-exclusao');
-        const btnCriarUsuario = document.getElementById('btn-criar-usuario');
-
-        function popularDropdownExclusao() {
-            selectExclusao.innerHTML = '<option value="TUDO">Base Completa (Apagar TUDO)</option>';
-            const mesesDisponiveis = new Set();
-            dadosGlobais.forEach(d => {
-                const dataAlvo = d['Data Encerramento'] || d['Data Solução'] || d['Data Abertura'];
-                const m = obterMesAno(dataAlvo);
-                if (m !== "Desc") mesesDisponiveis.add(m);
-            });
-            const mArr = Array.from(mesesDisponiveis).sort((x,y) => cvDtOrd(x) - cvDtOrd(y));
-            mArr.forEach(m => { selectExclusao.innerHTML += `<option value="${m}">Apenas Dados do Mês ${m}</option>`; });
-            selectExclusao.innerHTML += `<option value="SATISFACAO">Apagar Base de Satisfação (INS1)</option>`;
-            selectExclusao.innerHTML += `<option value="REABERTOS">Apagar Base de Reabertos (INS6)</option>`;
-        }
-
-        inSenha.addEventListener('input', (e) => { 
-            if (e.target.value === 'setic2026') {
-                areaGestaoBanco.classList.remove('hidden'); areaGestaoUsuarios.classList.remove('hidden'); popularDropdownExclusao();
-            } else {
-                areaGestaoBanco.classList.add('hidden'); areaGestaoUsuarios.classList.add('hidden');
-            }
         });
 
-        btnCriarUsuario.addEventListener('click', async () => {
-            const emailNovo = document.getElementById('novo-email').value;
-            const senhaNova = document.getElementById('novo-senha').value;
-            if (!emailNovo || senhaNova.length < 6) return alert("Atenção: Introduza um e-mail válido e uma senha com pelo menos 6 caracteres.");
-            btnCriarUsuario.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; btnCriarUsuario.disabled = true;
-            try {
-                await createUserWithEmailAndPassword(secondaryAuth, emailNovo, senhaNova);
-                await signOut(secondaryAuth);
-                alert(`✅ Sucesso!\nO acesso para ${emailNovo} foi criado.\nJá pode partilhar essas credenciais com o analista.`);
-                document.getElementById('novo-email').value = ''; document.getElementById('novo-senha').value = '';
-            } catch (error) {
-                if(error.code === 'auth/email-already-in-use') alert("Este e-mail já tem um acesso criado no sistema.");
-                else alert("Erro ao criar utilizador. Verifique a sua conexão.");
-            } finally { btnCriarUsuario.innerHTML = '<i class="fa-solid fa-check"></i> Criar'; btnCriarUsuario.disabled = false; }
-        });
-
-        btnReset.addEventListener('click', async () => {
-            const valorSelecionado = selectExclusao.value;
-            let textoConfirmacao = "";
-            if (valorSelecionado === 'SATISFACAO') textoConfirmacao = "A BASE DE SATISFAÇÃO (INS1)";
-            else if (valorSelecionado === 'REABERTOS') textoConfirmacao = "A BASE DE REABERTOS (INS6)";
-            else if (valorSelecionado === 'TUDO') textoConfirmacao = "TODA A BASE PRINCIPAL DE DADOS";
-            else textoConfirmacao = `OS DADOS DO MÊS ${valorSelecionado}`;
-            
-            if(!confirm(`⚠️ ALERTA DE SEGURANÇA ⚠️\n\nTEM A CERTEZA ABSOLUTA QUE DESEJA APAGAR ${textoConfirmacao}? Esta ação não pode ser desfeita.`)) return;
-            btnReset.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> A apagar...'; btnReset.disabled = true;
-
-            try { 
-                let colName = "chamados";
-                if (valorSelecionado === 'SATISFACAO') colName = "satisfacao";
-                if (valorSelecionado === 'REABERTOS') colName = "reabertos";
-
-                const q = await getDocs(collection(db, colName)); 
-                let b = writeBatch(db); let c = 0; const pr = []; 
-                
-                q.docs.forEach((d) => { 
-                    let del = false;
-                    if (colName === "chamados") {
-                        const data = d.data();
-                        const dataAlvo = data['Data Encerramento'] || data['Data Solução'] || data['Data Abertura'];
-                        const mesDoc = obterMesAno(dataAlvo);
-                        if (valorSelecionado === 'TUDO' || mesDoc === valorSelecionado) del = true;
-                    } else { del = true; }
-
-                    if (del) { b.delete(d.ref); c++; if(c === 490) { pr.push(b.commit()); b = writeBatch(db); c = 0; } }
-                }); 
-                if(c > 0) pr.push(b.commit()); 
-                await Promise.all(pr); 
-                
-                alert(`Exclusão de ${textoConfirmacao} concluída com sucesso!`); 
-                inSenha.value = ''; areaGestaoBanco.classList.add('hidden'); areaGestaoUsuarios.classList.add('hidden');
-                btnReset.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Apagar'; btnReset.disabled = false;
-                
-                if (colName === "chamados") dadosGlobais = []; 
-                await carregarDadosNuvem(historicoCompletoCarregado); 
-            } catch(e) { alert("Erro ao tentar apagar os dados."); btnReset.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Apagar'; btnReset.disabled = false; }
-        });
-
-        // ==========================================
-        // AUDITORIA E FISCALIZAÇÃO IMR COM SISTEMA DE INTERCEÇÃO (REVISÃO DE GLOSA)
-        // ==========================================
-        
         // Evento do Modal de Cancelar Revisão
         document.getElementById('btn-cancelar-revisao').addEventListener('click', () => {
             document.getElementById('modal-revisao-glosa').classList.add('hidden');
             objAuditoriaTemp = null;
         });
 
-        // Evento Principal do Botão de Gerar Relatório
+        // ==========================================
+        // AUDITORIA E FISCALIZAÇÃO IMR COM SISTEMA DE INTERCEÇÃO
+        // ==========================================
         document.getElementById('btn-gerar-fiscal-pdf').addEventListener('click', () => {
             const mesSelecionado = document.getElementById('fiscal-mes').value;
             
@@ -943,7 +560,6 @@
             dadosAuditoria.forEach(d => {
                 const tId = String(d['Ticket'] || d['ticket'] || "");
 
-                // Lógica de Notas do INS1
                 let nota = 5.0; 
                 if (mapSat.has(tId)) {
                     const satRec = mapSat.get(tId);
@@ -1065,30 +681,34 @@
                     periodoAfericao = `04/${m1}/${yy} a 03/${m2}/${yyNext}`;
                 }
 
-                // SALVAR OBJETO TEMPORÁRIO PARA O PDF
                 objAuditoriaTemp = {
                     totalChamados: total,
                     mesTexto: mesTexto,
                     periodoAfericao: periodoAfericao,
-                    linhasTabela: linhasTabela
+                    linhasTabela: linhasTabela,
+                    descumprimentos: descumprimentos
                 };
 
                 btn.innerHTML = conteudoOriginal; btn.disabled = false;
 
-                // INTERCEÇÃO DE ESTADO SE HOUVER PONTOS DE GLOSA
+                // INTERCEÇÃO DE ESTADO
                 if (totalPontosGlosa > 0) {
                     const nomesIndicadores = descumprimentos.join(', ');
-                    const textoSugestao = `Após análise dos índices no período aferido, constatou-se descumprimento nos seguintes indicadores: ${nomesIndicadores}.\n\n[Espaço para justificação ou análise do fiscal]`;
                     
                     document.getElementById('revisao-indicadores').innerText = nomesIndicadores;
-                    document.getElementById('revisao-texto').value = textoSugestao;
+                    // Sugestão de texto (fica oculta se o usuário usar o modo Automático)
+                    document.getElementById('revisao-texto').value = `O indicador ${nomesIndicadores} registrou um percentual temporariamente abaixo da meta contratual. Contudo, a análise do histórico comprovou que... [INSERIR JUSTIFICATIVA AQUI]. Após a devida análise, a equipe técnica considerou justificada a extrapolação do prazo.`;
+                    
                     document.getElementById('revisao-pontos').value = totalPontosGlosa;
                     
+                    // Garante que o rádio volte ao automático por padrão
+                    document.querySelector('input[value="automatica"]').checked = true;
+                    document.getElementById('area-texto-personalizado').classList.add('hidden');
+                    document.getElementById('area-texto-automatico').classList.remove('hidden');
+
                     document.getElementById('modal-revisao-glosa').classList.remove('hidden');
                 } else {
-                    // CAMINHO FELIZ (Zero Glosas) - Gera direto
-                    const txtFeliz = "Após análise rigorosa dos índices apresentados no período aferido, atesta-se que a empresa cumpriu com todos os Níveis Mínimos de Serviços (NMS) previstos contratualmente. A justificativa de glosa não se aplica neste ciclo.";
-                    gerarPDFFiscalFinal(0, txtFeliz, objAuditoriaTemp);
+                    gerarPDFFiscalFinal(0, "automatica", "", objAuditoriaTemp);
                 }
 
             }, 800); 
@@ -1097,19 +717,24 @@
         // Evento de Confirmação da Revisão
         document.getElementById('btn-confirmar-revisao').addEventListener('click', () => {
             if(!objAuditoriaTemp) return;
-            const ptsFinais = parseInt(document.getElementById('revisao-pontos').value, 10);
-            const txtFinal = document.getElementById('revisao-texto').value;
+            
+            const tipoSelecionado = document.querySelector('input[name="tipo_conclusao"]:checked').value;
+            let ptsFinais = parseInt(document.getElementById('revisao-pontos').value, 10);
+            if(isNaN(ptsFinais)) ptsFinais = 0;
+            
+            const txtPersonalizado = document.getElementById('revisao-texto').value;
             
             document.getElementById('modal-revisao-glosa').classList.add('hidden');
-            gerarPDFFiscalFinal(ptsFinais, txtFinal, objAuditoriaTemp);
+            gerarPDFFiscalFinal(ptsFinais, tipoSelecionado, txtPersonalizado, objAuditoriaTemp);
         });
 
-        // MOTOR DE GERAÇÃO DO PDF (ISOLADO E REUTILIZÁVEL)
-        function gerarPDFFiscalFinal(ptsAplicados, textoConclusao, dados) {
+        // MOTOR DE GERAÇÃO DO PDF 
+        function gerarPDFFiscalFinal(ptsAplicados, tipoConclusao, textoPersonalizado, dados) {
             try {
                 const { jsPDF } = window.jspdf; 
                 const doc = new jsPDF('p', 'pt', 'a4'); 
                 const w = doc.internal.pageSize.width;
+                const marginY = doc.internal.pageSize.height - 40; // Limite da margem inferior
                 
                 doc.setFillColor(26, 25, 65); doc.rect(0, 0, w, 85, 'F'); doc.setTextColor(255, 255, 255); 
                 doc.setFontSize(14); doc.setFont("helvetica", "bold"); doc.text("MINISTÉRIO DA JUSTIÇA E SEGURANÇA PÚBLICA", 40, 32);
@@ -1172,7 +797,8 @@
                 });
 
                 // TABELA DE REGRAS DE GLOSA 
-                const rulesY = doc.lastAutoTable.finalY + 15;
+                let rulesY = doc.lastAutoTable.finalY + 15;
+                if (rulesY > marginY - 60) { doc.addPage(); rulesY = 40; } // Paginação se não houver espaço
                 
                 doc.setTextColor(26, 25, 65); doc.setFontSize(10); doc.setFont("helvetica", "bold"); 
                 doc.text("Regras de Pontuação e Glosa", 40, rulesY);
@@ -1206,8 +832,10 @@
                     margin: { left: 40, right: 40 }
                 });
 
-                // CONCLUSÃO EDITÁVEL E CÁLCULO FINANCEIRO
-                const finalY = doc.lastAutoTable.finalY + 20;
+                // CONCLUSÃO DE GLOSA COM PAGINAÇÃO INTELIGENTE INFINITA
+                let finalY = doc.lastAutoTable.finalY + 20;
+                if (finalY > marginY - 40) { doc.addPage(); finalY = 40; }
+                
                 doc.setTextColor(26, 25, 65); doc.setFontSize(12); doc.setFont("helvetica", "bold"); 
                 doc.text("Conclusão do Fiscal", 40, finalY);
                 
@@ -1224,11 +852,15 @@
                             let spaceW = doc.getTextWidth(" ");
                             if (cursorX + spaceW <= 40 + maxWidth) cursorX += spaceW;
                         } else if (token === "\n") {
-                            cursorX = 40; cursorY += 14;
+                            cursorX = 40; 
+                            cursorY += 14;
+                            if (cursorY > marginY) { doc.addPage(); cursorY = 40; } // PAGINAÇÃO INFINITA
                         } else {
                             let wordW = doc.getTextWidth(token);
                             if (cursorX + wordW > 40 + maxWidth) {
-                                cursorX = 40; cursorY += 14;
+                                cursorX = 40; 
+                                cursorY += 14;
+                                if (cursorY > marginY) { doc.addPage(); cursorY = 40; } // PAGINAÇÃO INFINITA
                             }
                             doc.text(token, cursorX, cursorY);
                             cursorX += wordW;
@@ -1236,37 +868,45 @@
                     });
                 }
 
-                // Imprime a narrativa do usuário
-                const paragrafos = textoConclusao.split('\n');
-                paragrafos.forEach(pg => {
-                    if(pg.trim() !== '') printWrapped(pg + " ", false);
-                    cursorX = 40; cursorY += 14;
-                });
-
-                // Imprime a Matemática de Desconto baseada nos Pontos Finais
-                cursorY += 4;
-                const valorContrato = 26971.30;
-                let percentualGlosa = Math.floor(ptsAplicados / 10) * 1.0;
-                if (percentualGlosa > 30.0) percentualGlosa = 30.0;
-                
-                const valorDesconto = valorContrato * (percentualGlosa / 100);
-                const valorDescontoStr = valorDesconto.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-
-                if (ptsAplicados === 0) {
-                    printWrapped(`Parecer Financeiro: Foram contabilizados 0 pontos. `, false);
-                    printWrapped("NÃO SERÁ APLICADA GLOSA", true);
-                    printWrapped(" neste período. O faturamento deve prosseguir na íntegra.", false);
-                } else if (percentualGlosa === 0) {
-                    printWrapped(`Parecer Financeiro: Foram contabilizados ${ptsAplicados} pontos. Por não atingir a régua mínima de 10 pontos, `, false);
-                    printWrapped("NÃO SERÁ APLICADA GLOSA", true);
-                    printWrapped(" neste período. O faturamento deve prosseguir na íntegra.", false);
+                if (tipoConclusao === 'personalizada') {
+                    // LÓGICA DO TEXTO PERSONALIZADO (Pode ser de 1 ou 10 páginas)
+                    const paragrafos = textoPersonalizado.split('\n');
+                    paragrafos.forEach(pg => {
+                        if(pg.trim() !== '') printWrapped(pg + " ", false);
+                        cursorX = 40; 
+                        cursorY += 14;
+                        if (cursorY > marginY) { doc.addPage(); cursorY = 40; }
+                    });
                 } else {
-                    printWrapped(`Parecer Financeiro: Com base no total de ${ptsAplicados} pontos, `, false);
-                    printWrapped("SERÁ APLICADA GLOSA", true);
-                    printWrapped(` equivalente a `, false);
-                    printWrapped(`${percentualGlosa}%`, true);
-                    printWrapped(` sobre o valor do contrato (R$ 26.971,30). O desconto final é de `, false);
-                    printWrapped(`${valorDescontoStr}.`, true);
+                    // LÓGICA AUTOMÁTICA FINANCEIRA
+                    if (ptsAplicados === 0 && dados.descumprimentos && dados.descumprimentos.length === 0) {
+                        printWrapped("Após análise rigorosa dos índices apresentados no período aferido, atesta-se que a empresa cumpriu com todos os Níveis Mínimos de Serviços (NMS) previstos contratualmente. Portanto, ", false);
+                        printWrapped("NÃO SERÁ APLICADA GLOSA", true);
+                        printWrapped(" (0 pontos computados), devendo o faturamento prosseguir em sua integralidade.", false);
+                    } else {
+                        const valorContrato = 26971.30;
+                        let percentualGlosa = Math.floor(ptsAplicados / 10) * 1.0;
+                        if (percentualGlosa > 30.0) percentualGlosa = 30.0;
+                        const valorDesconto = valorContrato * (percentualGlosa / 100);
+                        const valorDescontoStr = valorDesconto.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                        
+                        const nomesIndicadores = dados.descumprimentos ? dados.descumprimentos.join(', ') : '';
+
+                        printWrapped(`Após análise dos índices no período aferido, constatou-se descumprimento nos seguintes indicadores: `, false);
+                        printWrapped(`${nomesIndicadores}. `, true);
+                        
+                        if (percentualGlosa === 0) {
+                            printWrapped(`Embora tenham sido acumulados ${ptsAplicados} pontos, a quantidade é insuficiente para atingir a régua mínima de desconto financeiro (10 pontos). Portanto, `, false);
+                            printWrapped("NÃO SERÁ APLICADA GLOSA", true);
+                            printWrapped(" neste ciclo. O faturamento deve prosseguir em sua integralidade.", false);
+                        } else {
+                            printWrapped("SERÁ APLICADA GLOSA", true);
+                            printWrapped(` correspondente a um total de ${ptsAplicados} pontos acumulados. Com base nas regras contratuais de redução, aplica-se uma glosa de `, false);
+                            printWrapped(`${percentualGlosa}%`, true);
+                            printWrapped(` sobre o valor do pagamento mensal, o que corresponde a um desconto de `, false);
+                            printWrapped(`${valorDescontoStr}.`, true);
+                        }
+                    }
                 }
 
                 doc.save(`Auditoria_Fiscalizacao_IMR.pdf`);
@@ -1582,119 +1222,6 @@
             const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(dadosExp), "Relatorio"); XLSX.writeFile(wb, `Base_Extraida.xlsx`);
         });
 
-        // ==========================================
-        // RELATÓRIO GERENCIAL
-        // ==========================================
-        document.getElementById('btn-gerar-pdf').addEventListener('click', () => {
-            const checkboxes = document.querySelectorAll('#relatorio-mes-container input:checked');
-            const fM_array = Array.from(checkboxes).map(cb => cb.value);
-            if(fM_array.length === 0) fM_array.push("Todos");
-            const fM_text = fM_array.includes("Todos") ? "Todos" : fM_array.join(', ');
-            
-            const fA = document.getElementById('relatorio-analista').value;
-            const btn = document.getElementById('btn-gerar-pdf'); const conteudoOriginal = btn.innerHTML; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xl"></i> <div><p class="text-sm">A processar...</p></div>'; btn.disabled = true;
-            
-            mesesRelatorioOverride = fM_array;
-            document.getElementById('filtro-analista').value = fA; 
-            document.getElementById('filtro-prioridade').value = 'Todos'; 
-            document.getElementById('filtro-assunto').value = 'Todos'; 
-            document.getElementById('filtro-tipo').value = 'Todos'; 
-            document.getElementById('filtro-data-inicio').value = ''; 
-            document.getElementById('filtro-data-fim').value = ''; 
-            atualizarDashboard(); 
-
-            setTimeout(() => {
-                try {
-                    const dadosExp = dadosFiltradosCache; if(dadosExp.length === 0) { alert("Nenhum dado."); btn.innerHTML = conteudoOriginal; btn.disabled = false; mesesRelatorioOverride = null; atualizarDashboard(); return; }
-                    const { jsPDF } = window.jspdf; const doc = new jsPDF('p', 'pt', 'a4'); const w = doc.internal.pageSize.width;
-                    
-                    doc.setFillColor(26, 25, 65); doc.rect(0, 0, w, 85, 'F'); doc.setTextColor(255, 255, 255); 
-                    
-                    doc.setFontSize(14); doc.setFont("helvetica", "bold"); doc.text("MINISTÉRIO DA JUSTIÇA E SEGURANÇA PÚBLICA", 40, 32);
-                    doc.setFontSize(9.5); doc.setFont("helvetica", "normal"); doc.text("Polícia Rodoviária Federal - Diretoria de Tecnologia da Informação e Comunicação (DTIC)", 40, 52);
-                    doc.setFontSize(10.5); doc.setFont("helvetica", "bold"); doc.text("Relatório Gerencial Analítico - Suporte N2 - Serviço de Pronto Atendimento (SETIC)", 40, 72);
-                    
-                    try { 
-                        let imgData = localStorage.getItem('dashLogo');
-                        if (imgData) {
-                            doc.addImage(imgData, 'PNG', w - 80, 20, 40, 40);
-                        } else {
-                            const imgEl = document.querySelector('#header-logo-container img');
-                            if(imgEl) {
-                                const canvas = document.createElement('canvas');
-                                canvas.width = imgEl.naturalWidth || imgEl.width;
-                                canvas.height = imgEl.naturalHeight || imgEl.height;
-                                const ctx = canvas.getContext('2d');
-                                ctx.drawImage(imgEl, 0, 0);
-                                const b64 = canvas.toDataURL('image/png');
-                                doc.addImage(b64, 'PNG', w - 80, 20, 40, 40);
-                            }
-                        }
-                    } catch(e) {}
-
-                    const agora = new Date();
-                    const dataForm = agora.toLocaleDateString('pt-BR');
-                    const horaForm = agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-
-                    doc.setTextColor(26, 25, 65); doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.text("Parecer e Metodologia de Cálculo", 40, 110);
-                    doc.setTextColor(60, 60, 60); doc.setFontSize(9.5); doc.setFont("helvetica", "normal");
-                    
-                    const textoParecer = `A presente extração consolidou um universo de ${dadosExp.length} chamados encerrados dentro do mês civil selecionado (${fM_text}). Os indicadores matemáticos foram processados de forma automatizada. Documento processado eletronicamente em ${dataForm} às ${horaForm} com filtro de analista: ${fA}.`;
-                    const splitText = doc.splitTextToSize(textoParecer, w - 80);
-                    doc.text(splitText, 40, 124);
-                    
-                    const nextY = 124 + (splitText.length * 14) + 12;
-
-                    doc.setTextColor(26, 25, 65); doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.text("Resumo Executivo", 40, nextY);
-                    doc.setTextColor(60, 60, 60); doc.setFontSize(9.5); doc.setFont("helvetica", "normal");
-                    doc.text(doc.splitTextToSize(`O período processou um total de ${dadosExp.length} tickets. A eficiência registrou um TMA de ${tmaGlobalTexto}, garantindo que ${slaGlobalTexto} das demandas fossem solucionadas no prazo. A taxa de incidentes correspondeu a ${incGlobalTexto}.`, w - 80), 40, nextY + 14);
-                    
-                    const mesesUnicos = new Set(dadosExp.map(d => obterMesAno(d['Data Encerramento'] || d['Data Abertura']))).size || 1; 
-                    const mediaMes = Math.round(dadosExp.length / mesesUnicos);
-                    
-                    const blockY = nextY + 45;
-                    doc.setFillColor(245, 247, 250); 
-                    doc.rect(40, blockY, 120, 42, 'F');
-                    doc.rect(171, blockY, 120, 42, 'F');
-                    doc.rect(302, blockY, 120, 42, 'F');
-                    doc.rect(433, blockY, 120, 42, 'F');
-
-                    doc.setFontSize(7.5); doc.setTextColor(120, 120, 120); doc.setFont("helvetica", "bold"); 
-                    doc.text("VOLUME TOTAL", 100, blockY+16, {align: 'center'}); 
-                    doc.text("MÉDIA / MÊS", 231, blockY+16, {align: 'center'}); 
-                    doc.text("TMA (HORAS)", 362, blockY+16, {align: 'center'}); 
-                    doc.text("SLA ATENDIDO", 493, blockY+16, {align: 'center'});
-                    
-                    doc.setFontSize(14); doc.setTextColor(26, 25, 65); 
-                    doc.text(String(dadosExp.length), 100, blockY+33, {align: 'center'}); 
-                    doc.text(String(mediaMes), 231, blockY+33, {align: 'center'}); 
-                    doc.text(String(tmaGlobalTexto), 362, blockY+33, {align: 'center'}); 
-                    doc.setTextColor(22, 163, 74); 
-                    doc.text(String(slaGlobalTexto), 493, blockY+33, {align: 'center'});
-
-                    const vizY = blockY + 58;
-                    doc.setTextColor(26, 25, 65); doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.text("Análise Visual", 40, vizY);
-                    doc.setFontSize(8.5); doc.setTextColor(100, 100, 100); doc.setFont("helvetica", "normal");
-                    
-                    const getImg = (id) => { try { const c = document.getElementById(id); return c ? c.toDataURL('image/jpeg', 1.0) : null; } catch(e) { return null; } };
-                    
-                    doc.text("Evolução Histórica", 40, vizY + 15); const i1 = getImg('chart-meses'); if(i1) doc.addImage(i1, 'JPEG', 40, vizY + 20, 240, 110);
-                    doc.text("Volume Foco", 305, vizY + 15); const i2 = getImg('chart-analistas'); if(i2) doc.addImage(i2, 'JPEG', 305, vizY + 20, 240, 110);
-
-                    const vizY2 = vizY + 145;
-                    doc.text("Assuntos Top 15", 40, vizY2); const i3 = getImg('chart-assuntos'); if(i3) doc.addImage(i3, 'JPEG', 40, vizY2 + 5, 240, 110);
-                    doc.text("SLA vs Criticidade", 305, vizY2); const i4 = getImg('chart-prioridade'); if(i4) doc.addImage(i4, 'JPEG', 305, vizY2 + 5, 240, 110);
-
-                    doc.addPage(); doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.setTextColor(26, 25, 65); doc.text("Detalhamento dos Chamados Extraídos", 40, 40);
-                    const linhas = dadosExp.map(d => [ String(d['Ticket']||'-'), String((d['Data Abertura']||'').split(' ')[0]), String((d['Analista']||'-').split('.')[0]), String((d['Assunto']||'').substring(0, 35)), String(d['Prioridade']||'-'), String(d['SLA Atendido']||'-') ]);
-                    doc.autoTable({ startY: 55, head: [["Ticket", "Abertura", "Analista", "Assunto", "Prioridade", "SLA Ok?"]], body: linhas, theme: 'striped', headStyles: { fillColor: [26, 25, 65] }, styles: { fontSize: 8 }, alternateRowStyles: { fillColor: [247, 248, 250] }, margin: { top: 30, right: 40, bottom: 40, left: 40 }, didDrawPage: function (dt) { doc.setFontSize(8); doc.setTextColor(150, 150, 150); doc.text(`Página ${doc.internal.getNumberOfPages()}`, w/2, doc.internal.pageSize.height - 20, {align:'center'}); } });
-                    doc.save(`Relatorio_Gerencial_SETIC.pdf`);
-                } catch (err) { alert("Erro ao gerar PDF."); } finally { 
-                    btn.innerHTML = conteudoOriginal; btn.disabled = false; 
-                    mesesRelatorioOverride = null; atualizarDashboard();
-                }
-            }, 800); 
-        });
     </script>
 </body>
 </html>
