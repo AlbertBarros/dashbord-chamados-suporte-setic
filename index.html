@@ -136,7 +136,7 @@
                 <div class="card bg-white dark:bg-gray-800 flex flex-col items-center justify-center"><h3 class="font-bold text-gray-700 dark:text-gray-300 mb-4 w-full border-b dark:border-gray-700 pb-2 text-sm uppercase">Natureza do Chamado</h3><div class="chart-container-small" title="Clique para filtrar por tipo"><canvas id="chart-tipo"></canvas></div></div>
             </div>
 
-            <div class="card bg-white dark:bg-gray-800">
+            <div class="card bg-white dark:bg-white dark:bg-gray-800">
                 <div class="flex justify-between items-end mb-4 border-b dark:border-gray-700 pb-2">
                     <h3 class="font-bold text-gray-700 dark:text-gray-300 text-sm uppercase"><i class="fa-solid fa-table-list mr-2 text-[#1a1941] dark:text-indigo-400"></i>Detalhamento Operacional</h3>
                     <span class="text-xs text-gray-500 dark:text-gray-400 font-semibold" id="txt-tabela-count">Exibindo 0 registros.</span>
@@ -678,7 +678,7 @@
         });
 
         // ==========================================
-        // AUDITORIA E FISCALIZAÇÃO IMR (CORREÇÃO DE TEXTO FLUIDO E NEGRITO ISOLADO)
+        // AUDITORIA E FISCALIZAÇÃO IMR (BUG DA CONCLUSÃO RESOLVIDO)
         // ==========================================
         document.getElementById('btn-gerar-fiscal-pdf').addEventListener('click', () => {
             const mesSelecionado = document.getElementById('fiscal-mes').value;
@@ -900,27 +900,25 @@
                     doc.setFontSize(10); doc.setTextColor(60, 60, 60);
 
                     if (totalPontosGlosa === 0) {
-                        // Linha 1 Completa Normal
+                        // Linha 1 
+                        doc.setFont("helvetica", "normal");
                         doc.text("Após análise rigorosa dos índices apresentados no período aferido, atesta-se que a empresa cumpriu com", 40, posY);
                         
-                        // Linha 2 Com Negrito apenas no termo solicitado
-                        const parteA = "todos os Níveis Mínimos de Serviços (NMS) previstos contratualmente. Portanto, ";
-                        const parteNegrito = "NÃO SERÁ APLICADA GLOSA";
-                        const parteB = " (0 pontos computados),";
+                        // Linha 2
+                        doc.text("todos os Níveis Mínimos de Serviços (NMS) previstos contratualmente. Portanto,", 40, posY + 14);
                         
-                        doc.setFont("helvetica", "normal");
-                        doc.text(parteA, 40, posY + 14);
-                        
-                        const wA = doc.getTextWidth(parteA);
+                        // Linha 3 com o Negrito isolado no inicio
                         doc.setFont("helvetica", "bold");
-                        doc.text(parteNegrito, 40 + wA, posY + 14);
+                        doc.text("NÃO SERÁ APLICADA GLOSA", 40, posY + 28);
                         
-                        const wBold = doc.getTextWidth(parteNegrito);
+                        // Resto da linha 3
+                        const wBold = doc.getTextWidth("NÃO SERÁ APLICADA GLOSA");
                         doc.setFont("helvetica", "normal");
-                        doc.text(parteB, 40 + wA + wBold, posY + 14);
+                        doc.text(" (0 pontos computados), devendo o faturamento prosseguir em", 40 + wBold, posY + 28);
+                        
+                        // Linha 4
+                        doc.text("sua integralidade.", 40, posY + 42);
 
-                        // Linha 3 Final normal
-                        doc.text("devendo o faturamento prosseguir em sua integralidade.", 40, posY + 28);
                     } else {
                         doc.text(`Após análise dos índices no período aferido, constatou-se descumprimento de NMS.`, 40, posY);
                         doc.setFont("helvetica", "bold");
@@ -1008,7 +1006,6 @@
                 
                 m.add(obterMesAno(dataEncerramento)); 
                 
-                // VARREDURA ABRANGENTE: Inclui Abertura e Encerramento para carregar perfeitamente 07/2026, 08/2026, etc.
                 if(dataEncerramento) mFiscal.add(obterMesAnoFiscal(dataEncerramento));
                 if(dataAbertura) mFiscal.add(obterMesAnoFiscal(dataAbertura));
                 
@@ -1166,7 +1163,7 @@
         });
 
         // ==========================================
-        // RELATÓRIO GERENCIAL (COM ANÁLISE VISUAL NA PÁGINA 1)
+        // RELATÓRIO GERENCIAL (CORREÇÃO DE PÁGINA)
         // ==========================================
         document.getElementById('btn-gerar-pdf').addEventListener('click', () => {
             const checkboxes = document.querySelectorAll('#relatorio-mes-container input:checked');
@@ -1199,18 +1196,11 @@
                     
                     try { 
                         let imgData = localStorage.getItem('dashLogo');
-                        if (imgData) {
-                            doc.addImage(imgData, 'PNG', w - 80, 20, 40, 40);
-                        } else {
+                        if (imgData) { doc.addImage(imgData, 'PNG', w - 80, 20, 40, 40); } 
+                        else {
                             const imgEl = document.querySelector('#header-logo-container img');
                             if(imgEl) {
-                                const canvas = document.createElement('canvas');
-                                canvas.width = imgEl.naturalWidth || imgEl.width;
-                                canvas.height = imgEl.naturalHeight || imgEl.height;
-                                const ctx = canvas.getContext('2d');
-                                ctx.drawImage(imgEl, 0, 0);
-                                const b64 = canvas.toDataURL('image/png');
-                                doc.addImage(b64, 'PNG', w - 80, 20, 40, 40);
+                                const canvas = document.createElement('canvas'); canvas.width = imgEl.naturalWidth || imgEl.width; canvas.height = imgEl.naturalHeight || imgEl.height; const ctx = canvas.getContext('2d'); ctx.drawImage(imgEl, 0, 0); const b64 = canvas.toDataURL('image/png'); doc.addImage(b64, 'PNG', w - 80, 20, 40, 40);
                             }
                         }
                     } catch(e) {}
@@ -1255,15 +1245,21 @@
                     doc.setTextColor(22, 163, 74); 
                     doc.text(String(slaGlobalTexto), 493, blockY+33, {align: 'center'});
 
-                    // ANÁLISE VISUAL ENCAIXADA NA PÁGINA 1 PREENCHENDO O ESPAÇO BRANCO
+                    // ANÁLISE VISUAL COM OS 4 GRÁFICOS RESTAURADOS NA PÁGINA 1
                     const vizY = blockY + 58;
                     doc.setTextColor(26, 25, 65); doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.text("Análise Visual", 40, vizY);
                     doc.setFontSize(8.5); doc.setTextColor(100, 100, 100); doc.setFont("helvetica", "normal");
                     
                     const getImg = (id) => { try { const c = document.getElementById(id); return c ? c.toDataURL('image/jpeg', 1.0) : null; } catch(e) { return null; } };
                     
+                    // Gráficos Linha 1
                     doc.text("Evolução Histórica", 40, vizY + 15); const i1 = getImg('chart-meses'); if(i1) doc.addImage(i1, 'JPEG', 40, vizY + 20, 240, 110);
                     doc.text("Volume Foco", 305, vizY + 15); const i2 = getImg('chart-analistas'); if(i2) doc.addImage(i2, 'JPEG', 305, vizY + 20, 240, 110);
+
+                    // Gráficos Linha 2
+                    const vizY2 = vizY + 145;
+                    doc.text("Assuntos Top 15", 40, vizY2); const i3 = getImg('chart-assuntos'); if(i3) doc.addImage(i3, 'JPEG', 40, vizY2 + 5, 240, 110);
+                    doc.text("SLA vs Criticidade", 305, vizY2); const i4 = getImg('chart-prioridade'); if(i4) doc.addImage(i4, 'JPEG', 305, vizY2 + 5, 240, 110);
 
                     // PÁGINA 2: Detalhamento da Tabela
                     doc.addPage(); doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.setTextColor(26, 25, 65); doc.text("Detalhamento dos Chamados Extraídos", 40, 40);
