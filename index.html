@@ -120,8 +120,8 @@
                 <div class="card bg-white dark:bg-gray-800 flex items-center gap-4" title="Tempo Médio de Atendimento (TMA): Média de horas gastas para a resolução dos chamados."><div class="w-12 h-12 rounded-full bg-yellow-100 dark:bg-yellow-900/50 flex items-center justify-center text-yellow-600 dark:text-yellow-400 text-xl"><i class="fa-regular fa-clock"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">TMA (Horas)</p><p id="kpi-tma" class="text-2xl font-black text-gray-800 dark:text-gray-100">0.0h</p></div></div>
                 <div class="card bg-white dark:bg-gray-800 flex items-center gap-4" title="SLA Atendido: Percentagem de chamados solucionados dentro do prazo acordado."><div class="w-12 h-12 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center text-green-500 dark:text-green-400 text-xl"><i class="fa-solid fa-stopwatch"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">SLA Atendido</p><p id="kpi-sla" class="text-2xl font-black text-gray-800 dark:text-gray-100">0%</p></div></div>
                 <div class="card bg-white dark:bg-gray-800 flex items-center gap-4" title="Incidentes: Taxa proporcional de chamados abertos classificados como interrupção ou falha (Incidentes)."><div class="w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center text-purple-600 dark:text-purple-400 text-xl"><i class="fa-solid fa-triangle-exclamation"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">Incidentes</p><p id="kpi-incidentes" class="text-2xl font-black text-gray-800 dark:text-gray-100">0%</p></div></div>
-                <div class="card bg-white dark:bg-gray-800 flex items-center gap-4" title="Média de Satisfação do Usuário (INS1): Calcula a nota média dos chamados filtrados (escala de 1 a 5). Na ausência de avaliação explícita na base auxiliar, assume-se a nota 5.0 como padrão."><div class="w-12 h-12 rounded-full bg-pink-100 dark:bg-pink-900/50 flex items-center justify-center text-pink-600 dark:text-pink-400 text-xl"><i class="fa-solid fa-star"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">Satisfação</p><p id="kpi-satisfacao" class="text-2xl font-black text-gray-800 dark:text-gray-100">0,00</p></div></div>
-                <div class="card bg-white dark:bg-gray-800 flex items-center gap-4" title="Taxa de Reabertura (INS6): Percentual de chamados no filtro atual que precisaram ser reabertos pelo usuário após a solução inicial."><div class="w-12 h-12 rounded-full bg-orange-100 dark:bg-orange-900/50 flex items-center justify-center text-orange-600 dark:text-orange-400 text-xl"><i class="fa-solid fa-rotate-left"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">Reabertos</p><p id="kpi-reabertos" class="text-2xl font-black text-gray-800 dark:text-gray-100">0%</p></div></div>
+                <div class="card bg-white dark:bg-gray-800 flex items-center gap-4" title="Média de Satisfação do Usuário (INS1). Escala 1 a 5. Nota 5.0 assumida por padrão em chamados sem avaliação."><div class="w-12 h-12 rounded-full bg-pink-100 dark:bg-pink-900/50 flex items-center justify-center text-pink-600 dark:text-pink-400 text-xl"><i class="fa-solid fa-star"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">Satisfação</p><p id="kpi-satisfacao" class="text-2xl font-black text-gray-800 dark:text-gray-100">0,00</p></div></div>
+                <div class="card bg-white dark:bg-gray-800 flex items-center gap-4" title="Taxa de Reabertura (INS6). Percentagem de chamados reabertos no filtro selecionado."><div class="w-12 h-12 rounded-full bg-orange-100 dark:bg-orange-900/50 flex items-center justify-center text-orange-600 dark:text-orange-400 text-xl"><i class="fa-solid fa-rotate-left"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">Reabertos</p><p id="kpi-reabertos" class="text-2xl font-black text-gray-800 dark:text-gray-100">0%</p></div></div>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
@@ -315,6 +315,7 @@
                         </div>
                     </div>
 
+                    <!-- GESTÃO DE UTILIZADORES -->
                     <div id="area-gestao-usuarios" class="hidden bg-white dark:bg-gray-800 p-5 rounded border border-blue-200 dark:border-gray-700 border-l-4 border-l-blue-500 shadow-sm mb-4">
                         <h4 class="font-bold text-blue-800 dark:text-blue-400 mb-2 flex items-center gap-2"><i class="fa-solid fa-user-plus"></i> Criar Acesso de Analista</h4>
                         <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">Registe o e-mail e a senha provisória para um colega aceder ao Analytics.</p>
@@ -327,6 +328,7 @@
                         </div>
                     </div>
 
+                    <!-- ZONA DE PERIGO / EXCLUSÃO -->
                     <div id="area-gestao-banco" class="hidden bg-white dark:bg-gray-800 p-5 rounded border border-red-200 dark:border-gray-700 border-l-4 border-l-red-500 shadow-sm">
                         <h4 class="font-bold text-red-700 dark:text-red-400 mb-2 flex items-center gap-2"><i class="fa-solid fa-trash-can"></i> Gestão da Base de Dados</h4>
                         <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">Selecione o mês correspondente à planilha ou a base auxiliar que deseja apagar.</p>
@@ -555,7 +557,6 @@
                     }
                 });
                 
-                // Carrega bases auxiliares para o IMR
                 try {
                     const qs = await getDocs(collection(db, "satisfacao")); dadosSatisfacao = [];
                     qs.forEach(doc => dadosSatisfacao.push(doc.data()));
@@ -582,7 +583,6 @@
             }); 
         });
 
-        // UPLOADS
         document.getElementById('file-upload').addEventListener('change', (e) => {
             const file = e.target.files[0]; if (!file) return; document.getElementById('loader-upload').classList.remove('hidden');
             const reader = new FileReader(); reader.onload = async function(ev) {
@@ -596,6 +596,7 @@
             }; reader.readAsArrayBuffer(file);
         });
 
+        // UPLOAD BASES AUXILIARES IMR
         function handleUploadAux(inputId, colName) {
             const el = document.getElementById(inputId);
             if(!el) return;
@@ -805,13 +806,14 @@
 
             const mapSat = new Map();
             dadosSatisfacao.forEach(s => mapSat.set(String(s.Ticket || s.ticket || s.TICKET || s['Nº Chamado'] || ""), s));
+            
             const mapReab = new Set();
             dadosReabertos.forEach(r => mapReab.add(String(r.Ticket || r.ticket || r.TICKET || r['Nº Chamado'] || "")));
 
             dadosAuditoria.forEach(d => {
                 const tId = String(d['Ticket'] || d['ticket'] || "");
 
-                // LÓGICA DE SATISFAÇÃO (INS1) - Busca Exata e Blindagem de Nota (Max 5.0)
+                // LÓGICA DE SATISFAÇÃO (INS1)
                 let nota = 5.0; 
                 if (mapSat.has(tId)) {
                     const satRec = mapSat.get(tId);
@@ -898,21 +900,11 @@
                     }
 
                     doc.setTextColor(26, 25, 65); doc.setFontSize(10); 
-                    
-                    doc.setFont("helvetica", "bold"); doc.text("Empresa:", 40, 105);
-                    doc.setFont("helvetica", "normal"); doc.text("IOS Informática", 95, 105);
-
-                    doc.setFont("helvetica", "bold"); doc.text("Contrato:", 40, 120);
-                    doc.setFont("helvetica", "normal"); doc.text("14/2025", 95, 120);
-
-                    doc.setFont("helvetica", "bold"); doc.text("Fiscal Técnico:", 40, 135);
-                    doc.setFont("helvetica", "normal"); doc.text("Albert Einstein da Silva Barros", 125, 135);
-
-                    doc.setFont("helvetica", "bold"); doc.text("Mês Referente:", 330, 105);
-                    doc.setFont("helvetica", "normal"); doc.text(mesTexto, 420, 105);
-
-                    doc.setFont("helvetica", "bold"); doc.text("Período de Aferição:", 330, 120);
-                    doc.setFont("helvetica", "normal"); doc.text(periodoAfericao, 445, 120);
+                    doc.setFont("helvetica", "bold"); doc.text("Empresa:", 40, 105); doc.setFont("helvetica", "normal"); doc.text("IOS Informática", 95, 105);
+                    doc.setFont("helvetica", "bold"); doc.text("Contrato:", 40, 120); doc.setFont("helvetica", "normal"); doc.text("14/2025", 95, 120);
+                    doc.setFont("helvetica", "bold"); doc.text("Fiscal Técnico:", 40, 135); doc.setFont("helvetica", "normal"); doc.text("Albert Einstein da Silva Barros", 125, 135);
+                    doc.setFont("helvetica", "bold"); doc.text("Mês Referente:", 330, 105); doc.setFont("helvetica", "normal"); doc.text(mesTexto, 420, 105);
+                    doc.setFont("helvetica", "bold"); doc.text("Período de Aferição:", 330, 120); doc.setFont("helvetica", "normal"); doc.text(periodoAfericao, 445, 120);
 
                     const agora = new Date();
                     const dataForm = agora.toLocaleDateString('pt-BR');
@@ -990,38 +982,45 @@
                     });
 
                     // ==========================================
-                    // CONCLUSÃO DE GLOSA (RESOLVIDO COM SPLIT SEGURO)
+                    // CONCLUSÃO DE GLOSA
                     // ==========================================
                     const finalY = doc.lastAutoTable.finalY + 30;
                     doc.setTextColor(26, 25, 65); doc.setFontSize(12); doc.setFont("helvetica", "bold"); 
                     doc.text("Conclusão do Fiscal", 40, finalY);
                     
-                    const posY = finalY + 18;
+                    let cursorX = 40;
+                    let cursorY = finalY + 18;
                     const maxWidth = w - 80;
                     doc.setFontSize(10); doc.setTextColor(60, 60, 60);
 
+                    // ALGORITMO DE QUEBRA DE MARGEM INTELIGENTE
+                    function printWrapped(text, isBold) {
+                        doc.setFont("helvetica", isBold ? "bold" : "normal");
+                        const tokens = text.split(/(\s+)/).filter(Boolean); 
+                        tokens.forEach(token => {
+                            if (token.trim() === "") {
+                                let spaceW = doc.getTextWidth(" ");
+                                if (cursorX + spaceW <= 40 + maxWidth) cursorX += spaceW;
+                            } else {
+                                let wordW = doc.getTextWidth(token);
+                                if (cursorX + wordW > 40 + maxWidth) {
+                                    cursorX = 40;
+                                    cursorY += 14;
+                                }
+                                doc.text(token, cursorX, cursorY);
+                                cursorX += wordW;
+                            }
+                        });
+                    }
+
                     if (totalPontosGlosa === 0) {
-                        const p1 = "Após análise rigorosa dos índices apresentados no período aferido, atesta-se que a empresa cumpriu com todos os Níveis Mínimos de Serviços (NMS) previstos contratualmente.";
-                        const linhasP1 = doc.splitTextToSize(p1, maxWidth);
-                        doc.setFont("helvetica", "normal");
-                        doc.text(linhasP1, 40, posY);
-                        
-                        let posY2 = posY + (linhasP1.length * 14) + 6;
-                        
-                        // Negrito Isolado Perfeitamente
-                        doc.setFont("helvetica", "bold");
-                        doc.text("Portanto, NÃO SERÁ APLICADA GLOSA", 40, posY2);
-                        
-                        let wBold = doc.getTextWidth("Portanto, NÃO SERÁ APLICADA GLOSA");
-                        doc.setFont("helvetica", "normal");
-                        doc.text(" (0 pontos computados), devendo o faturamento", 40 + wBold, posY2);
-                        
-                        doc.text("prosseguir em sua integralidade.", 40, posY2 + 14);
+                        printWrapped("Após análise rigorosa dos índices apresentados no período aferido, atesta-se que a empresa cumpriu com todos os Níveis Mínimos de Serviços (NMS) previstos contratualmente. Portanto, ", false);
+                        printWrapped("NÃO SERÁ APLICADA GLOSA", true);
+                        printWrapped(" (0 pontos computados), devendo o faturamento prosseguir em sua integralidade.", false);
                     } else {
-                        const errTxt = doc.splitTextToSize("Após análise dos índices no período aferido, constatou-se descumprimento de NMS.", maxWidth);
-                        doc.text(errTxt, 40, posY);
-                        doc.setFont("helvetica", "bold");
-                        doc.text(`SERÁ APLICADA GLOSA correspondente a um total de ${totalPontosGlosa} pontos.`, 40, posY + (errTxt.length * 14) + 6);
+                        printWrapped("Após análise dos índices no período aferido, constatou-se descumprimento de NMS. ", false);
+                        printWrapped("SERÁ APLICADA GLOSA", true);
+                        printWrapped(` correspondente a um total de ${totalPontosGlosa} pontos.`, false);
                     }
 
                     doc.save(`Auditoria_Fiscalizacao_IMR.pdf`);
@@ -1035,45 +1034,60 @@
         // FUNÇÕES DE TEMPO E FILTROS 
         // -----------------------------------------------------
         
+        function parseExcelDate(serial) {
+            const dateObj = new Date(Math.round((serial - 25569) * 86400 * 1000));
+            return {
+                ano: dateObj.getUTCFullYear(),
+                mes: dateObj.getUTCMonth() + 1,
+                dia: dateObj.getUTCDate()
+            };
+        }
+
         function parseHoras(str) { if(!str) return 0; const p = String(str).split(':'); return p.length === 3 ? parseInt(p[0]) + (parseInt(p[1])/60) + (parseInt(p[2])/3600) : 0; }
         
         function obterMesAno(str) { 
-            if (str && str.includes('-')) { 
-                const p = str.split(' ')[0].split('-'); 
-                if(p.length >= 2) return `${p[1]}/${p[0]}`;
+            if (!str) return "Desc";
+            if (!isNaN(str) && Number(str) > 30000) {
+                const parsed = parseExcelDate(parseFloat(str));
+                const mesStr = parsed.mes < 10 ? '0' + parsed.mes : parsed.mes;
+                return `${mesStr}/${parsed.ano}`;
+            }
+            let raw = String(str).trim().split(' ')[0].replace(/\//g, '-');
+            if (!raw.includes('-')) return "Desc"; 
+            const p = raw.split('-');
+            if (p.length >= 2) {
+                if(p[0].length === 4) return `${p[1]}/${p[0]}`;
+                else return `${p[1]}/${p[2]}`;
             } 
             return "Desc"; 
         }
 
-        // MOTOR DE CICLO FISCAL BLINDADO COM PARSEINT BASE 10
         function obterMesAnoFiscal(str) {
             if (!str) return "Desc";
-            let raw = String(str).trim().split(' ')[0];
-            raw = raw.replace(/\//g, '-');
-            if (!raw.includes('-')) return "Desc";
-            
-            const p = raw.split('-');
-            if (p.length < 3) return "Desc";
-            
             let ano, mes, dia;
-            if (p[0].length === 4) {
-                ano = parseInt(p[0], 10);
-                mes = parseInt(p[1], 10);
-                dia = parseInt(p[2], 10);
+
+            if (!isNaN(str) && Number(str) > 30000) {
+                const parsed = parseExcelDate(parseFloat(str));
+                ano = parsed.ano; mes = parsed.mes; dia = parsed.dia;
             } else {
-                dia = parseInt(p[0], 10);
-                mes = parseInt(p[1], 10);
-                ano = parseInt(p[2], 10);
+                let raw = String(str).trim().split(' ')[0].replace(/\//g, '-');
+                if (!raw.includes('-')) return "Desc";
+                
+                const p = raw.split('-');
+                if (p.length < 3) return "Desc";
+                
+                if (p[0].length === 4) {
+                    ano = parseInt(p[0], 10); mes = parseInt(p[1], 10); dia = parseInt(p[2], 10);
+                } else {
+                    dia = parseInt(p[0], 10); mes = parseInt(p[1], 10); ano = parseInt(p[2], 10);
+                }
             }
             
             if (isNaN(ano) || isNaN(mes) || isNaN(dia)) return "Desc";
             
             if (dia <= 3) {
-                mes = mes - 1;
-                if (mes === 0) {
-                    mes = 12;
-                    ano = ano - 1;
-                }
+                mes -= 1;
+                if (mes === 0) { mes = 12; ano -= 1; }
             }
             
             const mesStr = mes < 10 ? '0' + mes : mes;
@@ -1202,7 +1216,7 @@
             slaGlobalTexto = total > 0 ? ((at / total) * 100).toFixed(1) + '%' : '0%'; incGlobalTexto = total > 0 ? ((inc / total) * 100).toFixed(1) + '%' : '0%';
             document.getElementById('kpi-sla').innerText = slaGlobalTexto; document.getElementById('kpi-incidentes').innerText = incGlobalTexto;
 
-            // KPIs DASHBOARD SATISFAÇÃO BLINDADO
+            // LÓGICA DO INS1 BLINDADA NO DASHBOARD
             const mapSat = new Map();
             dadosSatisfacao.forEach(s => mapSat.set(String(s.Ticket || s.ticket || s.TICKET || s['Nº Chamado'] || ""), s));
             const mapReab = new Set();
