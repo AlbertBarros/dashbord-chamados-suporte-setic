@@ -47,6 +47,8 @@
             <h2 id="login-titulo" class="text-2xl font-black text-[#1a1941] dark:text-indigo-400 mb-1">Analytics SETIC</h2>
             <p class="text-gray-500 dark:text-gray-400 text-sm mb-6 font-semibold">Acesso Restrito</p>
             
+            <div id="login-erro-caixa" class="hidden mb-4 p-3 bg-red-100 border border-red-400 text-red-700 text-xs rounded text-left"></div>
+
             <div class="text-left mb-4">
                 <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 uppercase mb-1">E-mail Corporativo</label>
                 <input type="email" id="login-email" placeholder="email@prf.gov.br" class="w-full border border-gray-300 dark:border-gray-600 rounded p-3 text-sm bg-gray-50 dark:bg-gray-700 focus:outline-none focus:border-blue-500 transition">
@@ -187,7 +189,7 @@
         </div>
     </div>
 
-    <!-- Modal Histórico IMR (AGORA COM FILTROS E EXPORTAÇÃO PDF) -->
+    <!-- Modal Histórico IMR -->
     <div id="modal-historico-imr" class="hidden fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-[70] p-4">
         <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-2xl w-full max-w-5xl flex flex-col max-h-[90vh]">
             <div class="flex justify-between items-center mb-4">
@@ -195,7 +197,6 @@
                 <button id="btn-fechar-historico-imr" class="text-gray-400 hover:text-red-500 transition"><i class="fa-solid fa-xmark text-2xl"></i></button>
             </div>
             
-            <!-- Barra de Ferramentas do Histórico -->
             <div class="flex flex-wrap gap-4 mb-4 items-end bg-gray-50 dark:bg-gray-700 p-4 rounded border dark:border-gray-600">
                 <div>
                     <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase mb-1">Mês Inicial</label>
@@ -226,7 +227,6 @@
                         </tr>
                     </thead>
                     <tbody id="tabela-corpo-historico" class="divide-y divide-gray-100 dark:divide-gray-700 bg-white dark:bg-gray-800">
-                        <!-- Tabela alimentada via JS -->
                     </tbody>
                 </table>
             </div>
@@ -482,7 +482,6 @@
         import { getFirestore, collection, getDocs, doc, writeBatch } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 
-        // === DARK MODE LOGIC ===
         let isDark = localStorage.getItem('darkMode') === 'true';
         if (isDark) { document.documentElement.classList.add('dark'); document.getElementById('icon-theme').className = "fa-solid fa-sun text-yellow-400 text-lg"; }
         
@@ -607,19 +606,32 @@
             }
         });
 
+        // MECANISMO DE LOGIN COM CAPTURA DE ERRO NA TELA
         document.getElementById('btn-entrar').addEventListener('click', async () => {
             const email = document.getElementById('login-email').value;
             const senha = document.getElementById('login-senha').value;
             const btn = document.getElementById('btn-entrar');
+            const caixaErro = document.getElementById('login-erro-caixa');
 
             if (!email || !senha) return alert("Por favor, preencha o e-mail e a senha.");
+
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Autenticando...';
             btn.disabled = true;
+            caixaErro.classList.add('hidden'); 
 
             try {
-                await signInWithEmailAndPassword(auth, email, senha);
+                await signInWithEmailAndPassword(auth, email.trim(), senha);
             } catch (error) {
-                alert("Acesso negado: E-mail ou senha incorretos.");
+                let msg = "Acesso negado.";
+                if (error.code === 'auth/invalid-email') msg = "O e-mail digitado não é um formato de e-mail válido.";
+                else if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') msg = "Nenhum usuário ativo encontrado com estas credenciais.";
+                else if (error.code === 'auth/wrong-password') msg = "Senha incorreta.";
+                else if (error.message.includes('auth/configuration-not-found') || error.message.includes('auth/unauthorized-domain')) {
+                    msg = "ACESSO BLOQUEADO: Este domínio não está autorizado no Firebase (Authorized Domains).";
+                } else msg = `Erro no Firebase: ${error.message}`;
+
+                caixaErro.innerHTML = `<strong>Falha na Autenticação</strong><br>${msg}`;
+                caixaErro.classList.remove('hidden');
             } finally {
                 btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Entrar no Sistema';
                 btn.disabled = false;
@@ -726,13 +738,21 @@
                 } else { definirStatus('<i class="fa-solid fa-triangle-exclamation"></i> Vazio', 'bg-red-500'); } 
                 historicoCompletoCarregado = forcarCompleto;
             } catch (e) { 
-                console.error(e);
-                if (e.code === 'resource-exhausted' || (e.message && (e.message.includes('quota') || e.message.includes('Quota')))) {
+                console.error("Detalhes do Erro:", e);
+                let msgTela = "Erro";
+                if (e.code === 'resource-exhausted' || (e.message && e.message.toLowerCase().includes('quota'))) {
                     document.getElementById('modal-limite').classList.remove('hidden');
-                    definirStatus('<i class="fa-solid fa-ban"></i> Limite Excedido', 'bg-red-700');
+                    msgTela = "Limite Diário";
+                } else if (e.code === 'permission-denied' || (e.message && e.message.toLowerCase().includes('permission'))) {
+                    alert("Bloqueio de Segurança: O Firebase não permitiu a leitura. Se você alterou as 'Regras' (Rules) no Firebase, volte para a regra antiga.");
+                    msgTela = "Sem Permissão";
+                } else if (e.code === 'unavailable') {
+                    alert("Falha de Conexão: O banco de dados está inacessível. Pode ser bloqueio de rede/VPN da PRF ou você está offline.");
+                    msgTela = "Offline";
                 } else {
-                    definirStatus('<i class="fa-solid fa-xmark"></i> Erro', 'bg-red-600'); 
+                    alert("Erro interno do Firebase: " + e.message);
                 }
+                definirStatus(`<i class="fa-solid fa-xmark"></i> ${msgTela}`, 'bg-red-600'); 
             }
         }
 
@@ -744,6 +764,7 @@
             }); 
         });
 
+        // UPLOADS
         document.getElementById('file-upload').addEventListener('change', async (e) => {
             const files = e.target.files; 
             if (files.length === 0) return; 
@@ -1064,7 +1085,7 @@
         // HISTÓRICO IMR (DASHBOARD DINÂMICO)
         // ==========================================
         let globalHistMonths = [];
-        let dadosHistoricoExport = []; // Variável para armazenar os dados calculados para o PDF
+        let dadosHistoricoExport = [];
 
         document.getElementById('btn-fechar-historico-imr').addEventListener('click', () => {
             document.getElementById('modal-historico-imr').classList.add('hidden');
@@ -1109,7 +1130,7 @@
             const dataPontos = [];
             const dataCores = [];
             let htmlTabela = '';
-            dadosHistoricoExport = []; // Zera a memória de exportação
+            dadosHistoricoExport = []; 
 
             const mesesFiltrados = globalHistMonths.filter(m => cvDtOrd(m) >= cvDtOrd(inicio) && cvDtOrd(m) <= cvDtOrd(fim));
 
@@ -1121,7 +1142,6 @@
                     
                     let percentualGlosa = 0;
                     let valorDescontoStr = "R$ 0,00";
-                    let corLinha = "";
 
                     if (r.pts >= 10) {
                         percentualGlosa = Math.floor(r.pts / 10) * 1.0;
@@ -1139,7 +1159,7 @@
                     ]);
 
                     if (r.pts > 0) {
-                        dataCores.push('#ef4444'); // vermelho
+                        dataCores.push('#ef4444');
                         htmlTabela += `<tr class="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
                             <td class="p-3 font-bold text-red-600 dark:text-red-400">${m}</td>
                             <td class="p-3 font-bold">${r.pts}</td>
@@ -1148,7 +1168,7 @@
                             <td class="p-3 font-mono text-xs text-red-700 dark:text-red-300">${r.desc.join(', ')}</td>
                         </tr>`;
                     } else {
-                        dataCores.push('#22c55e'); // verde
+                        dataCores.push('#22c55e'); 
                         htmlTabela += `<tr class="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
                             <td class="p-3 font-bold text-green-600 dark:text-green-400">${m}</td>
                             <td class="p-3 font-bold">0</td>
@@ -1238,6 +1258,314 @@
             } catch (e) {
                 alert("Erro ao gerar o PDF do histórico.");
             }
+        });
+
+        // -----------------------------------------------------
+        // FUNÇÕES DE TEMPO E FILTROS 
+        // -----------------------------------------------------
+        
+        function parseExcelDate(serial) {
+            const dateObj = new Date(Math.round((serial - 25569) * 86400 * 1000));
+            return { ano: dateObj.getUTCFullYear(), mes: dateObj.getUTCMonth() + 1, dia: dateObj.getUTCDate() };
+        }
+
+        function parseHoras(str) { if(!str) return 0; const p = String(str).split(':'); return p.length === 3 ? parseInt(p[0]) + (parseInt(p[1])/60) + (parseInt(p[2])/3600) : 0; }
+        
+        function obterMesAno(str) { 
+            if (!str) return "Desc";
+            if (!isNaN(str) && Number(str) > 30000) {
+                const parsed = parseExcelDate(parseFloat(str));
+                const mesStr = parsed.mes < 10 ? '0' + parsed.mes : parsed.mes;
+                return `${mesStr}/${parsed.ano}`;
+            }
+            let raw = String(str).trim().split(' ')[0].replace(/\//g, '-');
+            if (!raw.includes('-')) return "Desc"; 
+            const p = raw.split('-');
+            if (p.length >= 2) {
+                if(p[0].length === 4) return `${p[1]}/${p[0]}`;
+                else return `${p[1]}/${p[2]}`;
+            } 
+            return "Desc"; 
+        }
+
+        function obterMesAnoFiscal(str) {
+            if (!str) return "Desc";
+            let ano, mes, dia;
+
+            if (!isNaN(str) && Number(str) > 30000) {
+                const parsed = parseExcelDate(parseFloat(str));
+                ano = parsed.ano; mes = parsed.mes; dia = parsed.dia;
+            } else {
+                let raw = String(str).trim().split(' ')[0].replace(/\//g, '-');
+                if (!raw.includes('-')) return "Desc";
+                
+                const p = raw.split('-');
+                if (p.length < 3) return "Desc";
+                
+                if (p[0].length === 4) {
+                    ano = parseInt(p[0], 10); mes = parseInt(p[1], 10); dia = parseInt(p[2], 10);
+                } else {
+                    dia = parseInt(p[0], 10); mes = parseInt(p[1], 10); ano = parseInt(p[2], 10);
+                }
+            }
+            
+            if (isNaN(ano) || isNaN(mes) || isNaN(dia)) return "Desc";
+            
+            if (dia <= 3) {
+                mes -= 1;
+                if (mes === 0) { mes = 12; ano -= 1; }
+            }
+            
+            const mesStr = mes < 10 ? '0' + mes : mes;
+            return `${mesStr}/${ano}`;
+        }
+
+        function cvDtOrd(m) { 
+            if (!m || m === "Desc") return 0; 
+            const parts = m.split('/');
+            if (parts.length === 2) {
+                return parseInt(parts[1], 10) * 100 + parseInt(parts[0], 10);
+            }
+            return 0; 
+        }
+
+        function preencherCheckboxes(id, arr) {
+            const container = document.getElementById(id);
+            if(!container) return;
+            const checkedValues = Array.from(container.querySelectorAll('input:checked')).map(cb => cb.value);
+            const selected = checkedValues.length > 0 ? checkedValues : ["Todos"];
+
+            container.innerHTML = `<label class="flex items-center gap-2 cursor-pointer text-gray-700 dark:text-gray-200"><input type="checkbox" value="Todos" ${selected.includes("Todos") ? "checked" : ""} class="accent-indigo-600 w-4 h-4"> <span>Global (Todos)</span></label>`;
+            arr.forEach(i => { 
+                container.innerHTML += `<label class="flex items-center gap-2 cursor-pointer text-gray-700 dark:text-gray-200"><input type="checkbox" value="${i}" ${selected.includes(i) ? "checked" : ""} class="accent-indigo-600 w-4 h-4"> <span>${i}</span></label>`; 
+            });
+
+            const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(cb => {
+                cb.addEventListener('change', function() {
+                    if(this.value === 'Todos' && this.checked) {
+                        checkboxes.forEach(c => { if(c !== this) c.checked = false; });
+                    } else if(this.checked) {
+                        checkboxes[0].checked = false; 
+                    }
+                });
+            });
+        }
+
+        function preencherFiltros() {
+            const m = new Set(), mFiscal = new Set(), a = new Set(), p = new Set(), ass = new Set(), tp = new Set();
+            
+            dadosGlobais.forEach(d => { 
+                const dataAbertura = d['Data Abertura'];
+                const dataEncerramento = d['Data Encerramento'] || d['Data Solução'] || dataAbertura;
+                
+                m.add(obterMesAno(dataEncerramento)); 
+                if(dataEncerramento) mFiscal.add(obterMesAnoFiscal(dataEncerramento));
+                if(dataAbertura) mFiscal.add(obterMesAnoFiscal(dataAbertura));
+                
+                if(d['Analista']) a.add(d['Analista']); if(d['Prioridade']) p.add(d['Prioridade']); 
+                if(d['Categoria']) ass.add(d['Categoria']); if(d['Tipo']) tp.add(d['Tipo']);
+            });
+            
+            const mArr = Array.from(m).filter(x => x!=="Desc").sort((x,y) => cvDtOrd(x) - cvDtOrd(y));
+            const mFiscalArr = Array.from(mFiscal).filter(x => x!=="Desc").sort((x,y) => cvDtOrd(x) - cvDtOrd(y));
+            
+            preencherS('filtro-mes', mArr, "Todos os Meses"); 
+            preencherS('fiscal-mes', mFiscalArr, "Todos os Ciclos"); 
+            preencherCheckboxes('relatorio-mes-container', mArr); 
+            
+            preencherS('filtro-analista', Array.from(a).filter(x => equipeFocoStr.toLowerCase().includes(x.toLowerCase())).sort(), "Todos"); 
+            preencherS('relatorio-analista', Array.from(a).filter(x => equipeFocoStr.toLowerCase().includes(x.toLowerCase())).sort(), "Todos");
+            preencherS('filtro-prioridade', Array.from(p).sort(), "Todas");
+            preencherS('filtro-assunto', Array.from(ass).sort(), "Todos");
+            preencherS('filtro-tipo', Array.from(tp).sort(), "Todos");
+        }
+        
+        function preencherS(id, arr, def) { 
+            const s = document.getElementById(id); 
+            if(!s) return;
+            const at = s.value; 
+            s.innerHTML = `<option value="Todos">${def}</option>`; 
+            arr.forEach(i => { const op = document.createElement('option'); op.value = i; op.innerText = i; s.appendChild(op); }); 
+            if (arr.includes(at)) s.value = at; 
+        }
+
+        ['filtro-mes', 'filtro-analista', 'filtro-prioridade', 'filtro-data-inicio', 'filtro-data-fim', 'filtro-assunto', 'filtro-tipo'].forEach(id => { document.getElementById(id).addEventListener('change', () => { tabelaPaginaAtual = 1; atualizarDashboard(); }); });
+        document.getElementById('btn-limpar-filtros').addEventListener('click', () => { ['filtro-mes', 'filtro-analista', 'filtro-prioridade', 'filtro-data-inicio', 'filtro-data-fim', 'filtro-assunto', 'filtro-tipo'].forEach(i => document.getElementById(i).value = i.includes('data') ? "" : "Todos"); tabelaPaginaAtual = 1; atualizarDashboard(); });
+
+        let tmaGlobalTexto = "0.0h"; let slaGlobalTexto = "0%"; let incGlobalTexto = "0%";
+
+        function atualizarDashboard() {
+            if (dadosGlobais.length === 0) return desenharTabela();
+            
+            const fM_single = document.getElementById('filtro-mes').value;
+            const fM_array = mesesRelatorioOverride || [fM_single]; 
+            
+            const fA = document.getElementById('filtro-analista').value;
+            const fP = document.getElementById('filtro-prioridade').value;
+            const fAss = document.getElementById('filtro-assunto').value;
+            const fTp = document.getElementById('filtro-tipo').value;
+            const dIn = document.getElementById('filtro-data-inicio').value;
+            const dFim = document.getElementById('filtro-data-fim').value;
+
+            const filtrados = dadosGlobais.filter(d => {
+                const dataAlvo = d['Data Encerramento'] || d['Data Solução'] || d['Data Abertura'];
+                const mesChamado = obterMesAno(dataAlvo);
+                
+                let match = (fM_array.includes("Todos") || fM_array.includes(mesChamado)) && 
+                            (fA === "Todos" || d['Analista'] === fA) && 
+                            (fP === "Todos" || d['Prioridade'] === fP) &&
+                            (fAss === "Todos" || d['Categoria'] === fAss) && 
+                            (fTp === "Todos" || d['Tipo'] === fTp);
+                            
+                if(match && (dIn || dFim) && dataAlvo) {
+                    const dataVal = dataAlvo.split(' ')[0].replace(/-/g, '');
+                    const n = parseInt(dataVal);
+                    if(dIn && n < parseInt(dIn.replace(/-/g, ''))) match = false; 
+                    if(dFim && n > parseInt(dFim.replace(/-/g, ''))) match = false;
+                } 
+                return match;
+            });
+            
+            filtrados.sort((a,b) => { 
+                const da = a['Data Encerramento'] || a['Data Abertura'] || ""; 
+                const db = b['Data Encerramento'] || b['Data Abertura'] || ""; 
+                return da > db ? -1 : (da < db ? 1 : 0); 
+            });
+            dadosFiltradosCache = filtrados;
+
+            const total = filtrados.length; document.getElementById('kpi-total').innerText = dadosGlobais.length.toLocaleString('pt-BR'); document.getElementById('kpi-filtrado').innerText = total.toLocaleString('pt-BR');
+            
+            const hT = total > 0 ? (filtrados.reduce((acc, d) => acc + parseHoras(d['Tempo Solução']), 0) / total) : 0; tmaGlobalTexto = hT.toFixed(1) + 'h'; document.getElementById('kpi-tma').innerText = tmaGlobalTexto;
+            const at = filtrados.filter(d => d['SLA Atendido'] === 'Sim').length; const inc = filtrados.filter(d => String(d['Tipo']).toLowerCase() === 'incidente').length;
+            slaGlobalTexto = total > 0 ? ((at / total) * 100).toFixed(1) + '%' : '0%'; incGlobalTexto = total > 0 ? ((inc / total) * 100).toFixed(1) + '%' : '0%';
+            document.getElementById('kpi-sla').innerText = slaGlobalTexto; document.getElementById('kpi-incidentes').innerText = incGlobalTexto;
+
+            const mapSat = new Map();
+            dadosSatisfacao.forEach(s => mapSat.set(String(s.Ticket || s.ticket || s.TICKET || s['Nº Chamado'] || ""), s));
+            const mapReab = new Set();
+            dadosReabertos.forEach(r => mapReab.add(String(r.Ticket || r.ticket || r.TICKET || r['Nº Chamado'] || "")));
+
+            let sumNotas = 0;
+            let countNotas = 0;
+            let reabertosCount = 0;
+
+            filtrados.forEach(d => {
+                const tId = String(d['Ticket'] || d['ticket'] || "");
+                let nota = 5.0; 
+                if (mapSat.has(tId)) {
+                    const satRec = mapSat.get(tId);
+                    let rawVal = satRec['Pesquisa de satisfação - Satisfação'];
+                    if (rawVal === undefined || rawVal === null || String(rawVal).trim() === "") {
+                        for(let key in satRec) {
+                            if (key.toLowerCase().includes('satisfa')) {
+                                rawVal = satRec[key]; break;
+                            }
+                        }
+                    }
+                    if (rawVal !== undefined && rawVal !== null && String(rawVal).trim() !== "") {
+                        const numMatch = String(rawVal).match(/\d+(\.\d+)?/);
+                        if (numMatch) {
+                            let parsed = parseFloat(numMatch[0]);
+                            if (!isNaN(parsed) && parsed >= 0 && parsed <= 5) nota = parsed;
+                        }
+                    }
+                }
+                sumNotas += Number(nota);
+                countNotas++;
+
+                let foiReaberto = mapReab.has(tId);
+                if (!foiReaberto) {
+                    for(let key in d) {
+                        if(key.toLowerCase().includes('reabert') || key.toLowerCase().includes('reabr')) {
+                            const val = String(d[key]).toLowerCase();
+                            if(val === 'sim' || parseFloat(val) > 0) foiReaberto = true;
+                            break;
+                        }
+                    }
+                }
+                if(foiReaberto) reabertosCount++;
+            });
+
+            const mediaSat = countNotas > 0 ? (sumNotas / countNotas).toFixed(2).replace('.', ',') : "0,00";
+            const percReabertos = total > 0 ? ((reabertosCount / total) * 100).toFixed(1) + '%' : "0%";
+
+            document.getElementById('kpi-satisfacao').innerText = mediaSat;
+            document.getElementById('kpi-reabertos').innerText = percReabertos;
+
+            let dMes = agruparPor(filtrados, d => obterMesAno(d['Data Encerramento'] || d['Data Solução'] || d['Data Abertura'])); const indOrd = dMes.labels.map((val, ind) => ({val, ind})).sort((a,b) => cvDtOrd(a.val) - cvDtOrd(b.val)); dMes.labels = indOrd.map(i => i.val); dMes.values = indOrd.map(i => dMes.values[i.ind]);
+            let dAnaBruto = agruparPor(filtrados, 'Analista'); let dAna = { labels: [], values: [] }; dAnaBruto.labels.forEach((l, i) => { if(equipeFocoStr.toLowerCase().includes(l.toLowerCase())) { dAna.labels.push(l); dAna.values.push(dAnaBruto.values[i]); } });
+
+            const dAss = agruparPor(filtrados, 'Categoria', 15); const dReq = agruparPor(filtrados, 'Requerente', 10); const dTipo = agruparPor(filtrados, 'Tipo');
+            let dPrioBruto = agruparPor(filtrados, 'Prioridade'); const mapOrdP = {'Muito Alto': 1, 'Alto': 2, 'Médio': 3, 'Baixo': 4, 'Muito Baixo': 5};
+            let arrP = dPrioBruto.labels.map((l, i) => ({l, v: dPrioBruto.values[i]})).sort((a,b) => (mapOrdP[a.l] || 99) - (mapOrdP[b.l] || 99));
+            let prioSLA_Atendido = []; let prioSLA_Estourado = [];
+            arrP.forEach(item => { const noPrazo = filtrados.filter(d => d['Prioridade'] === item.l && d['SLA Atendido'] === 'Sim').length; prioSLA_Atendido.push(noPrazo); prioSLA_Estourado.push(item.v - noPrazo); });
+
+            rend('chart-meses', 'line', dMes, corPrincipal, false, false, (l) => { document.getElementById('filtro-mes').value = l; tabelaPaginaAtual=1; atualizarDashboard(); });
+            rend('chart-analistas', 'bar', dAna, corPrincipal, false, true, (l) => { document.getElementById('filtro-analista').value = l; tabelaPaginaAtual=1; atualizarDashboard(); });
+            rendM('chart-assuntos', 'bar', dAss, paletaAssuntos, true, (l) => { document.getElementById('filtro-assunto').value = l; tabelaPaginaAtual=1; atualizarDashboard(); });
+            rend('chart-requerentes', 'bar', dReq, '#2e2b7a', true, false);
+            rendSLA('chart-prioridade', {labels: arrP.map(i=>i.l), ok: prioSLA_Atendido, no: prioSLA_Estourado}, (l) => { document.getElementById('filtro-prioridade').value = l; tabelaPaginaAtual=1; atualizarDashboard(); });
+            rendC('chart-tipo', 'pie', dTipo, coresTipo, (l) => { document.getElementById('filtro-tipo').value = l; tabelaPaginaAtual=1; atualizarDashboard(); });
+
+            desenharTabela();
+        }
+
+        function agruparPor(dados, chave, limite=null) { const c = {}; dados.forEach(d => { const k = typeof chave==='function' ? chave(d) : d[chave]; if(k) c[k] = (c[k]||0)+1; }); let arr = Object.keys(c).map(k => ({ label: k, value: c[k] })).sort((a,b) => b.value - a.value); if(limite) arr = arr.slice(0, limite); return { labels: arr.map(i=>i.label), values: arr.map(i=>i.value) }; }
+
+        function rend(id, tipo, dAgr, cor, horizontal, showLabels=false, clk=null) {
+            const ctx = document.getElementById(id).getContext('2d'); if (graficos[id]) graficos[id].destroy();
+            const options = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, datalabels: { display: showLabels, color: isDark?'#e5e7eb':'#fff', font: {weight: 'bold'}, anchor: 'end', align: 'start', offset: 4 } }, onClick: (e, a) => { if(clk && a.length>0) clk(dAgr.labels[a[0].index]); }, onHover: (e, a) => { e.native.target.style.cursor = a[0] ? 'pointer' : 'default'; } };
+            if(horizontal) options.indexAxis = 'y'; if(tipo === 'line' && showLabels) options.plugins.datalabels = {display:true, color:cor, anchor:'end', align:'top', offset:4, font:{weight:'bold'}};
+            const ds = { data: dAgr.values, backgroundColor: isDark?'#818cf8':cor, borderRadius: horizontal ? 0 : 4 };
+            if(tipo === 'line') { ds.fill=true; ds.backgroundColor=isDark?'rgba(129, 140, 248, 0.2)':cor+'20'; ds.borderColor=isDark?'#818cf8':cor; ds.tension=0.4; }
+            graficos[id] = new Chart(ctx, { type: tipo, data: { labels: dAgr.labels, datasets: [ds] }, options: options });
+        }
+
+        function rendM(id, tipo, dAgr, cores, horizontal, clk=null) { const ctx = document.getElementById(id).getContext('2d'); if (graficos[id]) graficos[id].destroy(); graficos[id] = new Chart(ctx, { type: tipo, data: { labels: dAgr.labels, datasets: [{ data: dAgr.values, backgroundColor: cores, borderRadius: 2 }] }, options: { indexAxis: horizontal ? 'y' : 'x', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, datalabels: { display: false } }, onClick: (e, a) => { if(clk && a.length>0) clk(dAgr.labels[a[0].index]); }, onHover: (e, a) => { e.native.target.style.cursor = a[0] ? 'pointer' : 'default'; } } }); }
+        function rendC(id, tipo, dAgr, mapCores, clk=null) { const ctx = document.getElementById(id).getContext('2d'); if (graficos[id]) graficos[id].destroy(); const bgC = dAgr.labels.map(l => mapCores[l] || '#9ca3af'); graficos[id] = new Chart(ctx, { type: tipo, data: { labels: dAgr.labels, datasets: [{ data: dAgr.values, backgroundColor: bgC, borderWidth: 1, borderColor: isDark?'#1f2937':'#fff' }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' }, datalabels: { display: false } }, onClick: (e, a) => { if(clk && a.length>0) clk(dAgr.labels[a[0].index]); }, onHover: (e, a) => { e.native.target.style.cursor = a[0] ? 'pointer' : 'default'; } } }); }
+        function rendSLA(id, obj, clk=null) { const ctx = document.getElementById(id).getContext('2d'); if (graficos[id]) graficos[id].destroy(); graficos[id] = new Chart(ctx, { type: 'bar', data: { labels: obj.labels, datasets: [ { label: 'SLA Cumprido', data: obj.ok, backgroundColor: '#22c55e', borderRadius: 2 }, { label: 'SLA Violado', data: obj.no, backgroundColor: '#ef4444', borderRadius: 2 } ] }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true } }, plugins: { legend: { position: 'top', labels: { boxWidth: 12, font: {size: 10} } }, datalabels: { display: false } }, onClick: (e, a) => { if(clk && a.length>0) clk(obj.labels[a[0].index]); }, onHover: (e, a) => { e.native.target.style.cursor = a[0] ? 'pointer' : 'default'; } } }); }
+
+        function desenharTabela() {
+            const tbody = document.getElementById('tabela-corpo'); const total = dadosFiltradosCache.length; document.getElementById('txt-tabela-count').innerText = `Exibindo ${total} registros.`;
+            
+            if (total === 0) { tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-gray-500 font-semibold bg-gray-50 dark:bg-gray-800">Nenhum chamado corresponde aos filtros.</td></tr>'; document.getElementById('paginacao-tabela').classList.add('hidden'); return; }
+
+            const totalP = Math.ceil(total / tabelaItensPorPagina); if(tabelaPaginaAtual > totalP) tabelaPaginaAtual = totalP;
+            const fatia = dadosFiltradosCache.slice((tabelaPaginaAtual - 1) * tabelaItensPorPagina, ((tabelaPaginaAtual - 1) * tabelaItensPorPagina) + tabelaItensPorPagina);
+
+            tbody.innerHTML = '';
+            fatia.forEach(d => {
+                const bSLA = d['SLA Atendido'] === 'Sim' ? `<span class="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-0.5 rounded text-[10px] font-bold">Sim</span>` : `<span class="bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 px-2 py-0.5 rounded text-[10px] font-bold">Não</span>`;
+                tbody.innerHTML += `
+                    <tr class="hover:bg-blue-50 dark:hover:bg-gray-700 transition">
+                        <td class="px-4 py-2 font-mono text-xs font-semibold">${d['Ticket'] || '-'}</td>
+                        <td class="px-4 py-2 text-xs">${(d['Data Abertura']||'').substring(0, 10)}</td>
+                        <td class="px-4 py-2 text-xs font-medium">${(d['Analista']||'').split('.')[0]}</td>
+                        <td class="px-4 py-2 text-xs truncate max-w-[200px]" title="${d['Assunto']||''}">${d['Assunto']||'-'}</td>
+                        <td class="px-4 py-2 text-xs">${d['Prioridade']||'-'}</td>
+                        <td class="px-4 py-2 text-xs">${bSLA}</td>
+                    </tr>
+                `;
+            });
+            document.getElementById('paginacao-tabela').classList.remove('hidden'); document.getElementById('txt-paginacao').innerText = `Página ${tabelaPaginaAtual} de ${totalP}`;
+            document.getElementById('btn-tab-prev').disabled = tabelaPaginaAtual === 1; document.getElementById('btn-tab-next').disabled = tabelaPaginaAtual === totalP;
+        }
+
+        document.getElementById('btn-gerar-excel').addEventListener('click', () => {
+            const checkboxes = document.querySelectorAll('#relatorio-mes-container input:checked');
+            const fM_array = Array.from(checkboxes).map(cb => cb.value);
+            if(fM_array.length === 0) fM_array.push("Todos");
+            
+            const fA = document.getElementById('relatorio-analista').value;
+            const dadosExp = dadosGlobais.filter(d => 
+                (fM_array.includes("Todos") || fM_array.includes(obterMesAno(d['Data Encerramento'] || d['Data Solução'] || d['Data Abertura']))) && 
+                (fA === "Todos" || d['Analista'] === fA)
+            );
+            
+            if(dadosExp.length === 0) return alert("Nenhum dado encontrado para exportar.");
+            const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(dadosExp), "Relatorio"); XLSX.writeFile(wb, `Base_Extraida.xlsx`);
         });
 
     </script>
