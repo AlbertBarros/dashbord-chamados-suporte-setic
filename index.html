@@ -83,6 +83,7 @@
                     <i class="fa-solid fa-toolbox"></i> Painel de Ferramentas
                 </button>
 
+                <!-- BOTÃO DE LOGOUT -->
                 <button id="btn-logout" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded transition shadow flex items-center gap-2 text-sm font-semibold border border-white border-opacity-20">
                     <i class="fa-solid fa-arrow-right-from-bracket"></i> Sair
                 </button>
@@ -198,7 +199,7 @@
             </div>
 
             <div class="p-6 overflow-y-auto flex-grow">
-                <!-- Aba Atualizar Base (AGORA COM UPLOAD MULTIPLO) -->
+                <!-- Aba Atualizar Base (CENTRALIZAÇÃO DE TODOS OS UPLOADS) -->
                 <div id="conteudo-dados" class="block">
                     <h3 class="font-bold text-gray-700 dark:text-gray-300 mb-2 text-sm uppercase">Base Operacional Primária</h3>
                     <label class="bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 text-[#1a1941] dark:text-indigo-300 border-2 border-dashed border-[#1a1941] dark:border-indigo-400 w-full p-6 rounded-lg font-semibold cursor-pointer transition flex flex-col items-center justify-center gap-3 mb-4">
@@ -338,6 +339,7 @@
                         </div>
                     </div>
 
+                    <!-- GESTÃO DE UTILIZADORES -->
                     <div id="area-gestao-usuarios" class="hidden bg-white dark:bg-gray-800 p-5 rounded border border-blue-200 dark:border-gray-700 border-l-4 border-l-blue-500 shadow-sm mb-4">
                         <h4 class="font-bold text-blue-800 dark:text-blue-400 mb-2 flex items-center gap-2"><i class="fa-solid fa-user-plus"></i> Criar Acesso de Analista</h4>
                         <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">Registe o e-mail e a senha provisória para um colega aceder ao Analytics.</p>
@@ -350,6 +352,7 @@
                         </div>
                     </div>
 
+                    <!-- ZONA DE PERIGO / EXCLUSÃO -->
                     <div id="area-gestao-banco" class="hidden bg-white dark:bg-gray-800 p-5 rounded border border-red-200 dark:border-gray-700 border-l-4 border-l-red-500 shadow-sm">
                         <h4 class="font-bold text-red-700 dark:text-red-400 mb-2 flex items-center gap-2"><i class="fa-solid fa-trash-can"></i> Gestão da Base de Dados</h4>
                         <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">Selecione o mês correspondente à planilha ou a base auxiliar que deseja apagar.</p>
@@ -424,7 +427,7 @@
         let dadosSatisfacao = []; let dadosReabertos = []; 
         let historicoCompletoCarregado = false;
         
-        // RECUPERAÇÃO ROBUSTA DAS VARIÁVEIS DO LOCALSTORAGE (CONTRA LIMPEZA DE CACHE RÁPIDA)
+        // RECUPERAÇÃO ROBUSTA DAS VARIÁVEIS DO LOCALSTORAGE
         let corPrincipal = localStorage.getItem('dashCor') || '#1a1941';
         let equipeFocoStr = localStorage.getItem('equipeFoco') || 'fabio.palma.prestador, edison.neto.prestador, antonio.muniz.prestador, jose.andrade.prestador';
         let tituloOficial = localStorage.getItem('dashTitulo') || 'Analytics Suporte SETIC';
@@ -435,7 +438,7 @@
         const coresPrioridade = { 'Muito Alto': '#b91c1c', 'Alto': '#ef4444', 'Médio': '#f59e0b', 'Baixo': '#22c55e', 'Muito Baixo': '#94a3b8' };
         const coresTipo = { 'Requisição': '#6366f1', 'Incidente': '#f43f5e' };
 
-        // APLICAÇÃO IMEDIATA DA PERSONALIZAÇÃO (IMPEDE PISCADAS AO RECARREGAR A PÁGINA)
+        // APLICAÇÃO IMEDIATA DA PERSONALIZAÇÃO
         function aplicarPersonalizacao() {
             tituloOficial = localStorage.getItem('dashTitulo') || 'Analytics Suporte SETIC';
             corPrincipal = localStorage.getItem('dashCor') || '#1a1941';
@@ -459,6 +462,9 @@
             if (savedLogo) {
                 document.getElementById('header-logo-container').innerHTML = `<img src="${savedLogo}" alt="Logo" class="h-9 w-9 object-contain mr-2">`;
                 if(document.getElementById('login-logo')) document.getElementById('login-logo').src = savedLogo;
+            } else {
+                document.getElementById('header-logo-container').innerHTML = `<img src="https://raw.githubusercontent.com/AlbertBarros/dashbord-chamados-suporte-setic/main/bras%C3%A3o.png" alt="Logo" class="h-9 w-9 object-contain mr-2" crossorigin="anonymous">`;
+                if(document.getElementById('login-logo')) document.getElementById('login-logo').src = "https://raw.githubusercontent.com/AlbertBarros/dashbord-chamados-suporte-setic/main/bras%C3%A3o.png";
             }
         }
         aplicarPersonalizacao();
@@ -905,7 +911,7 @@
         });
 
         // ==========================================
-        // AUDITORIA E FISCALIZAÇÃO IMR
+        // AUDITORIA E FISCALIZAÇÃO IMR COM CÁLCULO FINANCEIRO
         // ==========================================
         document.getElementById('btn-gerar-fiscal-pdf').addEventListener('click', () => {
             const mesSelecionado = document.getElementById('fiscal-mes').value;
@@ -956,7 +962,7 @@
             dadosAuditoria.forEach(d => {
                 const tId = String(d['Ticket'] || d['ticket'] || "");
 
-                // Lógica de Notas do INS1
+                // Lógica Blindada do INS1 (Satisfação)
                 let nota = 5.0; 
                 if (mapSat.has(tId)) {
                     const satRec = mapSat.get(tId);
@@ -964,14 +970,18 @@
                     
                     if (rawVal === undefined || rawVal === null || String(rawVal).trim() === "") {
                         for(let key in satRec) {
-                            if (key.toLowerCase().includes('satisfa')) { rawVal = satRec[key]; break; }
+                            if (key.toLowerCase().includes('satisfa')) {
+                                rawVal = satRec[key]; break;
+                            }
                         }
                     }
                     if (rawVal !== undefined && rawVal !== null && String(rawVal).trim() !== "") {
                         const numMatch = String(rawVal).match(/\d+(\.\d+)?/);
                         if (numMatch) {
                             let parsed = parseFloat(numMatch[0]);
-                            if (!isNaN(parsed) && parsed >= 0 && parsed <= 5) nota = parsed;
+                            if (!isNaN(parsed) && parsed >= 0 && parsed <= 5) {
+                                nota = parsed;
+                            }
                         }
                     }
                 }
@@ -1039,11 +1049,26 @@
                     }
 
                     doc.setTextColor(26, 25, 65); doc.setFontSize(10); 
-                    doc.setFont("helvetica", "bold"); doc.text("Empresa:", 40, 105); doc.setFont("helvetica", "normal"); doc.text("IOS Informática", 95, 105);
-                    doc.setFont("helvetica", "bold"); doc.text("Contrato:", 40, 120); doc.setFont("helvetica", "normal"); doc.text("14/2025", 95, 120);
-                    doc.setFont("helvetica", "bold"); doc.text("Fiscal Técnico:", 40, 135); doc.setFont("helvetica", "normal"); doc.text("Albert Einstein da Silva Barros", 125, 135);
-                    doc.setFont("helvetica", "bold"); doc.text("Mês Referente:", 330, 105); doc.setFont("helvetica", "normal"); doc.text(mesTexto, 420, 105);
-                    doc.setFont("helvetica", "bold"); doc.text("Período de Aferição:", 330, 120); doc.setFont("helvetica", "normal"); doc.text(periodoAfericao, 445, 120);
+                    
+                    // Coluna Esquerda
+                    doc.setFont("helvetica", "bold"); doc.text("Empresa:", 40, 105);
+                    doc.setFont("helvetica", "normal"); doc.text("IOS Informática", 115, 105);
+
+                    doc.setFont("helvetica", "bold"); doc.text("Contrato:", 40, 120);
+                    doc.setFont("helvetica", "normal"); doc.text("14/2025", 115, 120);
+
+                    doc.setFont("helvetica", "bold"); doc.text("Fiscal Técnico:", 40, 135);
+                    doc.setFont("helvetica", "normal"); doc.text("Albert Einstein da Silva Barros", 115, 135);
+
+                    // Coluna Direita (Ajustada para o valor do contrato)
+                    doc.setFont("helvetica", "bold"); doc.text("Mês Referente:", 330, 105);
+                    doc.setFont("helvetica", "normal"); doc.text(mesTexto, 435, 105);
+
+                    doc.setFont("helvetica", "bold"); doc.text("Período de Aferição:", 330, 120);
+                    doc.setFont("helvetica", "normal"); doc.text(periodoAfericao, 435, 120);
+
+                    doc.setFont("helvetica", "bold"); doc.text("Valor Mensal:", 330, 135);
+                    doc.setFont("helvetica", "normal"); doc.text("R$ 26.971,30", 435, 135);
 
                     const agora = new Date();
                     const dataForm = agora.toLocaleDateString('pt-BR');
@@ -1075,6 +1100,7 @@
                     
                     const linhasTabela = [];
                     let totalPontosGlosa = 0;
+                    let descumprimentos = []; // Array que guardará o nome dos índices que falharam
 
                     // MATEMÁTICA DE GLOSA
                     // INS1 (Meta = 4.0)
@@ -1082,7 +1108,7 @@
                     const ins1_missed = 4.0 - ins1_media;
                     const ins1_fm_str = ins1_missed > 0 ? ins1_missed.toFixed(2).replace('.', ',') : '0,00';
                     const ins1_pontos = ins1_missed > 0 ? Math.floor(ins1_missed / 0.1) * 5 : 0;
-                    totalPontosGlosa += ins1_pontos;
+                    if(ins1_pontos > 0) { totalPontosGlosa += ins1_pontos; descumprimentos.push('INS1'); }
                     linhasTabela.push(getRow('INS1', '-', '-', total, '4,0', ins1_media.toFixed(2).replace('.', ','), ins1_fm_str, String(ins1_pontos), ins1_media >= 4.0));
                     
                     // INS2 (Meta = 95%)
@@ -1090,7 +1116,7 @@
                     const ins2_missed = (0.95 - ins2_ating) * 100;
                     const ins2_fm_str = ins2_missed > 0 ? ins2_missed.toFixed(2).replace('.', ',') + '%' : '0,00';
                     const ins2_pontos = ins2_missed > 0 ? Math.floor(ins2_missed) * 5 : 0; 
-                    if(ins2_pontos > 0) totalPontosGlosa += ins2_pontos; 
+                    if(ins2_pontos > 0) { totalPontosGlosa += ins2_pontos; descumprimentos.push('INS2'); }
                     linhasTabela.push(getRow('INS2', ins2_dentro, (total - ins2_dentro), total, '95,00%', fPct(ins2_ating), ins2_fm_str, String(ins2_pontos), ins2_ating >= 0.95));
 
                     // INS3 Geral (Meta = 90%)
@@ -1098,7 +1124,7 @@
                     const ins3_missed = (0.90 - ins3_ating) * 100;
                     const ins3_fm_str = ins3_missed > 0 ? ins3_missed.toFixed(2).replace('.', ',') + '%' : '0,00';
                     const ins3_pontos = ins3_missed > 0 ? Math.floor(ins3_missed) * 5 : 0; 
-                    if(ins3_pontos > 0) totalPontosGlosa += ins3_pontos;
+                    if(ins3_pontos > 0) { totalPontosGlosa += ins3_pontos; descumprimentos.push('INS3 (Geral)'); }
                     linhasTabela.push(getRow('INS3', ins3_dentro, (total - ins3_dentro), total, '90,00%', fPct(ins3_ating), ins3_fm_str, String(ins3_pontos), ins3_ating >= 0.90));
                     
                     // INS3 por Criticidade
@@ -1111,7 +1137,7 @@
                             const missed = (0.90 - atg) * 100;
                             const fm_str = missed > 0 ? missed.toFixed(2).replace('.', ',') + '%' : '0,00';
                             const pts = missed > 0 ? Math.floor(missed) * 5 : 0; 
-                            if(pts > 0) totalPontosGlosa += pts;
+                            if(pts > 0) { totalPontosGlosa += pts; descumprimentos.push(`INS3 - ${p}`); }
                             linhasTabela.push(getRow(`INS3 - ${p}`, s.dentro, (s.total - s.dentro), s.total, '90,00%', fPct(atg), fm_str, String(pts), atg >= 0.90));
                         }
                     });
@@ -1126,7 +1152,7 @@
                     const ins6_missed = (ins6_ating - 0.03) * 100;
                     const ins6_fm_str = ins6_missed > 0 ? ins6_missed.toFixed(2).replace('.', ',') + '%' : '0,00';
                     const ins6_pontos = ins6_missed > 0 ? Math.floor(ins6_missed) * 3 : 0;
-                    if(ins6_pontos > 0) totalPontosGlosa += ins6_pontos; 
+                    if(ins6_pontos > 0) { totalPontosGlosa += ins6_pontos; descumprimentos.push('INS6'); }
                     linhasTabela.push(getRow('INS6', ins6_dentro, ins6_fora, total, '3,00%', fPct(ins6_ating), ins6_fm_str, String(ins6_pontos), ins6_ating <= 0.03));
 
                     // INS7 
@@ -1186,7 +1212,7 @@
                     });
 
                     // ==========================================
-                    // CONCLUSÃO DE GLOSA (QUEBRA INTELIGENTE SEM "PORTANTO" NO NEGRITO)
+                    // CONCLUSÃO DE GLOSA COM CÁLCULO FINANCEIRO
                     // ==========================================
                     const finalY = doc.lastAutoTable.finalY + 20;
                     doc.setTextColor(26, 25, 65); doc.setFontSize(12); doc.setFont("helvetica", "bold"); 
@@ -1221,9 +1247,33 @@
                         printWrapped("NÃO SERÁ APLICADA GLOSA", true);
                         printWrapped(" (0 pontos computados), devendo o faturamento prosseguir em sua integralidade.", false);
                     } else {
-                        printWrapped("Após análise dos índices no período aferido, constatou-se descumprimento de NMS. ", false);
-                        printWrapped("SERÁ APLICADA GLOSA", true);
-                        printWrapped(` correspondente a um total de ${totalPontosGlosa} pontos.`, false);
+                        // CÁLCULO DA GLOSA EM REAIS (R$)
+                        const valorContrato = 26971.30;
+                        let percentualGlosa = Math.floor(totalPontosGlosa / 10) * 1.0;
+                        if (percentualGlosa > 30.0) percentualGlosa = 30.0;
+                        
+                        const valorDesconto = valorContrato * (percentualGlosa / 100);
+                        const valorDescontoStr = valorDesconto.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                        
+                        const nomesIndicadores = descumprimentos.join(', ');
+
+                        printWrapped(`Após análise dos índices no período aferido, constatou-se descumprimento nos seguintes indicadores: `, false);
+                        printWrapped(`${nomesIndicadores}. `, true);
+                        
+                        if (percentualGlosa === 0) {
+                            // Houve descumprimento, mas os pontos não chegaram a 10 (ex: 5 pontos), logo, não gera desconto financeiro.
+                            printWrapped(`Embora tenham sido acumulados ${totalPontosGlosa} pontos, a quantidade é insuficiente para atingir a régua de desconto (mínimo de 10 pontos). Portanto, `, false);
+                            printWrapped("NÃO SERÁ APLICADA GLOSA", true);
+                            printWrapped(" e o faturamento deve prosseguir em sua integralidade.", false);
+                        } else {
+                            // Houve 10 pontos ou mais, gera glosa.
+                            printWrapped("SERÁ APLICADA GLOSA", true);
+                            printWrapped(` correspondente a um total de ${totalPontosGlosa} pontos acumulados. Com base nas regras contratuais, aplica-se uma redução de `, false);
+                            printWrapped(`${percentualGlosa}%`, true);
+                            printWrapped(` sobre o valor do pagamento mensal, o que corresponde a um desconto de `, false);
+                            printWrapped(`${valorDescontoStr}`, true);
+                            printWrapped(`.`, false);
+                        }
                     }
 
                     doc.save(`Auditoria_Fiscalizacao_IMR.pdf`);
@@ -1261,7 +1311,6 @@
             return "Desc"; 
         }
 
-        // MOTOR DE CICLO FISCAL BLINDADO COM PARSEINT BASE 10
         function obterMesAnoFiscal(str) {
             if (!str) return "Desc";
             let ano, mes, dia;
@@ -1415,7 +1464,6 @@
             slaGlobalTexto = total > 0 ? ((at / total) * 100).toFixed(1) + '%' : '0%'; incGlobalTexto = total > 0 ? ((inc / total) * 100).toFixed(1) + '%' : '0%';
             document.getElementById('kpi-sla').innerText = slaGlobalTexto; document.getElementById('kpi-incidentes').innerText = incGlobalTexto;
 
-            // KPIs DASHBOARD SATISFAÇÃO BLINDADO
             const mapSat = new Map();
             dadosSatisfacao.forEach(s => mapSat.set(String(s.Ticket || s.ticket || s.TICKET || s['Nº Chamado'] || ""), s));
             const mapReab = new Set();
