@@ -113,12 +113,15 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
+            <!-- QUADRO DE INDICADORES (KPIs) -->
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-6">
                 <div class="card bg-white dark:bg-gray-800 flex items-center gap-4" title="Volume total de chamados registados na base de dados atual."><div class="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 dark:text-blue-400 text-xl"><i class="fa-solid fa-ticket"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">Total (Geral)</p><p id="kpi-total" class="text-2xl font-black text-gray-800 dark:text-gray-100">0</p></div></div>
                 <div class="card bg-white dark:bg-gray-800 flex items-center gap-4" title="Volume total de chamados filtrados de acordo com os parâmetros selecionados."><div class="w-12 h-12 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400 text-xl"><i class="fa-solid fa-filter"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">Filtrados</p><p id="kpi-filtrado" class="text-2xl font-black text-gray-800 dark:text-gray-100">0</p></div></div>
                 <div class="card bg-white dark:bg-gray-800 flex items-center gap-4" title="Tempo Médio de Atendimento (TMA): Média de horas gastas para a resolução dos chamados."><div class="w-12 h-12 rounded-full bg-yellow-100 dark:bg-yellow-900/50 flex items-center justify-center text-yellow-600 dark:text-yellow-400 text-xl"><i class="fa-regular fa-clock"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">TMA (Horas)</p><p id="kpi-tma" class="text-2xl font-black text-gray-800 dark:text-gray-100">0.0h</p></div></div>
                 <div class="card bg-white dark:bg-gray-800 flex items-center gap-4" title="SLA Atendido: Percentagem de chamados solucionados dentro do prazo acordado."><div class="w-12 h-12 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center text-green-500 dark:text-green-400 text-xl"><i class="fa-solid fa-stopwatch"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">SLA Atendido</p><p id="kpi-sla" class="text-2xl font-black text-gray-800 dark:text-gray-100">0%</p></div></div>
                 <div class="card bg-white dark:bg-gray-800 flex items-center gap-4" title="Incidentes: Taxa proporcional de chamados abertos classificados como interrupção ou falha (Incidentes)."><div class="w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center text-purple-600 dark:text-purple-400 text-xl"><i class="fa-solid fa-triangle-exclamation"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">Incidentes</p><p id="kpi-incidentes" class="text-2xl font-black text-gray-800 dark:text-gray-100">0%</p></div></div>
+                <div class="card bg-white dark:bg-gray-800 flex items-center gap-4" title="Média de Satisfação do Usuário (INS1): Calcula a nota média dos chamados filtrados (escala de 1 a 5). Na ausência de avaliação explícita na base auxiliar, assume-se a nota 5.0 como padrão."><div class="w-12 h-12 rounded-full bg-pink-100 dark:bg-pink-900/50 flex items-center justify-center text-pink-600 dark:text-pink-400 text-xl"><i class="fa-solid fa-star"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">Satisfação</p><p id="kpi-satisfacao" class="text-2xl font-black text-gray-800 dark:text-gray-100">0,00</p></div></div>
+                <div class="card bg-white dark:bg-gray-800 flex items-center gap-4" title="Taxa de Reabertura (INS6): Percentual de chamados no filtro atual que precisaram ser reabertos pelo usuário após a solução inicial."><div class="w-12 h-12 rounded-full bg-orange-100 dark:bg-orange-900/50 flex items-center justify-center text-orange-600 dark:text-orange-400 text-xl"><i class="fa-solid fa-rotate-left"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">Reabertos</p><p id="kpi-reabertos" class="text-2xl font-black text-gray-800 dark:text-gray-100">0%</p></div></div>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
@@ -762,7 +765,7 @@
         });
 
         // ==========================================
-        // AUDITORIA E FISCALIZAÇÃO IMR (BUG DA NOTA 25.98 BLINDADO)
+        // AUDITORIA E FISCALIZAÇÃO IMR
         // ==========================================
         document.getElementById('btn-gerar-fiscal-pdf').addEventListener('click', () => {
             const mesSelecionado = document.getElementById('fiscal-mes').value;
@@ -805,7 +808,6 @@
                 return 'P4';
             };
 
-            // Mapeando dados auxiliares
             const mapSat = new Map();
             dadosSatisfacao.forEach(s => mapSat.set(String(s.Ticket || s.ticket || s.TICKET || s['Nº Chamado'] || ""), s));
             
@@ -815,25 +817,34 @@
             dadosAuditoria.forEach(d => {
                 const tId = String(d['Ticket'] || d['ticket'] || "");
 
-                // INS1 via Base de Satisfação COM BLINDAGEM DE LIXO MATEMÁTICO
+                // BLINDAGEM DO INS1 (Nota precisa de 1 a 5)
                 let nota = 5.0; 
                 if (mapSat.has(tId)) {
                     const satRec = mapSat.get(tId);
-                    for(let key in satRec) {
-                        const k = key.toLowerCase();
-                        // Evita colunas de data/hora explicitamente
-                        if((k.includes('nota') || k.includes('avali') || k.includes('satisfa')) && !k.includes('data') && !k.includes('hora') && !k.includes('tempo')) {
-                            let rawVal = String(satRec[key]).replace(',', '.');
-                            const val = parseFloat(rawVal);
-                            // Blindagem de segurança: Só aceita notas válidas entre 0 e 5. Descarta datas ocultas (46200) ou IDs.
-                            if(!isNaN(val) && val >= 0 && val <= 5) { 
-                                nota = val; 
-                                break; 
+                    // Procura prioritariamente pela coluna informada pelo utilizador
+                    let rawVal = satRec['Pesquisa de satisfação - Satisfação'];
+                    
+                    if (rawVal === undefined || rawVal === null || String(rawVal).trim() === "") {
+                        // Tenta encontrar outras colunas caso o nome varie
+                        for(let key in satRec) {
+                            if (key.toLowerCase().includes('satisfa')) {
+                                rawVal = satRec[key]; break;
+                            }
+                        }
+                    }
+                    if (rawVal !== undefined && rawVal !== null && String(rawVal).trim() !== "") {
+                        // Extrai apenas o valor numérico (evita extrair lixo)
+                        const numMatch = String(rawVal).match(/\d+(\.\d+)?/);
+                        if (numMatch) {
+                            let parsed = parseFloat(numMatch[0]);
+                            if (!isNaN(parsed) && parsed >= 1 && parsed <= 5) {
+                                nota = parsed;
                             }
                         }
                     }
                 }
-                sumNotas += nota; countNotas++;
+                sumNotas += Number(nota); 
+                countNotas++;
 
                 const tit = d['TIT Por Grupo Atendido'] || d['TIT Atendido'] || 'Sim';
                 if(String(tit).toLowerCase() === 'sim') ins2_dentro++;
@@ -848,7 +859,6 @@
                     if(isSlaOk) p_stats[pLevel].dentro++;
                 }
 
-                // INS6 via Base de Reabertos
                 let foiReaberto = mapReab.has(tId);
                 if (!foiReaberto) {
                     for(let key in d) {
@@ -884,9 +894,6 @@
                         }
                     } catch(e) {}
 
-                    // ==========================================
-                    // METADADOS DO CONTRATO
-                    // ==========================================
                     const mesTexto = mesSelecionado === 'Todos' ? 'Base Completa' : mesSelecionado;
                     let periodoAfericao = "Base Completa";
                     if (mesSelecionado !== 'Todos') {
@@ -916,9 +923,6 @@
                     doc.setFont("helvetica", "bold"); doc.text("Período de Aferição:", 330, 120);
                     doc.setFont("helvetica", "normal"); doc.text(periodoAfericao, 445, 120);
 
-                    // ==========================================
-                    // PARECER TÉCNICO
-                    // ==========================================
                     const agora = new Date();
                     const dataForm = agora.toLocaleDateString('pt-BR');
                     const horaForm = agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
@@ -995,41 +999,45 @@
                     });
 
                     // ==========================================
-                    // CONCLUSÃO DE GLOSA (RESOLVIDO: FLUIDO E SEM CORTES)
+                    // CONCLUSÃO DE GLOSA (RESOLVIDO COM WORD-WRAPPER CUSTOMIZADO)
                     // ==========================================
                     const finalY = doc.lastAutoTable.finalY + 30;
                     doc.setTextColor(26, 25, 65); doc.setFontSize(12); doc.setFont("helvetica", "bold"); 
                     doc.text("Conclusão do Fiscal", 40, finalY);
                     
-                    const posY = finalY + 18;
+                    let cursorX = 40;
+                    let cursorY = finalY + 18;
+                    const maxWidth = w - 80;
                     doc.setFontSize(10); doc.setTextColor(60, 60, 60);
 
+                    // Função inteligente para imprimir texto quebrando linha e respeitando negrito
+                    function printWrapped(text, isBold) {
+                        doc.setFont("helvetica", isBold ? "bold" : "normal");
+                        const tokens = text.match(/\S+|\s/g) || []; 
+                        tokens.forEach(token => {
+                            if (token === " ") {
+                                let spaceW = doc.getTextWidth(" ");
+                                if (cursorX + spaceW <= 40 + maxWidth) cursorX += spaceW;
+                            } else {
+                                let wordW = doc.getTextWidth(token);
+                                if (cursorX + wordW > 40 + maxWidth) {
+                                    cursorX = 40;
+                                    cursorY += 14;
+                                }
+                                doc.text(token, cursorX, cursorY);
+                                cursorX += wordW;
+                            }
+                        });
+                    }
+
                     if (totalPontosGlosa === 0) {
-                        // Linha 1 
-                        const linha1 = "Após análise rigorosa dos índices apresentados no período aferido, atesta-se que a empresa cumpriu com todos";
-                        // Linha 2
-                        const linha2 = "os Níveis Mínimos de Serviços (NMS) previstos contratualmente, devendo o faturamento prosseguir na íntegra.";
-                        
-                        doc.setFont("helvetica", "normal");
-                        doc.text(linha1, 40, posY);
-                        doc.text(linha2, 40, posY + 14);
-                        
-                        // Parecer Final com Negrito Isolado para segurança visual
-                        doc.setFont("helvetica", "normal");
-                        doc.text("Parecer Final: ", 40, posY + 34);
-                        
-                        const wParecer = doc.getTextWidth("Parecer Final: ");
-                        doc.setFont("helvetica", "bold");
-                        doc.text("NÃO SERÁ APLICADA GLOSA", 40 + wParecer, posY + 34);
-                        
-                        const wBold = doc.getTextWidth("NÃO SERÁ APLICADA GLOSA");
-                        doc.setFont("helvetica", "normal");
-                        doc.text(" (0 pontos computados).", 40 + wParecer + wBold, posY + 34);
-                        
+                        printWrapped("Após análise rigorosa dos índices apresentados no período aferido, atesta-se que a empresa cumpriu com todos os Níveis Mínimos de Serviços (NMS) previstos contratualmente. Portanto, ", false);
+                        printWrapped("NÃO SERÁ APLICADA GLOSA", true);
+                        printWrapped(" (0 pontos computados), devendo o faturamento prosseguir em sua integralidade.", false);
                     } else {
-                        doc.text(`Após análise dos índices no período aferido, constatou-se descumprimento de NMS.`, 40, posY);
-                        doc.setFont("helvetica", "bold");
-                        doc.text(`SERÁ APLICADA GLOSA correspondente a um total de ${totalPontosGlosa} pontos.`, 40, posY + 14);
+                        printWrapped("Após análise dos índices no período aferido, constatou-se descumprimento de NMS. ", false);
+                        printWrapped("SERÁ APLICADA GLOSA", true);
+                        printWrapped(` correspondente a um total de ${totalPontosGlosa} pontos.`, false);
                     }
 
                     doc.save(`Auditoria_Fiscalizacao_IMR.pdf`);
@@ -1110,7 +1118,6 @@
                 const dataEncerramento = d['Data Encerramento'] || d['Data Solução'] || dataAbertura;
                 
                 m.add(obterMesAno(dataEncerramento)); 
-                
                 if(dataEncerramento) mFiscal.add(obterMesAnoFiscal(dataEncerramento));
                 if(dataAbertura) mFiscal.add(obterMesAnoFiscal(dataAbertura));
                 
@@ -1192,6 +1199,59 @@
             slaGlobalTexto = total > 0 ? ((at / total) * 100).toFixed(1) + '%' : '0%'; incGlobalTexto = total > 0 ? ((inc / total) * 100).toFixed(1) + '%' : '0%';
             document.getElementById('kpi-sla').innerText = slaGlobalTexto; document.getElementById('kpi-incidentes').innerText = incGlobalTexto;
 
+            // LÓGICA DO INS1 BLINDADA NO DASHBOARD
+            const mapSat = new Map();
+            dadosSatisfacao.forEach(s => mapSat.set(String(s.Ticket || s.ticket || s.TICKET || s['Nº Chamado'] || ""), s));
+            const mapReab = new Set();
+            dadosReabertos.forEach(r => mapReab.add(String(r.Ticket || r.ticket || r.TICKET || r['Nº Chamado'] || "")));
+
+            let sumNotas = 0;
+            let countNotas = 0;
+            let reabertosCount = 0;
+
+            filtrados.forEach(d => {
+                const tId = String(d['Ticket'] || d['ticket'] || "");
+                let nota = 5.0; 
+                if (mapSat.has(tId)) {
+                    const satRec = mapSat.get(tId);
+                    let rawVal = satRec['Pesquisa de satisfação - Satisfação'];
+                    if (rawVal === undefined || rawVal === null || String(rawVal).trim() === "") {
+                        for(let key in satRec) {
+                            if (key.toLowerCase().includes('satisfa')) {
+                                rawVal = satRec[key]; break;
+                            }
+                        }
+                    }
+                    if (rawVal !== undefined && rawVal !== null && String(rawVal).trim() !== "") {
+                        const numMatch = String(rawVal).match(/\d+(\.\d+)?/);
+                        if (numMatch) {
+                            let parsed = parseFloat(numMatch[0]);
+                            if (!isNaN(parsed) && parsed >= 1 && parsed <= 5) nota = parsed;
+                        }
+                    }
+                }
+                sumNotas += Number(nota);
+                countNotas++;
+
+                let foiReaberto = mapReab.has(tId);
+                if (!foiReaberto) {
+                    for(let key in d) {
+                        if(key.toLowerCase().includes('reabert') || key.toLowerCase().includes('reabr')) {
+                            const val = String(d[key]).toLowerCase();
+                            if(val === 'sim' || parseFloat(val) > 0) foiReaberto = true;
+                            break;
+                        }
+                    }
+                }
+                if(foiReaberto) reabertosCount++;
+            });
+
+            const mediaSat = countNotas > 0 ? (sumNotas / countNotas).toFixed(2).replace('.', ',') : "0,00";
+            const percReabertos = total > 0 ? ((reabertosCount / total) * 100).toFixed(1) + '%' : "0%";
+
+            document.getElementById('kpi-satisfacao').innerText = mediaSat;
+            document.getElementById('kpi-reabertos').innerText = percReabertos;
+
             let dMes = agruparPor(filtrados, d => obterMesAno(d['Data Encerramento'] || d['Data Solução'] || d['Data Abertura'])); const indOrd = dMes.labels.map((val, ind) => ({val, ind})).sort((a,b) => cvDtOrd(a.val) - cvDtOrd(b.val)); dMes.labels = indOrd.map(i => i.val); dMes.values = indOrd.map(i => dMes.values[i.ind]);
             let dAnaBruto = agruparPor(filtrados, 'Analista'); let dAna = { labels: [], values: [] }; dAnaBruto.labels.forEach((l, i) => { if(equipeFocoStr.toLowerCase().includes(l.toLowerCase())) { dAna.labels.push(l); dAna.values.push(dAnaBruto.values[i]); } });
 
@@ -1268,7 +1328,7 @@
         });
 
         // ==========================================
-        // RELATÓRIO GERENCIAL (CORREÇÃO DE PÁGINA)
+        // RELATÓRIO GERENCIAL
         // ==========================================
         document.getElementById('btn-gerar-pdf').addEventListener('click', () => {
             const checkboxes = document.querySelectorAll('#relatorio-mes-container input:checked');
@@ -1357,18 +1417,15 @@
                     doc.setTextColor(22, 163, 74); 
                     doc.text(String(slaGlobalTexto), 493, blockY+33, {align: 'center'});
 
-                    // RESTAURANDO A ANÁLISE VISUAL NA PÁGINA 1
                     const vizY = blockY + 58;
                     doc.setTextColor(26, 25, 65); doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.text("Análise Visual", 40, vizY);
                     doc.setFontSize(8.5); doc.setTextColor(100, 100, 100); doc.setFont("helvetica", "normal");
                     
                     const getImg = (id) => { try { const c = document.getElementById(id); return c ? c.toDataURL('image/jpeg', 1.0) : null; } catch(e) { return null; } };
                     
-                    // Top Charts
                     doc.text("Evolução Histórica", 40, vizY + 15); const i1 = getImg('chart-meses'); if(i1) doc.addImage(i1, 'JPEG', 40, vizY + 20, 240, 110);
                     doc.text("Volume Foco", 305, vizY + 15); const i2 = getImg('chart-analistas'); if(i2) doc.addImage(i2, 'JPEG', 305, vizY + 20, 240, 110);
 
-                    // Bottom Charts
                     const vizY2 = vizY + 145;
                     doc.text("Assuntos Top 15", 40, vizY2); const i3 = getImg('chart-assuntos'); if(i3) doc.addImage(i3, 'JPEG', 40, vizY2 + 5, 240, 110);
                     doc.text("SLA vs Criticidade", 305, vizY2); const i4 = getImg('chart-prioridade'); if(i4) doc.addImage(i4, 'JPEG', 305, vizY2 + 5, 240, 110);
