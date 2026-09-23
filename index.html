@@ -69,7 +69,6 @@
                 <div id="header-logo-container" class="flex items-center">
                     <img src="https://raw.githubusercontent.com/AlbertBarros/dashbord-chamados-suporte-setic/main/bras%C3%A3o.png" alt="Logo" class="h-9 w-9 object-contain mr-2" crossorigin="anonymous">
                 </div>
-                <!-- ÍCONE RESTAURADO E PREPARADO PARA A BIBLIOTECA -->
                 <i class="fa-solid fa-chart-line text-2xl" id="header-default-icon"></i>
                 <h1 id="titulo-painel" class="text-xl font-bold tracking-wide">Analytics Suporte SETIC</h1>
             </div>
@@ -173,6 +172,15 @@
         </main>
     </div>
 
+    <!-- MODAL LIMITE DIÁRIO FIREBASE -->
+    <div id="modal-limite" class="hidden fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4">
+        <div class="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-2xl text-center max-w-md border-t-4 border-red-600">
+            <i class="fa-solid fa-triangle-exclamation text-red-600 text-5xl mb-4"></i>
+            <h2 class="text-2xl font-black text-gray-800 dark:text-gray-100 mb-2">Limite Diário Excedido</h2>
+            <p class="text-gray-600 dark:text-gray-400 text-sm mb-6">O sistema atingiu a cota máxima de leituras gratuitas do banco de dados (Firebase) permitidas para hoje. Por favor, retorne amanhã quando a cota for renovada.</p>
+        </div>
+    </div>
+
     <!-- Modal Painel de Ferramentas -->
     <div id="modal-config" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-2xl w-full max-w-4xl flex flex-col max-h-[90vh]">
@@ -190,32 +198,32 @@
             </div>
 
             <div class="p-6 overflow-y-auto flex-grow">
-                <!-- Aba Atualizar Base -->
+                <!-- Aba Atualizar Base (AGORA COM UPLOAD MULTIPLO) -->
                 <div id="conteudo-dados" class="block">
                     <h3 class="font-bold text-gray-700 dark:text-gray-300 mb-2 text-sm uppercase">Base Operacional Primária</h3>
                     <label class="bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 text-[#1a1941] dark:text-indigo-300 border-2 border-dashed border-[#1a1941] dark:border-indigo-400 w-full p-6 rounded-lg font-semibold cursor-pointer transition flex flex-col items-center justify-center gap-3 mb-4">
                         <i class="fa-solid fa-cloud-arrow-up text-3xl mb-1"></i>
-                        <span>Importar Base de Chamados (.xlsx)</span>
-                        <input type="file" id="file-upload" accept=".xlsx, .xls" class="hidden">
+                        <span>Importar Base de Chamados (.xlsx) - Permite Vários Arquivos</span>
+                        <input type="file" id="file-upload" accept=".xlsx, .xls" class="hidden" multiple>
                     </label>
 
                     <h3 class="font-bold text-gray-700 dark:text-gray-300 mb-2 mt-6 text-sm uppercase border-t dark:border-gray-700 pt-4">Bases Auxiliares de Fiscalização (IMR)</h3>
                     <div class="flex flex-col sm:flex-row gap-3 mb-2">
                         <label class="flex-grow bg-green-50 dark:bg-green-900/20 border border-green-300 dark:border-green-700 hover:bg-green-100 dark:hover:bg-green-900/40 text-green-800 dark:text-green-400 p-3 rounded cursor-pointer transition text-sm font-bold flex items-center justify-center gap-2 shadow-sm">
                             <i class="fa-solid fa-star"></i> Planilha de Satisfação (INS1)
-                            <input type="file" id="upload-satisfacao" accept=".xlsx, .xls" class="hidden">
+                            <input type="file" id="upload-satisfacao" accept=".xlsx, .xls" class="hidden" multiple>
                         </label>
                         <label class="flex-grow bg-green-50 dark:bg-green-900/20 border border-green-300 dark:border-green-700 hover:bg-green-100 dark:hover:bg-green-900/40 text-green-800 dark:text-green-400 p-3 rounded cursor-pointer transition text-sm font-bold flex items-center justify-center gap-2 shadow-sm">
                             <i class="fa-solid fa-rotate-left"></i> Planilha de Reabertos (INS6)
-                            <input type="file" id="upload-reabertos" accept=".xlsx, .xls" class="hidden">
+                            <input type="file" id="upload-reabertos" accept=".xlsx, .xls" class="hidden" multiple>
                         </label>
                     </div>
 
                     <div id="loader-upload" class="mt-4 flex items-center justify-center gap-2 text-sm font-semibold text-[#1a1941] dark:text-indigo-300 hidden">
-                        <div class="loader !border-t-current !border-4 !w-5 !h-5 inline-block"></div> Gravando base primária no Firebase...
+                        <div class="loader !border-t-current !border-4 !w-5 !h-5 inline-block"></div> Processando arquivo(s)...
                     </div>
                     <div id="loader-fiscal-upload" class="mt-4 flex items-center justify-center gap-2 text-sm font-semibold text-green-700 dark:text-green-400 hidden">
-                        <div class="loader !border-t-current !border-4 !w-5 !h-5 inline-block"></div> Gravando dados auxiliares no Firebase...
+                        <div class="loader !border-t-current !border-4 !w-5 !h-5 inline-block"></div> Processando arquivo(s) auxiliar(es)...
                     </div>
 
                     <div class="mt-6 text-center border-t dark:border-gray-700 pt-4">
@@ -429,7 +437,6 @@
 
         // APLICAÇÃO IMEDIATA DA PERSONALIZAÇÃO (IMPEDE PISCADAS AO RECARREGAR A PÁGINA)
         function aplicarPersonalizacao() {
-            // Se o usuário limpou tudo sem querer no Ctrl+F5 e ficou vazio, recarrega o fallback.
             tituloOficial = localStorage.getItem('dashTitulo') || 'Analytics Suporte SETIC';
             corPrincipal = localStorage.getItem('dashCor') || '#1a1941';
             iconeCabecalho = localStorage.getItem('dashIcon') || 'fa-chart-line';
@@ -597,7 +604,16 @@
                     preencherFiltros(); atualizarDashboard();
                 } else { definirStatus('<i class="fa-solid fa-triangle-exclamation"></i> Vazio', 'bg-red-500'); } 
                 historicoCompletoCarregado = forcarCompleto;
-            } catch (e) { definirStatus('<i class="fa-solid fa-xmark"></i> Erro', 'bg-red-600'); console.error(e); }
+            } catch (e) { 
+                console.error(e);
+                // SISTEMA DE CAPTURA DO LIMITE DO FIREBASE (SPARK PLAN QUOTA)
+                if (e.code === 'resource-exhausted' || (e.message && (e.message.includes('quota') || e.message.includes('Quota')))) {
+                    document.getElementById('modal-limite').classList.remove('hidden');
+                    definirStatus('<i class="fa-solid fa-ban"></i> Limite Excedido', 'bg-red-700');
+                } else {
+                    definirStatus('<i class="fa-solid fa-xmark"></i> Erro', 'bg-red-600'); 
+                }
+            }
         }
 
         document.getElementById('btn-carregar-historico').addEventListener('click', () => { 
@@ -608,49 +624,152 @@
             }); 
         });
 
-        // UPLOADS
-        document.getElementById('file-upload').addEventListener('change', (e) => {
-            const file = e.target.files[0]; if (!file) return; document.getElementById('loader-upload').classList.remove('hidden');
-            const reader = new FileReader(); reader.onload = async function(ev) {
-                const wb = XLSX.read(new Uint8Array(ev.target.result), { type: 'array' }); const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: "" });
-                try {
-                    const ba = [writeBatch(db)]; let c = 0, b = 0;
-                    rows.forEach(r => { if(r.Ticket) { ba[b].set(doc(db, "chamados", String(r.Ticket)), r); c++; if (c === 490) { ba.push(writeBatch(db)); b++; c = 0; } } });
-                    for (const batch of ba) await batch.commit();
-                    document.getElementById('loader-upload').classList.add('hidden'); e.target.value = ""; await carregarDadosNuvem(historicoCompletoCarregado); 
-                } catch (err) { document.getElementById('loader-upload').classList.add('hidden'); }
-            }; reader.readAsArrayBuffer(file);
+        // UPLOADS DE MÚLTIPLOS ARQUIVOS (BASE PRIMÁRIA) COM VALIDAÇÃO E FEEDBACK VISUAL
+        document.getElementById('file-upload').addEventListener('change', async (e) => {
+            const files = e.target.files; 
+            if (files.length === 0) return; 
+            
+            const loader = document.getElementById('loader-upload');
+            loader.classList.remove('hidden');
+            loader.innerHTML = '<div class="loader !border-t-current !border-4 !w-5 !h-5 inline-block"></div> Processando arquivo(s)...';
+            
+            let allRows = [];
+            let errorFiles = [];
+
+            const readFiles = Array.from(files).map(file => {
+                return new Promise((resolve) => {
+                    const reader = new FileReader(); 
+                    reader.onload = function(ev) {
+                        try {
+                            const wb = XLSX.read(new Uint8Array(ev.target.result), { type: 'array' }); 
+                            const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: "" });
+                            
+                            // Validação Estrutural Lixo (Impede subir planilhas sem "Ticket")
+                            if (rows.length > 0 && !('Ticket' in rows[0] || 'ticket' in rows[0] || 'TICKET' in rows[0] || 'Nº Chamado' in rows[0] || 'chamado' in rows[0])) {
+                                errorFiles.push(file.name);
+                            } else {
+                                allRows = allRows.concat(rows);
+                            }
+                        } catch(err) {
+                            errorFiles.push(file.name);
+                        }
+                        resolve();
+                    }; 
+                    reader.readAsArrayBuffer(file);
+                });
+            });
+
+            await Promise.all(readFiles);
+
+            if (errorFiles.length > 0) {
+                alert(`ATENÇÃO: Os seguintes arquivos foram ignorados por não possuírem a estrutura correta (falta a coluna "Ticket"):\n\n${errorFiles.join('\n')}`);
+                if (allRows.length === 0) {
+                    loader.classList.add('hidden');
+                    e.target.value = "";
+                    return;
+                }
+            }
+
+            loader.innerHTML = '<div class="loader !border-t-current !border-4 !w-5 !h-5 inline-block"></div> Gravando na nuvem...';
+
+            try {
+                const ba = [writeBatch(db)]; let c = 0, b = 0;
+                allRows.forEach(r => { 
+                    const ticketStr = String(r.Ticket || r.ticket || r.TICKET || r['Nº Chamado'] || r['chamado'] || "");
+                    if(ticketStr) { 
+                        ba[b].set(doc(db, "chamados", ticketStr), r); 
+                        c++; 
+                        if (c === 490) { ba.push(writeBatch(db)); b++; c = 0; } 
+                    } 
+                });
+                const pr = ba.map(batch => batch.commit());
+                await Promise.all(pr);
+                
+                // Feedback Visual de Sucesso
+                loader.innerHTML = '<i class="fa-solid fa-check text-green-500 text-lg"></i> <span class="text-green-600 dark:text-green-400 font-bold">Upload Concluído com Sucesso!</span>';
+                setTimeout(async () => {
+                    loader.classList.add('hidden'); 
+                    loader.innerHTML = '<div class="loader !border-t-current !border-4 !w-5 !h-5 inline-block"></div> Gravando base primária no Firebase...';
+                    e.target.value = ""; 
+                    await carregarDadosNuvem(historicoCompletoCarregado); 
+                }, 2500);
+
+            } catch (err) { 
+                loader.innerHTML = '<i class="fa-solid fa-xmark text-red-500 text-lg"></i> <span class="text-red-600 font-bold">Erro na gravação.</span>';
+                setTimeout(() => { loader.classList.add('hidden'); e.target.value = ""; }, 3000);
+            }
         });
 
+        // UPLOADS DE MÚLTIPLOS ARQUIVOS (BASES AUXILIARES) COM VALIDAÇÃO E FEEDBACK VISUAL
         function handleUploadAux(inputId, colName) {
             const el = document.getElementById(inputId);
             if(!el) return;
-            el.addEventListener('change', (e) => {
-                const file = e.target.files[0]; if (!file) return;
-                document.getElementById('loader-fiscal-upload').classList.remove('hidden');
-                const reader = new FileReader(); reader.onload = async function(ev) {
-                    const wb = XLSX.read(new Uint8Array(ev.target.result), { type: 'array' }); 
-                    const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: "" });
-                    try {
-                        const ba = [writeBatch(db)]; let c = 0, b = 0;
-                        rows.forEach(r => { 
-                            const ticketId = String(r.Ticket || r.ticket || r.TICKET || r['Nº Chamado'] || r['chamado'] || "");
-                            if(ticketId) { 
-                                ba[b].set(doc(db, colName, ticketId), r); 
-                                c++; 
-                                if (c === 490) { ba.push(writeBatch(db)); b++; c = 0; } 
-                            } 
-                        });
-                        for (const batch of ba) await batch.commit();
-                        document.getElementById('loader-fiscal-upload').classList.add('hidden'); 
+            el.addEventListener('change', async (e) => {
+                const files = e.target.files; 
+                if (files.length === 0) return;
+                
+                const loader = document.getElementById('loader-fiscal-upload');
+                loader.classList.remove('hidden');
+                loader.innerHTML = '<div class="loader !border-t-current !border-4 !w-5 !h-5 inline-block"></div> Processando arquivo(s) auxiliar(es)...';
+                
+                let allRows = [];
+                let errorFiles = [];
+
+                const readFiles = Array.from(files).map(file => {
+                    return new Promise((resolve) => {
+                        const reader = new FileReader(); 
+                        reader.onload = function(ev) {
+                            try {
+                                const wb = XLSX.read(new Uint8Array(ev.target.result), { type: 'array' }); 
+                                const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: "" });
+                                
+                                // Validar Ticket
+                                if (rows.length > 0 && !('Ticket' in rows[0] || 'ticket' in rows[0] || 'TICKET' in rows[0] || 'Nº Chamado' in rows[0] || 'chamado' in rows[0])) {
+                                    errorFiles.push(file.name);
+                                } else {
+                                    allRows = allRows.concat(rows);
+                                }
+                            } catch(err) { errorFiles.push(file.name); }
+                            resolve();
+                        }; 
+                        reader.readAsArrayBuffer(file);
+                    });
+                });
+
+                await Promise.all(readFiles);
+
+                if (errorFiles.length > 0) {
+                    alert(`ATENÇÃO: Os seguintes arquivos auxiliares foram ignorados por não possuírem a coluna Ticket:\n\n${errorFiles.join('\n')}`);
+                    if (allRows.length === 0) { loader.classList.add('hidden'); e.target.value = ""; return; }
+                }
+
+                loader.innerHTML = '<div class="loader !border-t-current !border-4 !w-5 !h-5 inline-block"></div> Gravando base auxiliar na nuvem...';
+
+                try {
+                    const ba = [writeBatch(db)]; let c = 0, b = 0;
+                    allRows.forEach(r => { 
+                        const ticketId = String(r.Ticket || r.ticket || r.TICKET || r['Nº Chamado'] || r['chamado'] || "");
+                        if(ticketId) { 
+                            ba[b].set(doc(db, colName, ticketId), r); 
+                            c++; 
+                            if (c === 490) { ba.push(writeBatch(db)); b++; c = 0; } 
+                        } 
+                    });
+                    const pr = ba.map(batch => batch.commit());
+                    await Promise.all(pr);
+                    
+                    loader.innerHTML = '<i class="fa-solid fa-check text-green-500 text-lg"></i> <span class="text-green-600 dark:text-green-400 font-bold">Upload Auxiliar Concluído!</span>';
+                    setTimeout(async () => {
+                        loader.classList.add('hidden'); 
+                        loader.innerHTML = '<div class="loader !border-t-current !border-4 !w-5 !h-5 inline-block"></div> Gravando dados auxiliares no Firebase...';
                         e.target.value = ""; 
-                        alert(`Base de dados auxiliar (${colName}) atualizada com sucesso!`);
                         await carregarDadosNuvem(historicoCompletoCarregado); 
-                    } catch (err) { 
-                        document.getElementById('loader-fiscal-upload').classList.add('hidden'); 
-                        alert("Erro ao processar planilha auxiliar.");
-                    }
-                }; reader.readAsArrayBuffer(file);
+                    }, 2500);
+
+                } catch (err) { 
+                    loader.innerHTML = '<i class="fa-solid fa-xmark text-red-500 text-lg"></i> <span class="text-red-600 font-bold">Erro na gravação.</span>';
+                    setTimeout(() => { loader.classList.add('hidden'); e.target.value = ""; }, 3000);
+                }
             });
         }
         handleUploadAux('upload-satisfacao', 'satisfacao');
@@ -709,7 +828,7 @@
                 await createUserWithEmailAndPassword(secondaryAuth, emailNovo, senhaNova);
                 await signOut(secondaryAuth);
                 
-                alert(`✅ Sucesso!\nO acesso para ${emailNovo} foi criado.\nJá pode partilharcre essas credenciais com o analista.`);
+                alert(`✅ Sucesso!\nO acesso para ${emailNovo} foi criado.\nJá pode partilhar essas credenciais com o analista.`);
                 document.getElementById('novo-email').value = '';
                 document.getElementById('novo-senha').value = '';
             } catch (error) {
@@ -837,7 +956,7 @@
             dadosAuditoria.forEach(d => {
                 const tId = String(d['Ticket'] || d['ticket'] || "");
 
-                // Lógica Blindada do INS1 (Satisfação)
+                // Lógica de Notas do INS1
                 let nota = 5.0; 
                 if (mapSat.has(tId)) {
                     const satRec = mapSat.get(tId);
@@ -845,18 +964,14 @@
                     
                     if (rawVal === undefined || rawVal === null || String(rawVal).trim() === "") {
                         for(let key in satRec) {
-                            if (key.toLowerCase().includes('satisfa')) {
-                                rawVal = satRec[key]; break;
-                            }
+                            if (key.toLowerCase().includes('satisfa')) { rawVal = satRec[key]; break; }
                         }
                     }
                     if (rawVal !== undefined && rawVal !== null && String(rawVal).trim() !== "") {
                         const numMatch = String(rawVal).match(/\d+(\.\d+)?/);
                         if (numMatch) {
                             let parsed = parseFloat(numMatch[0]);
-                            if (!isNaN(parsed) && parsed >= 0 && parsed <= 5) {
-                                nota = parsed;
-                            }
+                            if (!isNaN(parsed) && parsed >= 0 && parsed <= 5) nota = parsed;
                         }
                     }
                 }
@@ -961,8 +1076,8 @@
                     const linhasTabela = [];
                     let totalPontosGlosa = 0;
 
-                    // MATEMÁTICA E REGRAS DE PONTOS DE GLOSA
-                    // INS1
+                    // MATEMÁTICA DE GLOSA
+                    // INS1 (Meta = 4.0)
                     const ins1_media = countNotas > 0 ? (sumNotas / countNotas) : 5.0;
                     const ins1_missed = 4.0 - ins1_media;
                     const ins1_fm_str = ins1_missed > 0 ? ins1_missed.toFixed(2).replace('.', ',') : '0,00';
@@ -970,7 +1085,7 @@
                     totalPontosGlosa += ins1_pontos;
                     linhasTabela.push(getRow('INS1', '-', '-', total, '4,0', ins1_media.toFixed(2).replace('.', ','), ins1_fm_str, String(ins1_pontos), ins1_media >= 4.0));
                     
-                    // INS2
+                    // INS2 (Meta = 95%)
                     const ins2_ating = total > 0 ? (ins2_dentro / total) : 1;
                     const ins2_missed = (0.95 - ins2_ating) * 100;
                     const ins2_fm_str = ins2_missed > 0 ? ins2_missed.toFixed(2).replace('.', ',') + '%' : '0,00';
@@ -978,7 +1093,7 @@
                     if(ins2_pontos > 0) totalPontosGlosa += ins2_pontos; 
                     linhasTabela.push(getRow('INS2', ins2_dentro, (total - ins2_dentro), total, '95,00%', fPct(ins2_ating), ins2_fm_str, String(ins2_pontos), ins2_ating >= 0.95));
 
-                    // INS3 Geral
+                    // INS3 Geral (Meta = 90%)
                     const ins3_ating = total > 0 ? (ins3_dentro / total) : 1;
                     const ins3_missed = (0.90 - ins3_ating) * 100;
                     const ins3_fm_str = ins3_missed > 0 ? ins3_missed.toFixed(2).replace('.', ',') + '%' : '0,00';
@@ -1005,7 +1120,7 @@
                     linhasTabela.push(['INS4', {content: 'Não se aplica', colSpan: 6, styles: {halign: 'center', fontStyle: 'bold', fillColor: [240, 240, 240]}}, '0']);
                     linhasTabela.push(['INS5', {content: 'Não se aplica', colSpan: 6, styles: {halign: 'center', fontStyle: 'bold', fillColor: [240, 240, 240]}}, '0']);
 
-                    // INS6
+                    // INS6 (Meta = 3% máximo)
                     const ins6_dentro = total - ins6_fora;
                     const ins6_ating = total > 0 ? (ins6_fora / total) : 0;
                     const ins6_missed = (ins6_ating - 0.03) * 100;
@@ -1146,6 +1261,7 @@
             return "Desc"; 
         }
 
+        // MOTOR DE CICLO FISCAL BLINDADO COM PARSEINT BASE 10
         function obterMesAnoFiscal(str) {
             if (!str) return "Desc";
             let ano, mes, dia;
@@ -1299,6 +1415,7 @@
             slaGlobalTexto = total > 0 ? ((at / total) * 100).toFixed(1) + '%' : '0%'; incGlobalTexto = total > 0 ? ((inc / total) * 100).toFixed(1) + '%' : '0%';
             document.getElementById('kpi-sla').innerText = slaGlobalTexto; document.getElementById('kpi-incidentes').innerText = incGlobalTexto;
 
+            // KPIs DASHBOARD SATISFAÇÃO BLINDADO
             const mapSat = new Map();
             dadosSatisfacao.forEach(s => mapSat.set(String(s.Ticket || s.ticket || s.TICKET || s['Nº Chamado'] || ""), s));
             const mapReab = new Set();
