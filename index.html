@@ -67,7 +67,6 @@
         <header id="header-bg" class="bg-[#1a1941] text-white p-4 shadow-md flex justify-between items-center sticky top-0 z-40 transition-colors">
             <div class="flex items-center gap-3 ml-4">
                 <div id="header-logo-container" class="flex items-center">
-                    <!-- Brasão Fixo para evitar sumiço por cache -->
                     <img src="https://raw.githubusercontent.com/AlbertBarros/dashbord-chamados-suporte-setic/main/bras%C3%A3o.png" alt="Logo" class="h-9 w-9 object-contain mr-2" crossorigin="anonymous">
                 </div>
                 <h1 id="titulo-painel" class="text-xl font-bold tracking-wide">Analytics Suporte SETIC</h1>
@@ -190,7 +189,7 @@
             </div>
 
             <div class="p-6 overflow-y-auto flex-grow">
-                <!-- Aba Atualizar Base (CENTRALIZAÇÃO DE TODOS OS UPLOADS) -->
+                <!-- Aba Atualizar Base -->
                 <div id="conteudo-dados" class="block">
                     <h3 class="font-bold text-gray-700 dark:text-gray-300 mb-2 text-sm uppercase">Base Operacional Primária</h3>
                     <label class="bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 text-[#1a1941] dark:text-indigo-300 border-2 border-dashed border-[#1a1941] dark:border-indigo-400 w-full p-6 rounded-lg font-semibold cursor-pointer transition flex flex-col items-center justify-center gap-3 mb-4">
@@ -402,7 +401,7 @@
         const secondaryAuth = getAuth(secondaryApp);
 
         let dadosGlobais = []; let dadosFiltradosCache = []; let mesesRelatorioOverride = null;
-        let dadosSatisfacao = []; let dadosReabertos = []; // Bases auxiliares
+        let dadosSatisfacao = []; let dadosReabertos = [];
         let historicoCompletoCarregado = false;
         let corPrincipal = localStorage.getItem('dashCor') || '#1a1941';
         let equipeFocoStr = localStorage.getItem('equipeFoco') || 'fabio.palma.prestador, edison.neto.prestador, antonio.muniz.prestador, jose.andrade.prestador';
@@ -499,6 +498,17 @@
         ['aba-dados', 'aba-aparencia', 'aba-relatorios', 'aba-fiscal', 'aba-admin'].forEach(id => document.getElementById(id).addEventListener('click', () => switchTab(id, 'conteudo-' + id.split('-')[1])));
         document.getElementById('input-cor').addEventListener('input', (e) => document.getElementById('hex-view').innerText = e.target.value);
 
+        document.getElementById('input-logo-file').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                localStorage.setItem('dashLogo', ev.target.result);
+                aplicarPersonalizacao();
+            };
+            reader.readAsDataURL(file);
+        });
+
         function aplicarPersonalizacao() {
             const tituloSalvo = localStorage.getItem('dashTitulo') || 'Analytics Suporte SETIC';
             
@@ -513,7 +523,6 @@
             document.getElementById('header-bg').style.backgroundColor = isDark ? '#111827' : corPrincipal;
             document.getElementById('card-filtros').style.borderTopColor = corPrincipal;
 
-            // Restaura o logo se existir
             const savedLogo = localStorage.getItem('dashLogo');
             const logoContainer = document.getElementById('header-logo-container');
             const loginLogo = document.getElementById('login-logo');
@@ -574,7 +583,6 @@
             }); 
         });
 
-        // UPLOADS
         document.getElementById('file-upload').addEventListener('change', (e) => {
             const file = e.target.files[0]; if (!file) return; document.getElementById('loader-upload').classList.remove('hidden');
             const reader = new FileReader(); reader.onload = async function(ev) {
@@ -644,7 +652,6 @@
             mArr.forEach(m => {
                 selectExclusao.innerHTML += `<option value="${m}">Apenas Dados do Mês ${m}</option>`;
             });
-            
             selectExclusao.innerHTML += `<option value="SATISFACAO">Apagar Base de Satisfação (INS1)</option>`;
             selectExclusao.innerHTML += `<option value="REABERTOS">Apagar Base de Reabertos (INS6)</option>`;
         }
@@ -663,21 +670,15 @@
         btnCriarUsuario.addEventListener('click', async () => {
             const emailNovo = document.getElementById('novo-email').value;
             const senhaNova = document.getElementById('novo-senha').value;
-            
-            if (!emailNovo || senhaNova.length < 6) {
-                return alert("Atenção: Introduza um e-mail válido e uma senha com pelo menos 6 caracteres.");
-            }
-
+            if (!emailNovo || senhaNova.length < 6) return alert("Atenção: Introduza um e-mail válido e uma senha com pelo menos 6 caracteres.");
             btnCriarUsuario.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
             btnCriarUsuario.disabled = true;
 
             try {
                 await createUserWithEmailAndPassword(secondaryAuth, emailNovo, senhaNova);
                 await signOut(secondaryAuth);
-                
                 alert(`✅ Sucesso!\nO acesso para ${emailNovo} foi criado.\nJá pode partilhar estas credenciais com o analista.`);
-                document.getElementById('novo-email').value = '';
-                document.getElementById('novo-senha').value = '';
+                document.getElementById('novo-email').value = ''; document.getElementById('novo-senha').value = '';
             } catch (error) {
                 if(error.code === 'auth/email-already-in-use') alert("Este e-mail já tem um acesso criado no sistema.");
                 else alert("Erro ao criar utilizador. Verifique a sua conexão.");
@@ -696,9 +697,7 @@
             else textoConfirmacao = `OS DADOS DO MÊS ${valorSelecionado}`;
             
             if(!confirm(`⚠️ ALERTA DE SEGURANÇA ⚠️\n\nTEM A CERTEZA ABSOLUTA QUE DESEJA APAGAR ${textoConfirmacao}? Esta ação não pode ser desfeita.`)) return;
-            
-            btnReset.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> A apagar...';
-            btnReset.disabled = true;
+            btnReset.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> A apagar...'; btnReset.disabled = true;
 
             try { 
                 let colName = "chamados";
@@ -706,9 +705,7 @@
                 if (valorSelecionado === 'REABERTOS') colName = "reabertos";
 
                 const q = await getDocs(collection(db, colName)); 
-                let b = writeBatch(db); 
-                let c = 0; 
-                const pr = []; 
+                let b = writeBatch(db); let c = 0; const pr = []; 
                 
                 q.docs.forEach((d) => { 
                     let del = false;
@@ -717,42 +714,30 @@
                         const dataAlvo = data['Data Encerramento'] || data['Data Solução'] || data['Data Abertura'];
                         const mesDoc = obterMesAno(dataAlvo);
                         if (valorSelecionado === 'TUDO' || mesDoc === valorSelecionado) del = true;
-                    } else {
-                        del = true; 
-                    }
+                    } else { del = true; }
 
                     if (del) {
-                        b.delete(d.ref); 
-                        c++; 
-                        if(c === 490) { 
-                            pr.push(b.commit()); 
-                            b = writeBatch(db); 
-                            c = 0; 
-                        } 
+                        b.delete(d.ref); c++; 
+                        if(c === 490) { pr.push(b.commit()); b = writeBatch(db); c = 0; } 
                     }
                 }); 
-                
                 if(c > 0) pr.push(b.commit()); 
                 await Promise.all(pr); 
                 
                 alert(`Exclusão de ${textoConfirmacao} concluída com sucesso!`); 
-                inSenha.value = '';
-                areaGestaoBanco.classList.add('hidden');
-                areaGestaoUsuarios.classList.add('hidden');
-                btnReset.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Apagar';
-                btnReset.disabled = false;
+                inSenha.value = ''; areaGestaoBanco.classList.add('hidden'); areaGestaoUsuarios.classList.add('hidden');
+                btnReset.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Apagar'; btnReset.disabled = false;
                 
                 if (colName === "chamados") dadosGlobais = []; 
                 await carregarDadosNuvem(historicoCompletoCarregado); 
             } catch(e) { 
                 alert("Erro ao tentar apagar os dados."); 
-                btnReset.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Apagar';
-                btnReset.disabled = false;
+                btnReset.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Apagar'; btnReset.disabled = false;
             }
         });
 
         // ==========================================
-        // AUDITORIA E FISCALIZAÇÃO IMR
+        // AUDITORIA E FISCALIZAÇÃO IMR (CÁLCULO E REGRAS DE GLOSA)
         // ==========================================
         document.getElementById('btn-gerar-fiscal-pdf').addEventListener('click', () => {
             const mesSelecionado = document.getElementById('fiscal-mes').value;
@@ -803,7 +788,7 @@
             dadosAuditoria.forEach(d => {
                 const tId = String(d['Ticket'] || d['ticket'] || "");
 
-                // LÓGICA DE SATISFAÇÃO (INS1)
+                // Lógica de Notas do INS1
                 let nota = 5.0; 
                 if (mapSat.has(tId)) {
                     const satRec = mapSat.get(tId);
@@ -811,18 +796,14 @@
                     
                     if (rawVal === undefined || rawVal === null || String(rawVal).trim() === "") {
                         for(let key in satRec) {
-                            if (key.toLowerCase().includes('satisfa')) {
-                                rawVal = satRec[key]; break;
-                            }
+                            if (key.toLowerCase().includes('satisfa')) { rawVal = satRec[key]; break; }
                         }
                     }
                     if (rawVal !== undefined && rawVal !== null && String(rawVal).trim() !== "") {
                         const numMatch = String(rawVal).match(/\d+(\.\d+)?/);
                         if (numMatch) {
                             let parsed = parseFloat(numMatch[0]);
-                            if (!isNaN(parsed) && parsed >= 0 && parsed <= 5) {
-                                nota = parsed;
-                            }
+                            if (!isNaN(parsed) && parsed >= 0 && parsed <= 5) nota = parsed;
                         }
                     }
                 }
@@ -916,7 +897,7 @@
                     
                     const getRow = (ind, den, f, t, m, at_str, fm, pt, isOk, isNA = false) => {
                         let color = isOk ? [22, 163, 74] : [220, 38, 38]; 
-                        if (isNA) color = [100, 100, 100]; // Cinza neutro se N/A
+                        if (isNA) color = [100, 100, 100]; 
                         return [
                             ind, den, f, t, m, 
                             { content: at_str, styles: { textColor: color, fontStyle: 'bold' } }, 
@@ -927,45 +908,60 @@
                     const linhasTabela = [];
                     let totalPontosGlosa = 0;
 
-                    // INS1
+                    // MATEMÁTICA E REGRAS DE PONTOS DE GLOSA (Ajustado)
+                    // INS1 (Meta = 4.0)
                     const ins1_media = countNotas > 0 ? (sumNotas / countNotas) : 5.0;
-                    linhasTabela.push(getRow('INS1', '-', '-', total, '4,0', ins1_media.toFixed(2).replace('.', ','), '0,00', '0', ins1_media >= 4.0));
+                    const ins1_missed = 4.0 - ins1_media;
+                    const ins1_fm_str = ins1_missed > 0 ? ins1_missed.toFixed(2).replace('.', ',') : '0,00';
+                    const ins1_pontos = ins1_missed > 0 ? Math.floor(ins1_missed / 0.1) * 5 : 0;
+                    totalPontosGlosa += ins1_pontos;
+                    linhasTabela.push(getRow('INS1', '-', '-', total, '4,0', ins1_media.toFixed(2).replace('.', ','), ins1_fm_str, String(ins1_pontos), ins1_media >= 4.0));
                     
-                    // INS2
+                    // INS2 (Meta = 95%)
                     const ins2_ating = total > 0 ? (ins2_dentro / total) : 1;
-                    const ins2_pontos = ins2_ating < 0.95 ? Math.floor((0.95 - ins2_ating)/0.01)*5 : 0; // Regra de penalização inserida
+                    const ins2_missed = (0.95 - ins2_ating) * 100;
+                    const ins2_fm_str = ins2_missed > 0 ? ins2_missed.toFixed(2).replace('.', ',') + '%' : '0,00';
+                    const ins2_pontos = ins2_missed > 0 ? Math.floor(ins2_missed) * 5 : 0; 
                     if(ins2_pontos > 0) totalPontosGlosa += ins2_pontos; 
-                    linhasTabela.push(getRow('INS2', ins2_dentro, (total - ins2_dentro), total, '95,00%', fPct(ins2_ating), '0,00', String(ins2_pontos), ins2_ating >= 0.95));
+                    linhasTabela.push(getRow('INS2', ins2_dentro, (total - ins2_dentro), total, '95,00%', fPct(ins2_ating), ins2_fm_str, String(ins2_pontos), ins2_ating >= 0.95));
 
-                    // INS3 (Geral)
+                    // INS3 Geral (Meta = 90%)
                     const ins3_ating = total > 0 ? (ins3_dentro / total) : 1;
-                    const ins3_pontos = ins3_ating < 0.90 ? Math.floor((0.90 - ins3_ating)/0.01)*5 : 0; // Regra de penalização inserida
+                    const ins3_missed = (0.90 - ins3_ating) * 100;
+                    const ins3_fm_str = ins3_missed > 0 ? ins3_missed.toFixed(2).replace('.', ',') + '%' : '0,00';
+                    const ins3_pontos = ins3_missed > 0 ? Math.floor(ins3_missed) * 5 : 0; 
                     if(ins3_pontos > 0) totalPontosGlosa += ins3_pontos;
-                    linhasTabela.push(getRow('INS3', ins3_dentro, (total - ins3_dentro), total, '90,00%', fPct(ins3_ating), '0,00', String(ins3_pontos), ins3_ating >= 0.90));
+                    linhasTabela.push(getRow('INS3', ins3_dentro, (total - ins3_dentro), total, '90,00%', fPct(ins3_ating), ins3_fm_str, String(ins3_pontos), ins3_ating >= 0.90));
                     
-                    // INS3 (Por Criticidade P1-P5 com Lógica N/A e Penalização)
+                    // INS3 por Criticidade (Meta = 90%)
                     ['P1', 'P2', 'P3', 'P4', 'P5'].forEach(p => {
                         const s = p_stats[p];
                         if (s.total === 0) {
-                            // Imprime "N/A" se for zero, sem pontos
                             linhasTabela.push(getRow(`INS3 - ${p}`, 0, 0, 0, '90,00%', 'N/A', '0,00', '0', true, true));
                         } else {
                             const atg = s.dentro / s.total;
-                            const pts = atg < 0.90 ? Math.floor((0.90 - atg)/0.01)*1 : 0; // Exemplo de penalidade individual por P
+                            const missed = (0.90 - atg) * 100;
+                            const fm_str = missed > 0 ? missed.toFixed(2).replace('.', ',') + '%' : '0,00';
+                            const pts = missed > 0 ? Math.floor(missed) * 5 : 0; 
                             if(pts > 0) totalPontosGlosa += pts;
-                            linhasTabela.push(getRow(`INS3 - ${p}`, s.dentro, (s.total - s.dentro), s.total, '90,00%', fPct(atg), '0,00', String(pts), atg >= 0.90));
+                            linhasTabela.push(getRow(`INS3 - ${p}`, s.dentro, (s.total - s.dentro), s.total, '90,00%', fPct(atg), fm_str, String(pts), atg >= 0.90));
                         }
                     });
 
+                    // INS4 e INS5 (Não se Aplicam com visual exato)
                     linhasTabela.push(['INS4', {content: 'Não se aplica', colSpan: 6, styles: {halign: 'center', fontStyle: 'bold', fillColor: [240, 240, 240]}}, '0']);
                     linhasTabela.push(['INS5', {content: 'Não se aplica', colSpan: 6, styles: {halign: 'center', fontStyle: 'bold', fillColor: [240, 240, 240]}}, '0']);
 
+                    // INS6 (Meta = 3% máximo)
                     const ins6_dentro = total - ins6_fora;
                     const ins6_ating = total > 0 ? (ins6_fora / total) : 0;
-                    const ins6_pontos = ins6_ating > 0.03 ? Math.floor((ins6_ating - 0.03)/0.01)*3 : 0;
+                    const ins6_missed = (ins6_ating - 0.03) * 100;
+                    const ins6_fm_str = ins6_missed > 0 ? ins6_missed.toFixed(2).replace('.', ',') + '%' : '0,00';
+                    const ins6_pontos = ins6_missed > 0 ? Math.floor(ins6_missed) * 3 : 0;
                     if(ins6_pontos > 0) totalPontosGlosa += ins6_pontos; 
-                    linhasTabela.push(getRow('INS6', ins6_dentro, ins6_fora, total, '3,00%', fPct(ins6_ating), '0,00', String(ins6_pontos), ins6_ating <= 0.03));
+                    linhasTabela.push(getRow('INS6', ins6_dentro, ins6_fora, total, '3,00%', fPct(ins6_ating), ins6_fm_str, String(ins6_pontos), ins6_ating <= 0.03));
 
+                    // INS7 (Não se Aplica)
                     linhasTabela.push(['INS7', {content: 'Não se aplica', colSpan: 6, styles: {halign: 'center', fontStyle: 'bold', fillColor: [240, 240, 240]}}, '0']);
 
                     doc.autoTable({ 
@@ -979,24 +975,61 @@
                             1: { halign: 'center' }, 2: { halign: 'center' }, 3: { halign: 'center' },
                             4: { halign: 'center' }, 5: { halign: 'center' }, 6: { halign: 'center' }, 7: { halign: 'center' }
                         },
-                        styles: { fontSize: 9, cellPadding: 4 }, 
+                        styles: { fontSize: 8, cellPadding: 3 }, 
                         alternateRowStyles: { fillColor: [247, 248, 250] }, 
                         margin: { left: 40, right: 40 }
                     });
 
                     // ==========================================
-                    // CONCLUSÃO DE GLOSA (COM QUEBRA INTELIGENTE E NEGRITO ISOLADO)
+                    // TABELA DE REGRAS DE GLOSA (Compacta p/ 1 página)
                     // ==========================================
-                    const finalY = doc.lastAutoTable.finalY + 30;
+                    const rulesY = doc.lastAutoTable.finalY + 15;
+                    
+                    doc.setTextColor(26, 25, 65); doc.setFontSize(10); doc.setFont("helvetica", "bold"); 
+                    doc.text("Regras de Pontuação e Glosa", 40, rulesY);
+                    
+                    doc.setFontSize(8); doc.setTextColor(60, 60, 60); doc.setFont("helvetica", "normal");
+                    const ruleText = "A cada 10 (dez) pontos inteiros acumulados será descontado 1% (um por cento) do montante mensal a ser pago à CONTRATADA pelos serviços prestados. O limite máximo para as glosas é de 30% (trinta por cento) do valor mensal a ser pago à CONTRATADA.";
+                    const splitRule = doc.splitTextToSize(ruleText, w - 80);
+                    doc.text(splitRule, 40, rulesY + 12);
+                    
+                    const tableRulesY = rulesY + 12 + (splitRule.length * 10) + 4;
+
+                    const regrasLinhas = [
+                        [{content: "Redução de 1% (um por cento) sobre o valor do pagamento mensal devido a cada 10 (dez) pontos acumulados no período de faturamento, limitado a 30% do valor total devido.", colSpan: 2, styles: {halign: 'center', fontStyle: 'bold', fillColor: [240, 240, 240]}}],
+                        ["INS1", "5 pontos a cada 0,1 ponto fora da meta"],
+                        ["INS2", "5 pontos a cada 1% fora da meta"],
+                        ["INS3", "5 pontos a cada 1% fora da meta para cada nível de prioridade."],
+                        ["INS4", "3 pontos a cada 1% fora da meta"],
+                        ["INS5", "3 pontos a cada 1% fora da meta"],
+                        ["INS6", "3 pontos a cada 1% fora da meta"],
+                        ["INS7", "3 pontos a cada 1% fora da meta"]
+                    ];
+
+                    doc.autoTable({ 
+                        startY: tableRulesY, 
+                        head: [["INDICADOR DE NÍVEL DE SERVIÇO", "PONTUAÇÃO ACUMULÁVEL"]], 
+                        body: regrasLinhas, 
+                        theme: 'grid', 
+                        headStyles: { fillColor: [150, 150, 150], textColor: 20, fontStyle: 'bold', halign: 'center' }, 
+                        columnStyles: { 0: { fontStyle: 'bold', halign: 'center', cellWidth: 140 }, 1: { halign: 'center' } },
+                        styles: { fontSize: 7.5, cellPadding: 3 }, 
+                        margin: { left: 40, right: 40 }
+                    });
+
+
+                    // ==========================================
+                    // CONCLUSÃO DE GLOSA (QUEBRA DE MARGEM INTELIGENTE E NEGRITO ISOLADO)
+                    // ==========================================
+                    const finalY = doc.lastAutoTable.finalY + 20;
                     doc.setTextColor(26, 25, 65); doc.setFontSize(12); doc.setFont("helvetica", "bold"); 
                     doc.text("Conclusão do Fiscal", 40, finalY);
                     
                     let cursorX = 40;
-                    let cursorY = finalY + 18;
+                    let cursorY = finalY + 16;
                     const maxWidth = w - 80;
                     doc.setFontSize(10); doc.setTextColor(60, 60, 60);
 
-                    // ALGORITMO DE QUEBRA DE MARGEM
                     function printWrapped(text, isBold) {
                         doc.setFont("helvetica", isBold ? "bold" : "normal");
                         const tokens = text.match(/\S+|\s/g) || []; 
@@ -1039,11 +1072,7 @@
         
         function parseExcelDate(serial) {
             const dateObj = new Date(Math.round((serial - 25569) * 86400 * 1000));
-            return {
-                ano: dateObj.getUTCFullYear(),
-                mes: dateObj.getUTCMonth() + 1,
-                dia: dateObj.getUTCDate()
-            };
+            return { ano: dateObj.getUTCFullYear(), mes: dateObj.getUTCMonth() + 1, dia: dateObj.getUTCDate() };
         }
 
         function parseHoras(str) { if(!str) return 0; const p = String(str).split(':'); return p.length === 3 ? parseInt(p[0]) + (parseInt(p[1])/60) + (parseInt(p[2])/3600) : 0; }
@@ -1065,12 +1094,11 @@
             return "Desc"; 
         }
 
-        // MOTOR DE CICLO FISCAL BLINDADO
+        // MOTOR DE CICLO FISCAL BLINDADO COM PARSEINT BASE 10
         function obterMesAnoFiscal(str) {
             if (!str) return "Desc";
             let ano, mes, dia;
 
-            // Blindagem contra número de série do Excel (Ex: 46235 -> 01/08/2026)
             if (!isNaN(str) && Number(str) > 30000) {
                 const parsed = parseExcelDate(parseFloat(str));
                 ano = parsed.ano; mes = parsed.mes; dia = parsed.dia;
@@ -1139,6 +1167,7 @@
                 const dataEncerramento = d['Data Encerramento'] || d['Data Solução'] || dataAbertura;
                 
                 m.add(obterMesAno(dataEncerramento)); 
+                
                 if(dataEncerramento) mFiscal.add(obterMesAnoFiscal(dataEncerramento));
                 if(dataAbertura) mFiscal.add(obterMesAnoFiscal(dataAbertura));
                 
@@ -1220,6 +1249,7 @@
             slaGlobalTexto = total > 0 ? ((at / total) * 100).toFixed(1) + '%' : '0%'; incGlobalTexto = total > 0 ? ((inc / total) * 100).toFixed(1) + '%' : '0%';
             document.getElementById('kpi-sla').innerText = slaGlobalTexto; document.getElementById('kpi-incidentes').innerText = incGlobalTexto;
 
+            // LÓGICA DO INS1 BLINDADA NO DASHBOARD
             const mapSat = new Map();
             dadosSatisfacao.forEach(s => mapSat.set(String(s.Ticket || s.ticket || s.TICKET || s['Nº Chamado'] || ""), s));
             const mapReab = new Set();
