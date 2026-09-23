@@ -30,6 +30,10 @@
         .tab-inactive:hover { opacity: 1; }
         .table-container { max-height: 400px; overflow-y: auto; }
         .data-table th { position: sticky; top: 0; z-index: 10; }
+        
+        /* Ajuste para rolagem suave na tabela do histórico */
+        .table-historico-container { max-height: 220px; overflow-y: auto; }
+        .table-historico-container th { position: sticky; top: 0; z-index: 10; }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
@@ -83,7 +87,6 @@
                     <i class="fa-solid fa-toolbox"></i> Painel de Ferramentas
                 </button>
 
-                <!-- BOTÃO DE LOGOUT -->
                 <button id="btn-logout" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded transition shadow flex items-center gap-2 text-sm font-semibold border border-white border-opacity-20">
                     <i class="fa-solid fa-arrow-right-from-bracket"></i> Sair
                 </button>
@@ -184,6 +187,37 @@
         </div>
     </div>
 
+    <!-- Modal Histórico IMR (NOVO VISUALIZADOR) -->
+    <div id="modal-historico-imr" class="hidden fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-[70] p-4">
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-2xl w-full max-w-4xl flex flex-col max-h-[90vh]">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-2"><i class="fa-solid fa-chart-area"></i> Visão Histórica: Descumprimentos Contratuais (IMR)</h2>
+                <button id="btn-fechar-historico-imr" class="text-gray-400 hover:text-red-500 transition"><i class="fa-solid fa-xmark text-2xl"></i></button>
+            </div>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Análise rápida de desempenho e falhas de NMS agrupada por todos os ciclos fiscais disponíveis no banco de dados.</p>
+            
+            <div class="chart-container mb-6 border dark:border-gray-700 p-2 rounded" style="height: 300px;">
+                 <canvas id="chart-historico-falhas"></canvas>
+            </div>
+
+            <h3 class="font-bold text-sm uppercase text-gray-700 dark:text-gray-300 mb-2">Detalhamento dos Meses Falhos</h3>
+            <div class="table-historico-container rounded border border-gray-200 dark:border-gray-700">
+                <table class="w-full text-left text-sm text-gray-600 dark:text-gray-300">
+                    <thead class="bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-200 uppercase text-xs border-b dark:border-gray-600">
+                        <tr>
+                            <th class="p-3 font-semibold">Ciclo Fiscal</th>
+                            <th class="p-3 font-semibold w-1/4">Pontos Calculados</th>
+                            <th class="p-3 font-semibold">Indicadores Descumpridos</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabela-corpo-historico" class="divide-y divide-gray-100 dark:divide-gray-700 bg-white dark:bg-gray-800">
+                        <!-- Tabela alimentada via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal Revisão de Glosa -->
     <div id="modal-revisao-glosa" class="hidden fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-[60] p-4">
         <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-2xl w-full max-w-2xl border-t-4 border-yellow-500 flex flex-col max-h-[90vh]">
@@ -205,7 +239,7 @@
                     </label>
                     <label class="flex items-center gap-3 cursor-pointer text-sm text-gray-700 dark:text-gray-300">
                         <input type="radio" name="tipo_conclusao" value="personalizada" class="w-4 h-4 cursor-pointer">
-                        <span><strong>Parecer Personalizado:</strong> Você escreve a justificativa livremente (Não imprime cálculos automáticos).</span>
+                        <span><strong>Parecer Personalizado:</strong> Escreva uma justificativa livre (Não imprime cálculos automáticos na folha).</span>
                     </label>
                 </div>
             </div>
@@ -214,7 +248,7 @@
             <div id="area-texto-personalizado" class="mb-4 hidden flex-grow">
                 <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase mb-1 flex justify-between">
                     <span>Justificativa Livre do Fiscal</span>
-                    <span class="text-[10px] text-gray-400 font-normal">Editável</span>
+                    <span class="text-[10px] text-gray-400 font-normal">Editável / Paginação Infinita</span>
                 </label>
                 <textarea id="revisao-texto" rows="6" class="w-full border border-gray-300 dark:border-gray-600 rounded p-3 text-sm bg-gray-50 dark:bg-gray-700 focus:outline-none focus:border-yellow-500 transition leading-relaxed"></textarea>
             </div>
@@ -350,7 +384,7 @@
                     </div>
                 </div>
 
-                <!-- Aba FISCALIZAÇÃO -->
+                <!-- Aba FISCALIZAÇÃO (COM NOVO BOTÃO HISTÓRICO) -->
                 <div id="conteudo-fiscal" class="hidden">
                     <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 p-6 rounded-lg mb-5 shadow-sm">
                         <div class="flex items-start gap-4">
@@ -360,18 +394,21 @@
                             <div class="w-full">
                                 <h3 class="font-bold text-lg text-green-800 dark:text-green-400 mb-2">Auditoria e Fiscalização de Contrato (IMR)</h3>
                                 <p class="text-sm text-green-700 dark:text-green-300 mb-4 leading-relaxed">
-                                    O sistema atuará como fiscal virtual processando o NMS utilizando as planilhas secundárias (enviadas na aba "Atualizar Base") em conjunto com a base primária e filtrando pela <strong>Data de Encerramento</strong> no ciclo do dia 04 ao dia 03.
+                                    O sistema atuará como fiscal virtual processando o NMS utilizando as planilhas secundárias em conjunto com a base primária e filtrando pela <strong>Data de Encerramento</strong> no ciclo do dia 04 ao dia 03.
                                 </p>
                                 
                                 <div class="flex flex-col sm:flex-row gap-3 items-end mt-2 pt-4 border-t border-green-200 dark:border-green-800">
-                                    <div class="w-full sm:w-1/3">
+                                    <div class="w-full sm:w-1/4">
                                         <label class="block text-xs font-bold text-green-800 dark:text-green-700 uppercase mb-1">Ciclo Fiscal</label>
                                         <select id="fiscal-mes" class="w-full border border-green-300 dark:border-green-700 rounded p-3 text-sm bg-white dark:bg-gray-800 focus:outline-none focus:border-green-500 transition">
                                             <option value="Todos">Todos os Ciclos</option>
                                         </select>
                                     </div>
-                                    <button id="btn-gerar-fiscal-pdf" class="w-full sm:w-2/3 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded shadow transition flex items-center justify-center gap-2">
-                                        <i class="fa-solid fa-file-shield text-lg"></i> Processar Auditoria e Gerar Relatório
+                                    <button id="btn-gerar-fiscal-pdf" class="w-full sm:w-auto flex-grow bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded shadow transition flex items-center justify-center gap-2">
+                                        <i class="fa-solid fa-file-shield text-lg"></i> Gerar Relatório PDF
+                                    </button>
+                                    <button id="btn-abrir-historico-imr" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded shadow transition flex items-center justify-center gap-2">
+                                        <i class="fa-solid fa-chart-column text-lg"></i> Ver Histórico
                                     </button>
                                 </div>
                             </div>
@@ -478,11 +515,7 @@
         let dadosSatisfacao = []; let dadosReabertos = []; 
         let historicoCompletoCarregado = false;
         
-        let corPrincipal = localStorage.getItem('dashCor') || '#1a1941';
-        let equipeFocoStr = localStorage.getItem('equipeFoco') || 'fabio.palma.prestador, edison.neto.prestador, antonio.muniz.prestador, jose.andrade.prestador';
-        let tituloOficial = localStorage.getItem('dashTitulo') || 'Analytics Suporte SETIC';
-        let iconeCabecalho = localStorage.getItem('dashIcon') || 'fa-chart-line';
-        
+        let corPrincipal, equipeFocoStr, tituloOficial, iconeCabecalho;
         let objAuditoriaTemp = null; 
 
         let graficos = {}; let tabelaPaginaAtual = 1; const tabelaItensPorPagina = 50;
@@ -490,9 +523,7 @@
         const coresPrioridade = { 'Muito Alto': '#b91c1c', 'Alto': '#ef4444', 'Médio': '#f59e0b', 'Baixo': '#22c55e', 'Muito Baixo': '#94a3b8' };
         const coresTipo = { 'Requisição': '#6366f1', 'Incidente': '#f43f5e' };
 
-        // ==========================================
-        // GESTÃO DE RÁDIOS DA REVISÃO
-        // ==========================================
+        // Eventos dos Rádios da Revisão de Glosa
         document.getElementsByName('tipo_conclusao').forEach(radio => {
             radio.addEventListener('change', (e) => {
                 if(e.target.value === 'personalizada') {
@@ -561,7 +592,7 @@
             }
         });
 
-        // MECANISMO DE LOGIN ORIGINAL REVERTIDO À VERSÃO ESTÁVEL
+        // LOGIN BLINDADO (VERSÃO ESTÁVEL)
         document.getElementById('btn-entrar').addEventListener('click', async () => {
             const email = document.getElementById('login-email').value;
             const senha = document.getElementById('login-senha').value;
@@ -700,6 +731,7 @@
             }); 
         });
 
+        // UPLOADS
         document.getElementById('file-upload').addEventListener('change', async (e) => {
             const files = e.target.files; 
             if (files.length === 0) return; 
@@ -917,7 +949,182 @@
         });
 
         // ==========================================
-        // AUDITORIA E FISCALIZAÇÃO IMR COM SISTEMA DE INTERCEÇÃO
+        // MOTOR INTERNO DE AUDITORIA (USADO PELO HISTÓRICO)
+        // ==========================================
+        function calcularAuditoriaInterna(mes) {
+            let dadosAuditoria = dadosGlobais;
+            if(mes !== 'Todos') {
+                dadosAuditoria = dadosGlobais.filter(d => obterMesAnoFiscal(d['Data Encerramento'] || d['Data Solução'] || d['Data Abertura']) === mes);
+            }
+            const total = dadosAuditoria.length;
+            if(total === 0) return null;
+
+            let sumNotas = 0, countNotas = 0, ins2_dentro = 0, ins3_dentro = 0, ins6_fora = 0; 
+            let p_stats = { 'P1': {t: 0, d: 0}, 'P2': {t: 0, d: 0}, 'P3': {t: 0, d: 0}, 'P4': {t: 0, d: 0}, 'P5': {t: 0, d: 0} };
+
+            const getPLevel = (slaStr) => {
+                if(!slaStr) return 'P4';
+                let s = String(slaStr).toLowerCase();
+                if(s.includes('vip') || s.includes('muito alta')) return 'P1';
+                if(s.includes('alta')) return 'P2';
+                if(s.includes('media') || s.includes('média')) return 'P3';
+                if(s.includes('muito baixa')) return 'P5';
+                if(s.includes('baixa')) return 'P4';
+                return 'P4';
+            };
+
+            const mapSat = new Map();
+            dadosSatisfacao.forEach(s => mapSat.set(String(s.Ticket || s.ticket || s.TICKET || s['Nº Chamado'] || ""), s));
+            const mapReab = new Set();
+            dadosReabertos.forEach(r => mapReab.add(String(r.Ticket || r.ticket || r.TICKET || r['Nº Chamado'] || "")));
+
+            dadosAuditoria.forEach(d => {
+                const tId = String(d['Ticket'] || d['ticket'] || "");
+                let nota = 5.0; 
+                if (mapSat.has(tId)) {
+                    const satRec = mapSat.get(tId);
+                    let rawVal = satRec['Pesquisa de satisfação - Satisfação'];
+                    if (!rawVal) { for(let key in satRec) { if (key.toLowerCase().includes('satisfa')) { rawVal = satRec[key]; break; } } }
+                    if (rawVal) {
+                        const numMatch = String(rawVal).match(/\d+(\.\d+)?/);
+                        if (numMatch) {
+                            let parsed = parseFloat(numMatch[0]);
+                            if (!isNaN(parsed) && parsed >= 0 && parsed <= 5) nota = parsed;
+                        }
+                    }
+                }
+                sumNotas += Number(nota); 
+                countNotas++;
+
+                const tit = d['TIT Por Grupo Atendido'] || d['TIT Atendido'] || 'Sim';
+                if(String(tit).toLowerCase() === 'sim') ins2_dentro++;
+
+                const slaOk = d['SLA Atendido'] || 'Sim';
+                const isSlaOk = String(slaOk).toLowerCase() === 'sim';
+                if(isSlaOk) ins3_dentro++;
+
+                const pLevel = getPLevel(d['SLA']);
+                p_stats[pLevel].t++;
+                if(isSlaOk) p_stats[pLevel].d++;
+
+                let foiReaberto = mapReab.has(tId);
+                if (!foiReaberto) {
+                    for(let key in d) {
+                        if(key.toLowerCase().includes('reabert') || key.toLowerCase().includes('reabr')) {
+                            const val = String(d[key]).toLowerCase();
+                            if(val === 'sim' || parseFloat(val) > 0) foiReaberto = true;
+                            break;
+                        }
+                    }
+                }
+                if(foiReaberto) ins6_fora++;
+            });
+
+            let totalPontosGlosa = 0;
+            let descumprimentos = []; 
+
+            const ins1_media = countNotas > 0 ? (sumNotas / countNotas) : 5.0;
+            const ins1_missed = 4.0 - ins1_media;
+            if(ins1_missed > 0) { totalPontosGlosa += Math.floor(ins1_missed / 0.1) * 5; descumprimentos.push('INS1'); }
+            
+            const ins2_ating = total > 0 ? (ins2_dentro / total) : 1;
+            const ins2_missed = (0.95 - ins2_ating) * 100;
+            if(ins2_missed > 0) { totalPontosGlosa += Math.floor(ins2_missed) * 5; descumprimentos.push('INS2'); }
+
+            const ins3_ating = total > 0 ? (ins3_dentro / total) : 1;
+            const ins3_missed = (0.90 - ins3_ating) * 100;
+            if(ins3_missed > 0) { totalPontosGlosa += Math.floor(ins3_missed) * 5; descumprimentos.push('INS3 (Geral)'); }
+            
+            ['P1', 'P2', 'P3', 'P4', 'P5'].forEach(p => {
+                const s = p_stats[p];
+                if (s.t > 0) {
+                    const atg = s.d / s.t;
+                    const missed = (0.90 - atg) * 100;
+                    if(missed > 0) { totalPontosGlosa += Math.floor(missed) * 5; descumprimentos.push(`INS3 - ${p}`); }
+                }
+            });
+
+            const ins6_ating = total > 0 ? (ins6_fora / total) : 0;
+            const ins6_missed = (ins6_ating - 0.03) * 100;
+            if(ins6_missed > 0) { totalPontosGlosa += Math.floor(ins6_missed) * 3; descumprimentos.push('INS6'); }
+
+            return { pts: totalPontosGlosa, desc: descumprimentos };
+        }
+
+        // ==========================================
+        // HISTÓRICO IMR (DASHBOARD)
+        // ==========================================
+        document.getElementById('btn-fechar-historico-imr').addEventListener('click', () => {
+            document.getElementById('modal-historico-imr').classList.add('hidden');
+        });
+
+        document.getElementById('btn-abrir-historico-imr').addEventListener('click', () => {
+            const mesesDisponiveis = new Set();
+            dadosGlobais.forEach(d => {
+                const dataAlvo = d['Data Encerramento'] || d['Data Solução'] || d['Data Abertura'];
+                const m = obterMesAnoFiscal(dataAlvo);
+                if (m !== "Desc") mesesDisponiveis.add(m);
+            });
+            const mArr = Array.from(mesesDisponiveis).sort((a,b) => cvDtOrd(a) - cvDtOrd(b));
+            
+            if (mArr.length === 0) return alert("Nenhuma base de dados disponível para análise.");
+
+            const labels = [];
+            const dataPontos = [];
+            const dataCores = [];
+            let htmlTabela = '';
+
+            mArr.forEach(m => {
+                const r = calcularAuditoriaInterna(m);
+                if(r) {
+                    labels.push(m);
+                    dataPontos.push(r.pts);
+                    if (r.pts > 0) {
+                        dataCores.push('#ef4444'); // vermelho (falha)
+                        htmlTabela += `<tr class="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                            <td class="p-3 font-bold text-red-600 dark:text-red-400">${m}</td>
+                            <td class="p-3 font-bold">${r.pts} pts</td>
+                            <td class="p-3 font-mono text-xs text-red-700 dark:text-red-300">${r.desc.join(', ')}</td>
+                        </tr>`;
+                    } else {
+                        dataCores.push('#22c55e'); // verde (sucesso)
+                        htmlTabela += `<tr class="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                            <td class="p-3 font-bold text-green-600 dark:text-green-400">${m}</td>
+                            <td class="p-3 font-bold">0 pts</td>
+                            <td class="p-3 text-xs text-gray-400 italic">Nenhuma falha detectada</td>
+                        </tr>`;
+                    }
+                }
+            });
+
+            document.getElementById('tabela-corpo-historico').innerHTML = htmlTabela;
+            
+            const ctx = document.getElementById('chart-historico-falhas').getContext('2d');
+            if (graficos['chart-historico-falhas']) graficos['chart-historico-falhas'].destroy();
+            
+            graficos['chart-historico-falhas'] = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Pontos de Glosa',
+                        data: dataPontos,
+                        backgroundColor: dataCores,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, datalabels: { display: true, anchor: 'end', align: 'top', color: isDark ? '#fff' : '#000', font: {weight: 'bold'} } },
+                    scales: { y: { beginAtZero: true, suggestedMax: 10 } }
+                }
+            });
+
+            document.getElementById('modal-historico-imr').classList.remove('hidden');
+        });
+
+        // ==========================================
+        // AUDITORIA E FISCALIZAÇÃO IMR (GERAR PDF)
         // ==========================================
         document.getElementById('btn-gerar-fiscal-pdf').addEventListener('click', () => {
             const mesSelecionado = document.getElementById('fiscal-mes').value;
@@ -1075,7 +1282,6 @@
 
                 linhasTabela.push(['INS7', {content: 'Não se aplica', colSpan: 6, styles: {halign: 'center', fontStyle: 'bold', fillColor: [240, 240, 240]}}, '0']);
 
-                // FORMATAR DADOS GERAIS
                 const mesTexto = mesSelecionado === 'Todos' ? 'Base Completa' : mesSelecionado;
                 let periodoAfericao = "Base Completa";
                 if (mesSelecionado !== 'Todos') {
@@ -1088,7 +1294,6 @@
                     periodoAfericao = `04/${m1}/${yy} a 03/${m2}/${yyNext}`;
                 }
 
-                // SALVAR OBJETO TEMPORÁRIO PARA O PDF
                 objAuditoriaTemp = {
                     totalChamados: total,
                     mesTexto: mesTexto,
@@ -1099,7 +1304,6 @@
 
                 btn.innerHTML = conteudoOriginal; btn.disabled = false;
 
-                // INTERCEÇÃO DE ESTADO
                 if (totalPontosGlosa > 0) {
                     const nomesIndicadores = descumprimentos.join(', ');
                     
@@ -1119,7 +1323,6 @@
             }, 800); 
         });
 
-        // Evento de Confirmação da Revisão
         document.getElementById('btn-confirmar-revisao').addEventListener('click', () => {
             if(!objAuditoriaTemp) return;
             
@@ -1133,7 +1336,7 @@
             gerarPDFFiscalFinal(ptsFinais, tipoSelecionado, txtPersonalizado, objAuditoriaTemp);
         });
 
-        // MOTOR DE GERAÇÃO DO PDF COM PAGINAÇÃO INFINITA
+        // MOTOR DE GERAÇÃO DE PDF (COM PAGINAÇÃO INFINITA NA CONCLUSÃO)
         function gerarPDFFiscalFinal(ptsAplicados, tipoConclusao, textoPersonalizado, dados) {
             try {
                 const { jsPDF } = window.jspdf; 
@@ -1245,7 +1448,7 @@
                 const maxWidth = w - 80;
                 doc.setFontSize(10); doc.setTextColor(60, 60, 60);
 
-                // Algoritmo de Paginação Infinita e Quebra de Margem
+                // ALGORITMO DE PAGINAÇÃO INFINITA NA CONCLUSÃO
                 function printWrapped(text, isBold) {
                     doc.setFont("helvetica", isBold ? "bold" : "normal");
                     const tokens = text.match(/\S+|\s/g) || []; 
@@ -1271,7 +1474,6 @@
                 }
 
                 if (tipoConclusao === 'personalizada') {
-                    // IMPRIME A JUSTIFICATIVA LONGA SEM CORTES
                     const paragrafos = textoPersonalizado.split('\n');
                     paragrafos.forEach(pg => {
                         if(pg.trim() !== '') printWrapped(pg + " ", false);
@@ -1280,7 +1482,6 @@
                         if (cursorY > marginY) { doc.addPage(); cursorY = 40; }
                     });
                 } else {
-                    // IMPRIME CÁLCULO DE GLOSA AUTOMÁTICO
                     if (ptsAplicados === 0 && dados.descumprimentos && dados.descumprimentos.length === 0) {
                         printWrapped("Após análise rigorosa dos índices apresentados no período aferido, atesta-se que a empresa cumpriu com todos os Níveis Mínimos de Serviços (NMS) previstos contratualmente. Portanto, ", false);
                         printWrapped("NÃO SERÁ APLICADA GLOSA", true);
@@ -1624,119 +1825,6 @@
             const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(dadosExp), "Relatorio"); XLSX.writeFile(wb, `Base_Extraida.xlsx`);
         });
 
-        // ==========================================
-        // RELATÓRIO GERENCIAL
-        // ==========================================
-        document.getElementById('btn-gerar-pdf').addEventListener('click', () => {
-            const checkboxes = document.querySelectorAll('#relatorio-mes-container input:checked');
-            const fM_array = Array.from(checkboxes).map(cb => cb.value);
-            if(fM_array.length === 0) fM_array.push("Todos");
-            const fM_text = fM_array.includes("Todos") ? "Todos" : fM_array.join(', ');
-            
-            const fA = document.getElementById('relatorio-analista').value;
-            const btn = document.getElementById('btn-gerar-pdf'); const conteudoOriginal = btn.innerHTML; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xl"></i> <div><p class="text-sm">A processar...</p></div>'; btn.disabled = true;
-            
-            mesesRelatorioOverride = fM_array;
-            document.getElementById('filtro-analista').value = fA; 
-            document.getElementById('filtro-prioridade').value = 'Todos'; 
-            document.getElementById('filtro-assunto').value = 'Todos'; 
-            document.getElementById('filtro-tipo').value = 'Todos'; 
-            document.getElementById('filtro-data-inicio').value = ''; 
-            document.getElementById('filtro-data-fim').value = ''; 
-            atualizarDashboard(); 
-
-            setTimeout(() => {
-                try {
-                    const dadosExp = dadosFiltradosCache; if(dadosExp.length === 0) { alert("Nenhum dado."); btn.innerHTML = conteudoOriginal; btn.disabled = false; mesesRelatorioOverride = null; atualizarDashboard(); return; }
-                    const { jsPDF } = window.jspdf; const doc = new jsPDF('p', 'pt', 'a4'); const w = doc.internal.pageSize.width;
-                    
-                    doc.setFillColor(26, 25, 65); doc.rect(0, 0, w, 85, 'F'); doc.setTextColor(255, 255, 255); 
-                    
-                    doc.setFontSize(14); doc.setFont("helvetica", "bold"); doc.text("MINISTÉRIO DA JUSTIÇA E SEGURANÇA PÚBLICA", 40, 32);
-                    doc.setFontSize(9.5); doc.setFont("helvetica", "normal"); doc.text("Polícia Rodoviária Federal - Diretoria de Tecnologia da Informação e Comunicação (DTIC)", 40, 52);
-                    doc.setFontSize(10.5); doc.setFont("helvetica", "bold"); doc.text("Relatório Gerencial Analítico - Suporte N2 - Serviço de Pronto Atendimento (SETIC)", 40, 72);
-                    
-                    try { 
-                        let imgData = localStorage.getItem('dashLogo');
-                        if (imgData) {
-                            doc.addImage(imgData, 'PNG', w - 80, 20, 40, 40);
-                        } else {
-                            const imgEl = document.querySelector('#header-logo-container img');
-                            if(imgEl) {
-                                const canvas = document.createElement('canvas');
-                                canvas.width = imgEl.naturalWidth || imgEl.width;
-                                canvas.height = imgEl.naturalHeight || imgEl.height;
-                                const ctx = canvas.getContext('2d');
-                                ctx.drawImage(imgEl, 0, 0);
-                                const b64 = canvas.toDataURL('image/png');
-                                doc.addImage(b64, 'PNG', w - 80, 20, 40, 40);
-                            }
-                        }
-                    } catch(e) {}
-
-                    const agora = new Date();
-                    const dataForm = agora.toLocaleDateString('pt-BR');
-                    const horaForm = agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-
-                    doc.setTextColor(26, 25, 65); doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.text("Parecer e Metodologia de Cálculo", 40, 110);
-                    doc.setTextColor(60, 60, 60); doc.setFontSize(9.5); doc.setFont("helvetica", "normal");
-                    
-                    const textoParecer = `A presente extração consolidou um universo de ${dadosExp.length} chamados encerrados dentro do mês civil selecionado (${fM_text}). Os indicadores matemáticos foram processados de forma automatizada. Documento processado eletronicamente em ${dataForm} às ${horaForm} com filtro de analista: ${fA}.`;
-                    const splitText = doc.splitTextToSize(textoParecer, w - 80);
-                    doc.text(splitText, 40, 124);
-                    
-                    const nextY = 124 + (splitText.length * 14) + 12;
-
-                    doc.setTextColor(26, 25, 65); doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.text("Resumo Executivo", 40, nextY);
-                    doc.setTextColor(60, 60, 60); doc.setFontSize(9.5); doc.setFont("helvetica", "normal");
-                    doc.text(doc.splitTextToSize(`O período processou um total de ${dadosExp.length} tickets. A eficiência registrou um TMA de ${tmaGlobalTexto}, garantindo que ${slaGlobalTexto} das demandas fossem solucionadas no prazo. A taxa de incidentes correspondeu a ${incGlobalTexto}.`, w - 80), 40, nextY + 14);
-                    
-                    const mesesUnicos = new Set(dadosExp.map(d => obterMesAno(d['Data Encerramento'] || d['Data Abertura']))).size || 1; 
-                    const mediaMes = Math.round(dadosExp.length / mesesUnicos);
-                    
-                    const blockY = nextY + 45;
-                    doc.setFillColor(245, 247, 250); 
-                    doc.rect(40, blockY, 120, 42, 'F');
-                    doc.rect(171, blockY, 120, 42, 'F');
-                    doc.rect(302, blockY, 120, 42, 'F');
-                    doc.rect(433, blockY, 120, 42, 'F');
-
-                    doc.setFontSize(7.5); doc.setTextColor(120, 120, 120); doc.setFont("helvetica", "bold"); 
-                    doc.text("VOLUME TOTAL", 100, blockY+16, {align: 'center'}); 
-                    doc.text("MÉDIA / MÊS", 231, blockY+16, {align: 'center'}); 
-                    doc.text("TMA (HORAS)", 362, blockY+16, {align: 'center'}); 
-                    doc.text("SLA ATENDIDO", 493, blockY+16, {align: 'center'});
-                    
-                    doc.setFontSize(14); doc.setTextColor(26, 25, 65); 
-                    doc.text(String(dadosExp.length), 100, blockY+33, {align: 'center'}); 
-                    doc.text(String(mediaMes), 231, blockY+33, {align: 'center'}); 
-                    doc.text(String(tmaGlobalTexto), 362, blockY+33, {align: 'center'}); 
-                    doc.setTextColor(22, 163, 74); 
-                    doc.text(String(slaGlobalTexto), 493, blockY+33, {align: 'center'});
-
-                    const vizY = blockY + 58;
-                    doc.setTextColor(26, 25, 65); doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.text("Análise Visual", 40, vizY);
-                    doc.setFontSize(8.5); doc.setTextColor(100, 100, 100); doc.setFont("helvetica", "normal");
-                    
-                    const getImg = (id) => { try { const c = document.getElementById(id); return c ? c.toDataURL('image/jpeg', 1.0) : null; } catch(e) { return null; } };
-                    
-                    doc.text("Evolução Histórica", 40, vizY + 15); const i1 = getImg('chart-meses'); if(i1) doc.addImage(i1, 'JPEG', 40, vizY + 20, 240, 110);
-                    doc.text("Volume Foco", 305, vizY + 15); const i2 = getImg('chart-analistas'); if(i2) doc.addImage(i2, 'JPEG', 305, vizY + 20, 240, 110);
-
-                    const vizY2 = vizY + 145;
-                    doc.text("Assuntos Top 15", 40, vizY2); const i3 = getImg('chart-assuntos'); if(i3) doc.addImage(i3, 'JPEG', 40, vizY2 + 5, 240, 110);
-                    doc.text("SLA vs Criticidade", 305, vizY2); const i4 = getImg('chart-prioridade'); if(i4) doc.addImage(i4, 'JPEG', 305, vizY2 + 5, 240, 110);
-
-                    doc.addPage(); doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.setTextColor(26, 25, 65); doc.text("Detalhamento dos Chamados Extraídos", 40, 40);
-                    const linhas = dadosExp.map(d => [ String(d['Ticket']||'-'), String((d['Data Abertura']||'').split(' ')[0]), String((d['Analista']||'-').split('.')[0]), String((d['Assunto']||'').substring(0, 35)), String(d['Prioridade']||'-'), String(d['SLA Atendido']||'-') ]);
-                    doc.autoTable({ startY: 55, head: [["Ticket", "Abertura", "Analista", "Assunto", "Prioridade", "SLA Ok?"]], body: linhas, theme: 'striped', headStyles: { fillColor: [26, 25, 65] }, styles: { fontSize: 8 }, alternateRowStyles: { fillColor: [247, 248, 250] }, margin: { top: 30, right: 40, bottom: 40, left: 40 }, didDrawPage: function (dt) { doc.setFontSize(8); doc.setTextColor(150, 150, 150); doc.text(`Página ${doc.internal.getNumberOfPages()}`, w/2, doc.internal.pageSize.height - 20, {align:'center'}); } });
-                    doc.save(`Relatorio_Gerencial_SETIC.pdf`);
-                } catch (err) { alert("Erro ao gerar PDF."); } finally { 
-                    btn.innerHTML = conteudoOriginal; btn.disabled = false; 
-                    mesesRelatorioOverride = null; atualizarDashboard();
-                }
-            }, 800); 
-        });
     </script>
 </body>
 </html>
