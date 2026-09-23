@@ -185,19 +185,37 @@
             </div>
 
             <div class="p-6 overflow-y-auto flex-grow">
-                <!-- Aba Atualizar Base -->
+                <!-- Aba Atualizar Base (CENTRALIZAÇÃO DE TODOS OS UPLOADS) -->
                 <div id="conteudo-dados" class="block">
-                    <label class="bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 text-[#1a1941] dark:text-indigo-300 border-2 border-dashed border-[#1a1941] dark:border-indigo-400 w-full p-8 rounded-lg font-semibold cursor-pointer transition flex flex-col items-center justify-center gap-3">
-                        <i class="fa-solid fa-cloud-arrow-up text-4xl mb-1"></i>
-                        <span>Clique para Importar Planilha Atualizada (.xlsx)</span>
+                    <h3 class="font-bold text-gray-700 dark:text-gray-300 mb-2 text-sm uppercase">Base Operacional Primária</h3>
+                    <label class="bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 text-[#1a1941] dark:text-indigo-300 border-2 border-dashed border-[#1a1941] dark:border-indigo-400 w-full p-6 rounded-lg font-semibold cursor-pointer transition flex flex-col items-center justify-center gap-3 mb-4">
+                        <i class="fa-solid fa-cloud-arrow-up text-3xl mb-1"></i>
+                        <span>Importar Base de Chamados (.xlsx)</span>
                         <input type="file" id="file-upload" accept=".xlsx, .xls" class="hidden">
                     </label>
-                    <div id="loader-upload" class="mt-4 flex items-center justify-center gap-2 text-sm font-semibold text-[#1a1941] dark:text-indigo-300 hidden">
-                        <div class="loader !border-t-current !border-4 !w-5 !h-5 inline-block"></div> Gravando no Firebase...
+
+                    <h3 class="font-bold text-gray-700 dark:text-gray-300 mb-2 mt-6 text-sm uppercase border-t dark:border-gray-700 pt-4">Bases Auxiliares de Fiscalização (IMR)</h3>
+                    <div class="flex flex-col sm:flex-row gap-3 mb-2">
+                        <label class="flex-grow bg-green-50 dark:bg-green-900/20 border border-green-300 dark:border-green-700 hover:bg-green-100 dark:hover:bg-green-900/40 text-green-800 dark:text-green-400 p-3 rounded cursor-pointer transition text-sm font-bold flex items-center justify-center gap-2 shadow-sm">
+                            <i class="fa-solid fa-star"></i> Planilha de Satisfação (INS1)
+                            <input type="file" id="upload-satisfacao" accept=".xlsx, .xls" class="hidden">
+                        </label>
+                        <label class="flex-grow bg-green-50 dark:bg-green-900/20 border border-green-300 dark:border-green-700 hover:bg-green-100 dark:hover:bg-green-900/40 text-green-800 dark:text-green-400 p-3 rounded cursor-pointer transition text-sm font-bold flex items-center justify-center gap-2 shadow-sm">
+                            <i class="fa-solid fa-rotate-left"></i> Planilha de Reabertos (INS6)
+                            <input type="file" id="upload-reabertos" accept=".xlsx, .xls" class="hidden">
+                        </label>
                     </div>
+
+                    <div id="loader-upload" class="mt-4 flex items-center justify-center gap-2 text-sm font-semibold text-[#1a1941] dark:text-indigo-300 hidden">
+                        <div class="loader !border-t-current !border-4 !w-5 !h-5 inline-block"></div> Gravando base primária no Firebase...
+                    </div>
+                    <div id="loader-fiscal-upload" class="mt-4 flex items-center justify-center gap-2 text-sm font-semibold text-green-700 dark:text-green-400 hidden">
+                        <div class="loader !border-t-current !border-4 !w-5 !h-5 inline-block"></div> Gravando dados auxiliares no Firebase...
+                    </div>
+
                     <div class="mt-6 text-center border-t dark:border-gray-700 pt-4">
                         <button id="btn-carregar-historico" class="bg-gray-800 dark:bg-gray-600 hover:bg-black text-white px-4 py-2 rounded text-sm font-semibold transition shadow-sm">
-                            <i class="fa-solid fa-database"></i> Carregar Histórico Completo
+                            <i class="fa-solid fa-database"></i> Carregar Histórico Completo da Nuvem
                         </button>
                     </div>
                 </div>
@@ -262,22 +280,8 @@
                             <div class="w-full">
                                 <h3 class="font-bold text-lg text-green-800 dark:text-green-400 mb-2">Auditoria e Fiscalização de Contrato (IMR)</h3>
                                 <p class="text-sm text-green-700 dark:text-green-300 mb-4 leading-relaxed">
-                                    O sistema atuará como fiscal virtual processando o NMS utilizando as planilhas secundárias em conjunto com a base primária e filtrando pelo <strong>Data de Encerramento</strong> no ciclo dia 04 ao dia 03.
+                                    O sistema atuará como fiscal virtual processando o NMS utilizando as planilhas secundárias (enviadas na aba "Atualizar Base") em conjunto com a base primária e filtrando pela <strong>Data de Encerramento</strong> no ciclo do dia 04 ao dia 03.
                                 </p>
-
-                                <div class="flex flex-col sm:flex-row gap-3 mb-4">
-                                    <label class="flex-grow bg-white dark:bg-gray-800 border border-green-300 dark:border-green-700 hover:bg-green-50 dark:hover:bg-green-900/30 text-green-800 dark:text-green-400 p-2 rounded cursor-pointer transition text-xs font-bold flex items-center justify-center gap-2 shadow-sm">
-                                        <i class="fa-solid fa-file-excel"></i> Enviar Planilha de Satisfação (INS1)
-                                        <input type="file" id="upload-satisfacao" accept=".xlsx, .xls" class="hidden">
-                                    </label>
-                                    <label class="flex-grow bg-white dark:bg-gray-800 border border-green-300 dark:border-green-700 hover:bg-green-50 dark:hover:bg-green-900/30 text-green-800 dark:text-green-400 p-2 rounded cursor-pointer transition text-xs font-bold flex items-center justify-center gap-2 shadow-sm">
-                                        <i class="fa-solid fa-file-excel"></i> Enviar Planilha de Reabertos (INS6)
-                                        <input type="file" id="upload-reabertos" accept=".xlsx, .xls" class="hidden">
-                                    </label>
-                                </div>
-                                <div id="loader-fiscal-upload" class="hidden text-center text-xs font-bold text-green-700 mb-4">
-                                    <i class="fa-solid fa-spinner fa-spin"></i> Registrando dados auxiliares no sistema...
-                                </div>
                                 
                                 <div class="flex flex-col sm:flex-row gap-3 items-end mt-2 pt-4 border-t border-green-200 dark:border-green-800">
                                     <div class="w-full sm:w-1/3">
@@ -758,7 +762,7 @@
         });
 
         // ==========================================
-        // AUDITORIA E FISCALIZAÇÃO IMR (COM BASES AUXILIARES)
+        // AUDITORIA E FISCALIZAÇÃO IMR
         // ==========================================
         document.getElementById('btn-gerar-fiscal-pdf').addEventListener('click', () => {
             const mesSelecionado = document.getElementById('fiscal-mes').value;
@@ -983,11 +987,11 @@
                         styles: { fontSize: 9, cellPadding: 4 }, 
                         alternateRowStyles: { fillColor: [247, 248, 250] }, 
                         margin: { left: 40, right: 40 },
-                        didDrawPage: function(data) {}
+                        didDrawPage: function(data) { }
                     });
 
                     // ==========================================
-                    // CONCLUSÃO DE GLOSA (FORMATADA)
+                    // CONCLUSÃO DE GLOSA (RESOLVIDO BUG DO TEXTO)
                     // ==========================================
                     const finalY = doc.lastAutoTable.finalY + 30;
                     doc.setTextColor(26, 25, 65); doc.setFontSize(12); doc.setFont("helvetica", "bold"); 
@@ -997,24 +1001,24 @@
                     doc.setFontSize(10); doc.setTextColor(60, 60, 60);
 
                     if (totalPontosGlosa === 0) {
-                        const l1 = "Após análise rigorosa dos índices apresentados no período aferido, atesta-se que a empresa cumpriu com";
-                        const l2 = "todos os Níveis Mínimos de Serviços (NMS) previstos contratualmente. Portanto, ";
-                        const lBold = "NÃO SERÁ APLICADA GLOSA";
-                        const l3 = " (0 pontos computados),";
-                        
                         doc.setFont("helvetica", "normal");
-                        doc.text(l1, 40, posY);
-                        doc.text(l2, 40, posY + 14);
+                        doc.text("Após análise rigorosa dos índices apresentados no período aferido, atesta-se que a empresa cumpriu com", 40, posY);
+                        doc.text("todos os Níveis Mínimos de Serviços (NMS) previstos contratualmente. Portanto,", 40, posY + 14);
                         
-                        const wL2 = doc.getTextWidth(l2);
+                        // Posiciona a frase em negrito e o resto da frase fluidamente na MESMA linha
+                        const parte2 = "todos os Níveis Mínimos de Serviços (NMS) previstos contratualmente. Portanto, ";
+                        const wParte2 = doc.getTextWidth(parte2);
+                        
                         doc.setFont("helvetica", "bold");
-                        doc.text(lBold, 40 + wL2, posY + 14);
+                        doc.text("NÃO SERÁ APLICADA GLOSA", 40 + wParte2, posY + 14);
                         
-                        const wBold = doc.getTextWidth(lBold);
+                        const wBold = doc.getTextWidth("NÃO SERÁ APLICADA GLOSA");
+                        
                         doc.setFont("helvetica", "normal");
-                        doc.text(l3, 40 + wL2 + wBold, posY + 14);
-
-                        doc.text("devendo o faturamento prosseguir em sua integralidade.", 40, posY + 28);
+                        doc.text(" (0 pontos computados), devendo", 40 + wParte2 + wBold, posY + 14);
+                        
+                        // Última linha
+                        doc.text("o faturamento prosseguir em sua integralidade.", 40, posY + 28);
                     } else {
                         doc.text(`Após análise dos índices no período aferido, constatou-se descumprimento de NMS.`, 40, posY);
                         doc.setFont("helvetica", "bold");
@@ -1257,7 +1261,7 @@
         });
 
         // ==========================================
-        // RELATÓRIO GERENCIAL
+        // RELATÓRIO GERENCIAL (CORREÇÃO DE PÁGINA)
         // ==========================================
         document.getElementById('btn-gerar-pdf').addEventListener('click', () => {
             const checkboxes = document.querySelectorAll('#relatorio-mes-container input:checked');
@@ -1290,18 +1294,11 @@
                     
                     try { 
                         let imgData = localStorage.getItem('dashLogo');
-                        if (imgData) {
-                            doc.addImage(imgData, 'PNG', w - 80, 20, 40, 40);
-                        } else {
+                        if (imgData) { doc.addImage(imgData, 'PNG', w - 80, 20, 40, 40); } 
+                        else {
                             const imgEl = document.querySelector('#header-logo-container img');
                             if(imgEl) {
-                                const canvas = document.createElement('canvas');
-                                canvas.width = imgEl.naturalWidth || imgEl.width;
-                                canvas.height = imgEl.naturalHeight || imgEl.height;
-                                const ctx = canvas.getContext('2d');
-                                ctx.drawImage(imgEl, 0, 0);
-                                const b64 = canvas.toDataURL('image/png');
-                                doc.addImage(b64, 'PNG', w - 80, 20, 40, 40);
+                                const canvas = document.createElement('canvas'); canvas.width = imgEl.naturalWidth || imgEl.width; canvas.height = imgEl.naturalHeight || imgEl.height; const ctx = canvas.getContext('2d'); ctx.drawImage(imgEl, 0, 0); const b64 = canvas.toDataURL('image/png'); doc.addImage(b64, 'PNG', w - 80, 20, 40, 40);
                             }
                         }
                     } catch(e) {}
