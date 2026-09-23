@@ -66,8 +66,10 @@
     <div id="tela-dashboard" class="hidden flex-col min-h-screen">
         <header id="header-bg" class="bg-[#1a1941] text-white p-4 shadow-md flex justify-between items-center sticky top-0 z-40 transition-colors">
             <div class="flex items-center gap-3 ml-4">
-                <div id="header-logo-container" class="flex items-center"></div>
-                <i class="fa-solid fa-chart-line text-2xl" id="header-default-icon"></i>
+                <div id="header-logo-container" class="flex items-center">
+                    <!-- Brasão Fixo para evitar sumiço por cache -->
+                    <img src="https://raw.githubusercontent.com/AlbertBarros/dashbord-chamados-suporte-setic/main/bras%C3%A3o.png" alt="Logo" class="h-9 w-9 object-contain mr-2" crossorigin="anonymous">
+                </div>
                 <h1 id="titulo-painel" class="text-xl font-bold tracking-wide">Analytics Suporte SETIC</h1>
             </div>
             <div class="flex items-center gap-4 mr-4">
@@ -188,7 +190,7 @@
             </div>
 
             <div class="p-6 overflow-y-auto flex-grow">
-                <!-- Aba Atualizar Base -->
+                <!-- Aba Atualizar Base (CENTRALIZAÇÃO DE TODOS OS UPLOADS) -->
                 <div id="conteudo-dados" class="block">
                     <h3 class="font-bold text-gray-700 dark:text-gray-300 mb-2 text-sm uppercase">Base Operacional Primária</h3>
                     <label class="bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 text-[#1a1941] dark:text-indigo-300 border-2 border-dashed border-[#1a1941] dark:border-indigo-400 w-full p-6 rounded-lg font-semibold cursor-pointer transition flex flex-col items-center justify-center gap-3 mb-4">
@@ -497,17 +499,6 @@
         ['aba-dados', 'aba-aparencia', 'aba-relatorios', 'aba-fiscal', 'aba-admin'].forEach(id => document.getElementById(id).addEventListener('click', () => switchTab(id, 'conteudo-' + id.split('-')[1])));
         document.getElementById('input-cor').addEventListener('input', (e) => document.getElementById('hex-view').innerText = e.target.value);
 
-        document.getElementById('input-logo-file').addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(ev) {
-                localStorage.setItem('dashLogo', ev.target.result);
-                aplicarPersonalizacao();
-            };
-            reader.readAsDataURL(file);
-        });
-
         function aplicarPersonalizacao() {
             const tituloSalvo = localStorage.getItem('dashTitulo') || 'Analytics Suporte SETIC';
             
@@ -522,6 +513,7 @@
             document.getElementById('header-bg').style.backgroundColor = isDark ? '#111827' : corPrincipal;
             document.getElementById('card-filtros').style.borderTopColor = corPrincipal;
 
+            // Restaura o logo se existir
             const savedLogo = localStorage.getItem('dashLogo');
             const logoContainer = document.getElementById('header-logo-container');
             const loginLogo = document.getElementById('login-logo');
@@ -547,7 +539,6 @@
         async function carregarDadosNuvem(forcarCompleto = false) {
             if(!db) { definirStatus('<i class="fa-solid fa-xmark"></i> Erro DB', 'bg-red-600'); return; }
             try {
-                // Carrega base principal
                 const q = await getDocs(collection(db, "chamados")); dadosGlobais = [];
                 q.forEach((doc) => { 
                     const d = doc.data(); 
@@ -583,6 +574,7 @@
             }); 
         });
 
+        // UPLOADS
         document.getElementById('file-upload').addEventListener('change', (e) => {
             const file = e.target.files[0]; if (!file) return; document.getElementById('loader-upload').classList.remove('hidden');
             const reader = new FileReader(); reader.onload = async function(ev) {
@@ -596,7 +588,6 @@
             }; reader.readAsArrayBuffer(file);
         });
 
-        // UPLOAD BASES AUXILIARES IMR
         function handleUploadAux(inputId, colName) {
             const el = document.getElementById(inputId);
             if(!el) return;
@@ -806,7 +797,6 @@
 
             const mapSat = new Map();
             dadosSatisfacao.forEach(s => mapSat.set(String(s.Ticket || s.ticket || s.TICKET || s['Nº Chamado'] || ""), s));
-            
             const mapReab = new Set();
             dadosReabertos.forEach(r => mapReab.add(String(r.Ticket || r.ticket || r.TICKET || r['Nº Chamado'] || "")));
 
@@ -891,7 +881,7 @@
                     let periodoAfericao = "Base Completa";
                     if (mesSelecionado !== 'Todos') {
                         const p = mesSelecionado.split('/');
-                        let mm = parseInt(p[0]); let yy = parseInt(p[1]);
+                        let mm = parseInt(p[0], 10); let yy = parseInt(p[1], 10);
                         let mmNext = mm + 1; let yyNext = yy;
                         if (mmNext > 12) { mmNext = 1; yyNext++; }
                         const m1 = mm < 10 ? '0'+mm : mm;
@@ -924,34 +914,47 @@
                     
                     const fPct = (v) => (v * 100).toFixed(2).replace('.', ',') + '%';
                     
-                    const getRow = (ind, den, f, t, m, at, fm, pt, isOk) => {
-                        const color = isOk ? [22, 163, 74] : [220, 38, 38]; 
+                    const getRow = (ind, den, f, t, m, at_str, fm, pt, isOk, isNA = false) => {
+                        let color = isOk ? [22, 163, 74] : [220, 38, 38]; 
+                        if (isNA) color = [100, 100, 100]; // Cinza neutro se N/A
                         return [
                             ind, den, f, t, m, 
-                            { content: at, styles: { textColor: color, fontStyle: 'bold' } }, 
+                            { content: at_str, styles: { textColor: color, fontStyle: 'bold' } }, 
                             fm, pt
                         ];
                     };
                     
                     const linhasTabela = [];
                     let totalPontosGlosa = 0;
-                    let detalhesGlosa = [];
 
+                    // INS1
                     const ins1_media = countNotas > 0 ? (sumNotas / countNotas) : 5.0;
                     linhasTabela.push(getRow('INS1', '-', '-', total, '4,0', ins1_media.toFixed(2).replace('.', ','), '0,00', '0', ins1_media >= 4.0));
                     
+                    // INS2
                     const ins2_ating = total > 0 ? (ins2_dentro / total) : 1;
-                    const ins2_pontos = ins2_ating < 0.95 ? Math.floor((0.95 - ins2_ating)/0.01)*5 : 0;
-                    if(ins2_pontos > 0) { totalPontosGlosa += ins2_pontos; detalhesGlosa.push(`INS2: ${((0.95 - ins2_ating)*100).toFixed(2).replace('.',',')}% fora da meta (${ins2_pontos} pontos)`); }
+                    const ins2_pontos = ins2_ating < 0.95 ? Math.floor((0.95 - ins2_ating)/0.01)*5 : 0; // Regra de penalização inserida
+                    if(ins2_pontos > 0) totalPontosGlosa += ins2_pontos; 
                     linhasTabela.push(getRow('INS2', ins2_dentro, (total - ins2_dentro), total, '95,00%', fPct(ins2_ating), '0,00', String(ins2_pontos), ins2_ating >= 0.95));
 
+                    // INS3 (Geral)
                     const ins3_ating = total > 0 ? (ins3_dentro / total) : 1;
-                    linhasTabela.push(getRow('INS3', ins3_dentro, (total - ins3_dentro), total, '90,00%', fPct(ins3_ating), '0,00', '0', ins3_ating >= 0.90));
+                    const ins3_pontos = ins3_ating < 0.90 ? Math.floor((0.90 - ins3_ating)/0.01)*5 : 0; // Regra de penalização inserida
+                    if(ins3_pontos > 0) totalPontosGlosa += ins3_pontos;
+                    linhasTabela.push(getRow('INS3', ins3_dentro, (total - ins3_dentro), total, '90,00%', fPct(ins3_ating), '0,00', String(ins3_pontos), ins3_ating >= 0.90));
                     
+                    // INS3 (Por Criticidade P1-P5 com Lógica N/A e Penalização)
                     ['P1', 'P2', 'P3', 'P4', 'P5'].forEach(p => {
                         const s = p_stats[p];
-                        const atg = s.total > 0 ? (s.dentro / s.total) : 1;
-                        linhasTabela.push(getRow(`INS3 - ${p}`, s.dentro, (s.total - s.dentro), s.total, '90,00%', fPct(atg), '0,00', '0', atg >= 0.90));
+                        if (s.total === 0) {
+                            // Imprime "N/A" se for zero, sem pontos
+                            linhasTabela.push(getRow(`INS3 - ${p}`, 0, 0, 0, '90,00%', 'N/A', '0,00', '0', true, true));
+                        } else {
+                            const atg = s.dentro / s.total;
+                            const pts = atg < 0.90 ? Math.floor((0.90 - atg)/0.01)*1 : 0; // Exemplo de penalidade individual por P
+                            if(pts > 0) totalPontosGlosa += pts;
+                            linhasTabela.push(getRow(`INS3 - ${p}`, s.dentro, (s.total - s.dentro), s.total, '90,00%', fPct(atg), '0,00', String(pts), atg >= 0.90));
+                        }
                     });
 
                     linhasTabela.push(['INS4', {content: 'Não se aplica', colSpan: 6, styles: {halign: 'center', fontStyle: 'bold', fillColor: [240, 240, 240]}}, '0']);
@@ -960,7 +963,7 @@
                     const ins6_dentro = total - ins6_fora;
                     const ins6_ating = total > 0 ? (ins6_fora / total) : 0;
                     const ins6_pontos = ins6_ating > 0.03 ? Math.floor((ins6_ating - 0.03)/0.01)*3 : 0;
-                    if(ins6_pontos > 0) { totalPontosGlosa += ins6_pontos; detalhesGlosa.push(`INS6: ${((ins6_ating - 0.03)*100).toFixed(2).replace('.',',')}% fora da meta (${ins6_pontos} pontos)`); }
+                    if(ins6_pontos > 0) totalPontosGlosa += ins6_pontos; 
                     linhasTabela.push(getRow('INS6', ins6_dentro, ins6_fora, total, '3,00%', fPct(ins6_ating), '0,00', String(ins6_pontos), ins6_ating <= 0.03));
 
                     linhasTabela.push(['INS7', {content: 'Não se aplica', colSpan: 6, styles: {halign: 'center', fontStyle: 'bold', fillColor: [240, 240, 240]}}, '0']);
@@ -982,7 +985,7 @@
                     });
 
                     // ==========================================
-                    // CONCLUSÃO DE GLOSA
+                    // CONCLUSÃO DE GLOSA (COM QUEBRA INTELIGENTE E NEGRITO ISOLADO)
                     // ==========================================
                     const finalY = doc.lastAutoTable.finalY + 30;
                     doc.setTextColor(26, 25, 65); doc.setFontSize(12); doc.setFont("helvetica", "bold"); 
@@ -993,12 +996,12 @@
                     const maxWidth = w - 80;
                     doc.setFontSize(10); doc.setTextColor(60, 60, 60);
 
-                    // ALGORITMO DE QUEBRA DE MARGEM INTELIGENTE
+                    // ALGORITMO DE QUEBRA DE MARGEM
                     function printWrapped(text, isBold) {
                         doc.setFont("helvetica", isBold ? "bold" : "normal");
-                        const tokens = text.split(/(\s+)/).filter(Boolean); 
+                        const tokens = text.match(/\S+|\s/g) || []; 
                         tokens.forEach(token => {
-                            if (token.trim() === "") {
+                            if (token === " ") {
                                 let spaceW = doc.getTextWidth(" ");
                                 if (cursorX + spaceW <= 40 + maxWidth) cursorX += spaceW;
                             } else {
@@ -1062,10 +1065,12 @@
             return "Desc"; 
         }
 
+        // MOTOR DE CICLO FISCAL BLINDADO
         function obterMesAnoFiscal(str) {
             if (!str) return "Desc";
             let ano, mes, dia;
 
+            // Blindagem contra número de série do Excel (Ex: 46235 -> 01/08/2026)
             if (!isNaN(str) && Number(str) > 30000) {
                 const parsed = parseExcelDate(parseFloat(str));
                 ano = parsed.ano; mes = parsed.mes; dia = parsed.dia;
@@ -1134,7 +1139,6 @@
                 const dataEncerramento = d['Data Encerramento'] || d['Data Solução'] || dataAbertura;
                 
                 m.add(obterMesAno(dataEncerramento)); 
-                
                 if(dataEncerramento) mFiscal.add(obterMesAnoFiscal(dataEncerramento));
                 if(dataAbertura) mFiscal.add(obterMesAnoFiscal(dataAbertura));
                 
@@ -1216,7 +1220,6 @@
             slaGlobalTexto = total > 0 ? ((at / total) * 100).toFixed(1) + '%' : '0%'; incGlobalTexto = total > 0 ? ((inc / total) * 100).toFixed(1) + '%' : '0%';
             document.getElementById('kpi-sla').innerText = slaGlobalTexto; document.getElementById('kpi-incidentes').innerText = incGlobalTexto;
 
-            // LÓGICA DO INS1 BLINDADA NO DASHBOARD
             const mapSat = new Map();
             dadosSatisfacao.forEach(s => mapSat.set(String(s.Ticket || s.ticket || s.TICKET || s['Nº Chamado'] || ""), s));
             const mapReab = new Set();
