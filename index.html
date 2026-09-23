@@ -136,7 +136,7 @@
                 <div class="card bg-white dark:bg-gray-800 flex flex-col items-center justify-center"><h3 class="font-bold text-gray-700 dark:text-gray-300 mb-4 w-full border-b dark:border-gray-700 pb-2 text-sm uppercase">Natureza do Chamado</h3><div class="chart-container-small" title="Clique para filtrar por tipo"><canvas id="chart-tipo"></canvas></div></div>
             </div>
 
-            <div class="card bg-white dark:bg-white dark:bg-gray-800">
+            <div class="card bg-white dark:bg-gray-800">
                 <div class="flex justify-between items-end mb-4 border-b dark:border-gray-700 pb-2">
                     <h3 class="font-bold text-gray-700 dark:text-gray-300 text-sm uppercase"><i class="fa-solid fa-table-list mr-2 text-[#1a1941] dark:text-indigo-400"></i>Detalhamento Operacional</h3>
                     <span class="text-xs text-gray-500 dark:text-gray-400 font-semibold" id="txt-tabela-count">Exibindo 0 registros.</span>
@@ -262,8 +262,22 @@
                             <div class="w-full">
                                 <h3 class="font-bold text-lg text-green-800 dark:text-green-400 mb-2">Auditoria e Fiscalização de Contrato (IMR)</h3>
                                 <p class="text-sm text-green-700 dark:text-green-300 mb-4 leading-relaxed">
-                                    O sistema atuará como fiscal virtual: ele lerá os chamados da base utilizando a <strong>Data de Encerramento</strong> para definir a qual ciclo de medição (dia 04 ao dia 03) o serviço pertence.
+                                    O sistema atuará como fiscal virtual processando o NMS utilizando as planilhas secundárias em conjunto com a base primária e filtrando pelo <strong>Data de Encerramento</strong> no ciclo dia 04 ao dia 03.
                                 </p>
+
+                                <div class="flex flex-col sm:flex-row gap-3 mb-4">
+                                    <label class="flex-grow bg-white dark:bg-gray-800 border border-green-300 dark:border-green-700 hover:bg-green-50 dark:hover:bg-green-900/30 text-green-800 dark:text-green-400 p-2 rounded cursor-pointer transition text-xs font-bold flex items-center justify-center gap-2 shadow-sm">
+                                        <i class="fa-solid fa-file-excel"></i> Enviar Planilha de Satisfação (INS1)
+                                        <input type="file" id="upload-satisfacao" accept=".xlsx, .xls" class="hidden">
+                                    </label>
+                                    <label class="flex-grow bg-white dark:bg-gray-800 border border-green-300 dark:border-green-700 hover:bg-green-50 dark:hover:bg-green-900/30 text-green-800 dark:text-green-400 p-2 rounded cursor-pointer transition text-xs font-bold flex items-center justify-center gap-2 shadow-sm">
+                                        <i class="fa-solid fa-file-excel"></i> Enviar Planilha de Reabertos (INS6)
+                                        <input type="file" id="upload-reabertos" accept=".xlsx, .xls" class="hidden">
+                                    </label>
+                                </div>
+                                <div id="loader-fiscal-upload" class="hidden text-center text-xs font-bold text-green-700 mb-4">
+                                    <i class="fa-solid fa-spinner fa-spin"></i> Registrando dados auxiliares no sistema...
+                                </div>
                                 
                                 <div class="flex flex-col sm:flex-row gap-3 items-end mt-2 pt-4 border-t border-green-200 dark:border-green-800">
                                     <div class="w-full sm:w-1/3">
@@ -310,7 +324,7 @@
                     <!-- ZONA DE PERIGO / EXCLUSÃO -->
                     <div id="area-gestao-banco" class="hidden bg-white dark:bg-gray-800 p-5 rounded border border-red-200 dark:border-gray-700 border-l-4 border-l-red-500 shadow-sm">
                         <h4 class="font-bold text-red-700 dark:text-red-400 mb-2 flex items-center gap-2"><i class="fa-solid fa-trash-can"></i> Gestão da Base de Dados</h4>
-                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">Selecione o mês correspondente à planilha que deseja remover para não duplicar dados incorretos.</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">Selecione o mês correspondente à planilha ou a base auxiliar que deseja apagar.</p>
                         <div class="flex flex-col sm:flex-row gap-3 items-center">
                             <select id="select-exclusao" class="flex-grow w-full border border-gray-300 dark:border-gray-600 rounded p-2 text-sm dark:bg-gray-700 focus:outline-none focus:border-red-500">
                                 <!-- Preenchido via JS -->
@@ -379,6 +393,7 @@
         const secondaryAuth = getAuth(secondaryApp);
 
         let dadosGlobais = []; let dadosFiltradosCache = []; let mesesRelatorioOverride = null;
+        let dadosSatisfacao = []; let dadosReabertos = []; // Bases auxiliares
         let historicoCompletoCarregado = false;
         let corPrincipal = localStorage.getItem('dashCor') || '#1a1941';
         let equipeFocoStr = localStorage.getItem('equipeFoco') || 'fabio.palma.prestador, edison.neto.prestador, antonio.muniz.prestador, jose.andrade.prestador';
@@ -526,6 +541,7 @@
         async function carregarDadosNuvem(forcarCompleto = false) {
             if(!db) { definirStatus('<i class="fa-solid fa-xmark"></i> Erro DB', 'bg-red-600'); return; }
             try {
+                // Carrega base principal
                 const q = await getDocs(collection(db, "chamados")); dadosGlobais = [];
                 q.forEach((doc) => { 
                     const d = doc.data(); 
@@ -534,6 +550,17 @@
                         dadosGlobais.push(d); 
                     }
                 });
+                
+                // Carrega bases auxiliares para o IMR
+                try {
+                    const qs = await getDocs(collection(db, "satisfacao")); dadosSatisfacao = [];
+                    qs.forEach(doc => dadosSatisfacao.push(doc.data()));
+                } catch(e) {}
+                try {
+                    const qr = await getDocs(collection(db, "reabertos")); dadosReabertos = [];
+                    qr.forEach(doc => dadosReabertos.push(doc.data()));
+                } catch(e) {}
+
                 if(dadosGlobais.length > 0) {
                     definirStatus('<i class="fa-solid fa-check-circle"></i> Sincronizado', 'bg-green-500');
                     document.getElementById('tag-ano-atual').innerText = forcarCompleto ? "Visualizando: Histórico Completo" : "Visualizando: 2026";
@@ -564,6 +591,41 @@
             }; reader.readAsArrayBuffer(file);
         });
 
+        // UPLOAD BASES AUXILIARES IMR
+        function handleUploadAux(inputId, colName) {
+            const el = document.getElementById(inputId);
+            if(!el) return;
+            el.addEventListener('change', (e) => {
+                const file = e.target.files[0]; if (!file) return;
+                document.getElementById('loader-fiscal-upload').classList.remove('hidden');
+                const reader = new FileReader(); reader.onload = async function(ev) {
+                    const wb = XLSX.read(new Uint8Array(ev.target.result), { type: 'array' }); 
+                    const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: "" });
+                    try {
+                        const ba = [writeBatch(db)]; let c = 0, b = 0;
+                        rows.forEach(r => { 
+                            const ticketId = String(r.Ticket || r.ticket || r.TICKET || r['Nº Chamado'] || r['chamado'] || "");
+                            if(ticketId) { 
+                                ba[b].set(doc(db, colName, ticketId), r); 
+                                c++; 
+                                if (c === 490) { ba.push(writeBatch(db)); b++; c = 0; } 
+                            } 
+                        });
+                        for (const batch of ba) await batch.commit();
+                        document.getElementById('loader-fiscal-upload').classList.add('hidden'); 
+                        e.target.value = ""; 
+                        alert(`Base de dados auxiliar (${colName}) atualizada com sucesso!`);
+                        await carregarDadosNuvem(historicoCompletoCarregado); 
+                    } catch (err) { 
+                        document.getElementById('loader-fiscal-upload').classList.add('hidden'); 
+                        alert("Erro ao processar planilha auxiliar.");
+                    }
+                }; reader.readAsArrayBuffer(file);
+            });
+        }
+        handleUploadAux('upload-satisfacao', 'satisfacao');
+        handleUploadAux('upload-reabertos', 'reabertos');
+
         // ==========================================
         // ÁREA DE ADMINISTRAÇÃO
         // ==========================================
@@ -586,6 +648,10 @@
             mArr.forEach(m => {
                 selectExclusao.innerHTML += `<option value="${m}">Apenas Dados do Mês ${m}</option>`;
             });
+            
+            // Adicionar opções para apagar bases auxiliares
+            selectExclusao.innerHTML += `<option value="SATISFACAO">Apagar Base de Satisfação (INS1)</option>`;
+            selectExclusao.innerHTML += `<option value="REABERTOS">Apagar Base de Reabertos (INS6)</option>`;
         }
 
         inSenha.addEventListener('input', (e) => { 
@@ -629,7 +695,11 @@
 
         btnReset.addEventListener('click', async () => {
             const valorSelecionado = selectExclusao.value;
-            const textoConfirmacao = valorSelecionado === 'TUDO' ? "TODA A BASE DE DADOS" : `OS DADOS DO MÊS ${valorSelecionado}`;
+            let textoConfirmacao = "";
+            if (valorSelecionado === 'SATISFACAO') textoConfirmacao = "A BASE DE SATISFAÇÃO (INS1)";
+            else if (valorSelecionado === 'REABERTOS') textoConfirmacao = "A BASE DE REABERTOS (INS6)";
+            else if (valorSelecionado === 'TUDO') textoConfirmacao = "TODA A BASE PRINCIPAL DE DADOS";
+            else textoConfirmacao = `OS DADOS DO MÊS ${valorSelecionado}`;
             
             if(!confirm(`⚠️ ALERTA DE SEGURANÇA ⚠️\n\nTEM A CERTEZA ABSOLUTA QUE DESEJA APAGAR ${textoConfirmacao}? Esta ação não pode ser desfeita.`)) return;
             
@@ -637,17 +707,27 @@
             btnReset.disabled = true;
 
             try { 
-                const q = await getDocs(collection(db, "chamados")); 
+                let colName = "chamados";
+                if (valorSelecionado === 'SATISFACAO') colName = "satisfacao";
+                if (valorSelecionado === 'REABERTOS') colName = "reabertos";
+
+                const q = await getDocs(collection(db, colName)); 
                 let b = writeBatch(db); 
                 let c = 0; 
                 const pr = []; 
                 
                 q.docs.forEach((d) => { 
-                    const data = d.data();
-                    const dataAlvo = data['Data Encerramento'] || data['Data Solução'] || data['Data Abertura'];
-                    const mesDoc = obterMesAno(dataAlvo);
-                    
-                    if (valorSelecionado === 'TUDO' || mesDoc === valorSelecionado) {
+                    let del = false;
+                    if (colName === "chamados") {
+                        const data = d.data();
+                        const dataAlvo = data['Data Encerramento'] || data['Data Solução'] || data['Data Abertura'];
+                        const mesDoc = obterMesAno(dataAlvo);
+                        if (valorSelecionado === 'TUDO' || mesDoc === valorSelecionado) del = true;
+                    } else {
+                        del = true; // Apaga a base auxiliar inteira
+                    }
+
+                    if (del) {
                         b.delete(d.ref); 
                         c++; 
                         if(c === 490) { 
@@ -661,14 +741,14 @@
                 if(c > 0) pr.push(b.commit()); 
                 await Promise.all(pr); 
                 
-                alert(`Exclusão concluída com sucesso!`); 
+                alert(`Exclusão de ${textoConfirmacao} concluída com sucesso!`); 
                 inSenha.value = '';
                 areaGestaoBanco.classList.add('hidden');
                 areaGestaoUsuarios.classList.add('hidden');
                 btnReset.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Apagar';
                 btnReset.disabled = false;
                 
-                dadosGlobais = []; 
+                if (colName === "chamados") dadosGlobais = []; 
                 await carregarDadosNuvem(historicoCompletoCarregado); 
             } catch(e) { 
                 alert("Erro ao tentar apagar os dados."); 
@@ -678,7 +758,7 @@
         });
 
         // ==========================================
-        // AUDITORIA E FISCALIZAÇÃO IMR (BUG DA CONCLUSÃO RESOLVIDO)
+        // AUDITORIA E FISCALIZAÇÃO IMR (COM BASES AUXILIARES)
         // ==========================================
         document.getElementById('btn-gerar-fiscal-pdf').addEventListener('click', () => {
             const mesSelecionado = document.getElementById('fiscal-mes').value;
@@ -721,14 +801,26 @@
                 return 'P4';
             };
 
+            // Mapeando dados auxiliares
+            const mapSat = new Map();
+            dadosSatisfacao.forEach(s => mapSat.set(String(s.Ticket || s.ticket || s.TICKET || s['Nº Chamado'] || ""), s));
+            
+            const mapReab = new Set();
+            dadosReabertos.forEach(r => mapReab.add(String(r.Ticket || r.ticket || r.TICKET || r['Nº Chamado'] || "")));
+
             dadosAuditoria.forEach(d => {
+                const tId = String(d['Ticket'] || d['ticket'] || "");
+
+                // INS1 via Base de Satisfação
                 let nota = 5.0; 
-                for(let key in d) {
-                    const k = key.toLowerCase();
-                    if(k.includes('nota') || k.includes('avali') || k.includes('satisfa')) {
-                        const val = parseFloat(d[key]);
-                        if(!isNaN(val)) nota = val;
-                        break;
+                if (mapSat.has(tId)) {
+                    const satRec = mapSat.get(tId);
+                    for(let key in satRec) {
+                        const k = key.toLowerCase();
+                        if(k.includes('nota') || k.includes('avali') || k.includes('satisfa')) {
+                            const val = parseFloat(satRec[key]);
+                            if(!isNaN(val)) { nota = val; break; }
+                        }
                     }
                 }
                 sumNotas += nota; countNotas++;
@@ -746,12 +838,16 @@
                     if(isSlaOk) p_stats[pLevel].dentro++;
                 }
 
-                let foiReaberto = false;
-                for(let key in d) {
-                    if(key.toLowerCase().includes('reabert') || key.toLowerCase().includes('reabr')) {
-                        const val = String(d[key]).toLowerCase();
-                        if(val === 'sim' || parseFloat(val) > 0) foiReaberto = true;
-                        break;
+                // INS6 via Base de Reabertos
+                let foiReaberto = mapReab.has(tId);
+                // Fallback para coluna nativa caso exista
+                if (!foiReaberto) {
+                    for(let key in d) {
+                        if(key.toLowerCase().includes('reabert') || key.toLowerCase().includes('reabr')) {
+                            const val = String(d[key]).toLowerCase();
+                            if(val === 'sim' || parseFloat(val) > 0) foiReaberto = true;
+                            break;
+                        }
                     }
                 }
                 if(foiReaberto) ins6_fora++;
@@ -886,11 +982,12 @@
                         },
                         styles: { fontSize: 9, cellPadding: 4 }, 
                         alternateRowStyles: { fillColor: [247, 248, 250] }, 
-                        margin: { left: 40, right: 40 }
+                        margin: { left: 40, right: 40 },
+                        didDrawPage: function(data) {}
                     });
 
                     // ==========================================
-                    // CONCLUSÃO DE GLOSA (TEXTO SEGURO E CORRIGIDO)
+                    // CONCLUSÃO DE GLOSA (FORMATADA)
                     // ==========================================
                     const finalY = doc.lastAutoTable.finalY + 30;
                     doc.setTextColor(26, 25, 65); doc.setFontSize(12); doc.setFont("helvetica", "bold"); 
@@ -900,25 +997,24 @@
                     doc.setFontSize(10); doc.setTextColor(60, 60, 60);
 
                     if (totalPontosGlosa === 0) {
-                        // Linha 1 
+                        const l1 = "Após análise rigorosa dos índices apresentados no período aferido, atesta-se que a empresa cumpriu com";
+                        const l2 = "todos os Níveis Mínimos de Serviços (NMS) previstos contratualmente. Portanto, ";
+                        const lBold = "NÃO SERÁ APLICADA GLOSA";
+                        const l3 = " (0 pontos computados),";
+                        
                         doc.setFont("helvetica", "normal");
-                        doc.text("Após análise rigorosa dos índices apresentados no período aferido, atesta-se que a empresa cumpriu com", 40, posY);
+                        doc.text(l1, 40, posY);
+                        doc.text(l2, 40, posY + 14);
                         
-                        // Linha 2
-                        doc.text("todos os Níveis Mínimos de Serviços (NMS) previstos contratualmente. Portanto,", 40, posY + 14);
-                        
-                        // Linha 3 com o Negrito isolado no inicio
+                        const wL2 = doc.getTextWidth(l2);
                         doc.setFont("helvetica", "bold");
-                        doc.text("NÃO SERÁ APLICADA GLOSA", 40, posY + 28);
+                        doc.text(lBold, 40 + wL2, posY + 14);
                         
-                        // Resto da linha 3
-                        const wBold = doc.getTextWidth("NÃO SERÁ APLICADA GLOSA");
+                        const wBold = doc.getTextWidth(lBold);
                         doc.setFont("helvetica", "normal");
-                        doc.text(" (0 pontos computados), devendo o faturamento prosseguir em", 40 + wBold, posY + 28);
-                        
-                        // Linha 4
-                        doc.text("sua integralidade.", 40, posY + 42);
+                        doc.text(l3, 40 + wL2 + wBold, posY + 14);
 
+                        doc.text("devendo o faturamento prosseguir em sua integralidade.", 40, posY + 28);
                     } else {
                         doc.text(`Após análise dos índices no período aferido, constatou-se descumprimento de NMS.`, 40, posY);
                         doc.setFont("helvetica", "bold");
@@ -938,7 +1034,6 @@
         
         function parseHoras(str) { if(!str) return 0; const p = String(str).split(':'); return p.length === 3 ? parseInt(p[0]) + (parseInt(p[1])/60) + (parseInt(p[2])/3600) : 0; }
         
-        // 1. MÊS CIVIL (Calendário normal) - Usado no Painel Operacional e Gerencial PDF
         function obterMesAno(str) { 
             if (str && str.includes('-')) { 
                 const p = str.split(' ')[0].split('-'); 
@@ -947,7 +1042,6 @@
             return "Desc"; 
         }
 
-        // 2. CICLO FISCAL IMR (Dia 04 a 03) - Usado EXCLUSIVAMENTE na aba Fiscalização
         function obterMesAnoFiscal(str) {
             if (str && str.includes('-')) {
                 const p = str.split(' ')[0].split('-');
@@ -1163,7 +1257,7 @@
         });
 
         // ==========================================
-        // RELATÓRIO GERENCIAL (CORREÇÃO DE PÁGINA)
+        // RELATÓRIO GERENCIAL
         // ==========================================
         document.getElementById('btn-gerar-pdf').addEventListener('click', () => {
             const checkboxes = document.querySelectorAll('#relatorio-mes-container input:checked');
@@ -1196,11 +1290,18 @@
                     
                     try { 
                         let imgData = localStorage.getItem('dashLogo');
-                        if (imgData) { doc.addImage(imgData, 'PNG', w - 80, 20, 40, 40); } 
-                        else {
+                        if (imgData) {
+                            doc.addImage(imgData, 'PNG', w - 80, 20, 40, 40);
+                        } else {
                             const imgEl = document.querySelector('#header-logo-container img');
                             if(imgEl) {
-                                const canvas = document.createElement('canvas'); canvas.width = imgEl.naturalWidth || imgEl.width; canvas.height = imgEl.naturalHeight || imgEl.height; const ctx = canvas.getContext('2d'); ctx.drawImage(imgEl, 0, 0); const b64 = canvas.toDataURL('image/png'); doc.addImage(b64, 'PNG', w - 80, 20, 40, 40);
+                                const canvas = document.createElement('canvas');
+                                canvas.width = imgEl.naturalWidth || imgEl.width;
+                                canvas.height = imgEl.naturalHeight || imgEl.height;
+                                const ctx = canvas.getContext('2d');
+                                ctx.drawImage(imgEl, 0, 0);
+                                const b64 = canvas.toDataURL('image/png');
+                                doc.addImage(b64, 'PNG', w - 80, 20, 40, 40);
                             }
                         }
                     } catch(e) {}
@@ -1245,23 +1346,22 @@
                     doc.setTextColor(22, 163, 74); 
                     doc.text(String(slaGlobalTexto), 493, blockY+33, {align: 'center'});
 
-                    // ANÁLISE VISUAL COM OS 4 GRÁFICOS RESTAURADOS NA PÁGINA 1
+                    // RESTAURANDO A ANÁLISE VISUAL NA PÁGINA 1
                     const vizY = blockY + 58;
                     doc.setTextColor(26, 25, 65); doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.text("Análise Visual", 40, vizY);
                     doc.setFontSize(8.5); doc.setTextColor(100, 100, 100); doc.setFont("helvetica", "normal");
                     
                     const getImg = (id) => { try { const c = document.getElementById(id); return c ? c.toDataURL('image/jpeg', 1.0) : null; } catch(e) { return null; } };
                     
-                    // Gráficos Linha 1
+                    // Top Charts
                     doc.text("Evolução Histórica", 40, vizY + 15); const i1 = getImg('chart-meses'); if(i1) doc.addImage(i1, 'JPEG', 40, vizY + 20, 240, 110);
                     doc.text("Volume Foco", 305, vizY + 15); const i2 = getImg('chart-analistas'); if(i2) doc.addImage(i2, 'JPEG', 305, vizY + 20, 240, 110);
 
-                    // Gráficos Linha 2
+                    // Bottom Charts
                     const vizY2 = vizY + 145;
                     doc.text("Assuntos Top 15", 40, vizY2); const i3 = getImg('chart-assuntos'); if(i3) doc.addImage(i3, 'JPEG', 40, vizY2 + 5, 240, 110);
                     doc.text("SLA vs Criticidade", 305, vizY2); const i4 = getImg('chart-prioridade'); if(i4) doc.addImage(i4, 'JPEG', 305, vizY2 + 5, 240, 110);
 
-                    // PÁGINA 2: Detalhamento da Tabela
                     doc.addPage(); doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.setTextColor(26, 25, 65); doc.text("Detalhamento dos Chamados Extraídos", 40, 40);
                     const linhas = dadosExp.map(d => [ String(d['Ticket']||'-'), String((d['Data Abertura']||'').split(' ')[0]), String((d['Analista']||'-').split('.')[0]), String((d['Assunto']||'').substring(0, 35)), String(d['Prioridade']||'-'), String(d['SLA Atendido']||'-') ]);
                     doc.autoTable({ startY: 55, head: [["Ticket", "Abertura", "Analista", "Assunto", "Prioridade", "SLA Ok?"]], body: linhas, theme: 'striped', headStyles: { fillColor: [26, 25, 65] }, styles: { fontSize: 8 }, alternateRowStyles: { fillColor: [247, 248, 250] }, margin: { top: 30, right: 40, bottom: 40, left: 40 }, didDrawPage: function (dt) { doc.setFontSize(8); doc.setTextColor(150, 150, 150); doc.text(`Página ${doc.internal.getNumberOfPages()}`, w/2, doc.internal.pageSize.height - 20, {align:'center'}); } });
