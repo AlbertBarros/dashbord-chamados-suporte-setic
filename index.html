@@ -43,6 +43,9 @@
             <h2 id="login-titulo" class="text-2xl font-black text-[#1a1941] dark:text-indigo-400 mb-1">Analytics SETIC</h2>
             <p class="text-gray-500 dark:text-gray-400 text-sm mb-6 font-semibold">Acesso Restrito</p>
             
+            <!-- CAIXA DE ERRO DETALHADA -->
+            <div id="login-erro-caixa" class="hidden mb-4 p-3 bg-red-100 border border-red-400 text-red-700 text-xs rounded text-left"></div>
+
             <div class="text-left mb-4">
                 <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 uppercase mb-1">E-mail Corporativo</label>
                 <input type="email" id="login-email" placeholder="email@prf.gov.br" class="w-full border border-gray-300 dark:border-gray-600 rounded p-3 text-sm bg-gray-50 dark:bg-gray-700 focus:outline-none focus:border-blue-500 transition">
@@ -168,6 +171,7 @@
                     <button id="btn-tab-next" class="px-3 py-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-xs font-semibold transition disabled:opacity-50">Próxima <i class="fa-solid fa-chevron-right"></i></button>
                 </div>
             </div>
+
         </main>
     </div>
 
@@ -182,11 +186,11 @@
         </div>
     </div>
 
-    <!-- Modal Revisão de Glosa (INTERCEÇÃO SOBERANA) -->
+    <!-- Modal Revisão de Glosa -->
     <div id="modal-revisao-glosa" class="hidden fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-[60] p-4">
         <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-2xl w-full max-w-2xl border-t-4 border-yellow-500 flex flex-col max-h-[90vh]">
             <h2 class="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2 flex items-center gap-2"><i class="fa-solid fa-triangle-exclamation text-yellow-500"></i> Descumprimento de NMS Detetado</h2>
-            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">A auditoria encontrou indicadores fora da meta contratual. Como fiscal, decida como o parecer será impresso no relatório final.</p>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">A auditoria encontrou indicadores fora da meta contratual. Escolha o formato da conclusão para o PDF.</p>
             
             <div class="bg-red-50 dark:bg-red-900/20 p-3 rounded border border-red-200 dark:border-red-800 mb-4">
                 <p class="text-xs font-bold text-red-800 dark:text-red-400 mb-1">Indicadores Afetados:</p>
@@ -203,7 +207,7 @@
                     </label>
                     <label class="flex items-center gap-3 cursor-pointer text-sm text-gray-700 dark:text-gray-300">
                         <input type="radio" name="tipo_conclusao" value="personalizada" class="w-4 h-4 cursor-pointer">
-                        <span><strong>Parecer Personalizado:</strong> Você escreve a justificativa livremente (Não imprime cálculos de Glosa).</span>
+                        <span><strong>Parecer Personalizado:</strong> Você escreve a justificativa livremente e insere o cálculo financeiro manualmente se desejar.</span>
                     </label>
                 </div>
             </div>
@@ -211,19 +215,19 @@
             <!-- ÁREA TEXTO PERSONALIZADO -->
             <div id="area-texto-personalizado" class="mb-4 hidden flex-grow">
                 <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase mb-1 flex justify-between">
-                    <span>Justificativa do Fiscal</span>
+                    <span>Justificativa Livre do Fiscal</span>
                     <span class="text-[10px] text-gray-400 font-normal">Editável</span>
                 </label>
                 <textarea id="revisao-texto" rows="6" class="w-full border border-gray-300 dark:border-gray-600 rounded p-3 text-sm bg-gray-50 dark:bg-gray-700 focus:outline-none focus:border-yellow-500 transition leading-relaxed"></textarea>
             </div>
 
-            <!-- ÁREA TEXTO AUTOMÁTICO (Visualização de Variáveis) -->
+            <!-- ÁREA TEXTO AUTOMÁTICO -->
             <div id="area-texto-automatico" class="mb-4">
                 <div class="flex items-center justify-between mb-2">
                     <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase">Pontos da Glosa a aplicar</label>
                     <input type="number" id="revisao-pontos" min="0" class="w-24 text-center font-bold text-xl border border-gray-300 dark:border-gray-600 rounded p-1 bg-white dark:bg-gray-800 text-red-600 dark:text-red-400">
                 </div>
-                <p class="text-[10px] text-gray-500 dark:text-gray-400">O sistema usará este valor de pontos para calcular os descontos de 1% (limite 30%) em R$. Altere para 0 para abonar a glosa.</p>
+                <p class="text-[10px] text-gray-500 dark:text-gray-400">O sistema usará este valor para calcular o desconto financeiro no modo automático. Altere para 0 se for abonar 100%.</p>
             </div>
 
             <div class="flex justify-end gap-3 pt-4 border-t dark:border-gray-700">
@@ -476,18 +480,46 @@
         let dadosSatisfacao = []; let dadosReabertos = []; 
         let historicoCompletoCarregado = false;
         
-        // RECUPERAÇÃO ROBUSTA DAS VARIÁVEIS
-        let corPrincipal = localStorage.getItem('dashCor') || '#1a1941';
-        let equipeFocoStr = localStorage.getItem('equipeFoco') || 'fabio.palma.prestador, edison.neto.prestador, antonio.muniz.prestador, jose.andrade.prestador';
-        let tituloOficial = localStorage.getItem('dashTitulo') || 'Analytics Suporte SETIC';
-        let iconeCabecalho = localStorage.getItem('dashIcon') || 'fa-chart-line';
-        
+        let corPrincipal, equipeFocoStr, tituloOficial, iconeCabecalho;
         let objAuditoriaTemp = null; 
 
         let graficos = {}; let tabelaPaginaAtual = 1; const tabelaItensPorPagina = 50;
         const paletaAssuntos = ['#4f46e5', '#3b82f6', '#0ea5e9', '#06b6d4', '#14b8a6', '#10b981', '#22c55e', '#84cc16', '#eab308', '#f59e0b', '#f97316', '#ef4444', '#f43f5e', '#d946ef', '#a855f7'];
         const coresPrioridade = { 'Muito Alto': '#b91c1c', 'Alto': '#ef4444', 'Médio': '#f59e0b', 'Baixo': '#22c55e', 'Muito Baixo': '#94a3b8' };
         const coresTipo = { 'Requisição': '#6366f1', 'Incidente': '#f43f5e' };
+
+        // CAPTURA DO ERRO E EXIBIÇÃO NO HTML DE LOGIN
+        document.getElementById('btn-entrar').addEventListener('click', async () => {
+            const email = document.getElementById('login-email').value;
+            const senha = document.getElementById('login-senha').value;
+            const btn = document.getElementById('btn-entrar');
+            const caixaErro = document.getElementById('login-erro-caixa');
+
+            if (!email || !senha) return alert("Por favor, preencha o e-mail e a senha.");
+
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Autenticando...';
+            btn.disabled = true;
+            caixaErro.classList.add('hidden'); // Ocultar erro anterior
+
+            try {
+                // Remove espaços em branco do e-mail que podem ter vindo no copia-cola
+                await signInWithEmailAndPassword(auth, email.trim(), senha);
+            } catch (error) {
+                let msg = "Acesso negado.";
+                if (error.code === 'auth/invalid-email') msg = "O e-mail digitado não é um formato de e-mail válido.";
+                else if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') msg = "Nenhum usuário ativo encontrado com estas credenciais. O e-mail foi registado?";
+                else if (error.code === 'auth/wrong-password') msg = "Senha incorreta.";
+                else if (error.message.includes('auth/configuration-not-found') || error.message.includes('auth/unauthorized-domain')) {
+                    msg = "ACESSO BLOQUEADO PELO FIREBASE: Este domínio não está autorizado. Você deve acessar o painel de configuração do Firebase > Authentication > Settings > Authorized Domains, e garantir que o IP ou localhost esteja listado lá.";
+                } else msg = `Erro no Firebase: ${error.message}`;
+
+                caixaErro.innerHTML = `<strong>Falha na Autenticação</strong><br>${msg}`;
+                caixaErro.classList.remove('hidden');
+            } finally {
+                btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Entrar no Sistema';
+                btn.disabled = false;
+            }
+        });
 
         // Eventos dos Radio Buttons do Modal
         document.getElementsByName('tipo_conclusao').forEach(radio => {
@@ -508,8 +540,384 @@
             objAuditoriaTemp = null;
         });
 
+        function aplicarPersonalizacao() {
+            tituloOficial = localStorage.getItem('dashTitulo') || 'Analytics Suporte SETIC';
+            corPrincipal = localStorage.getItem('dashCor') || '#1a1941';
+            iconeCabecalho = localStorage.getItem('dashIcon') || 'fa-chart-line';
+            equipeFocoStr = localStorage.getItem('equipeFoco') || 'fabio.palma.prestador, edison.neto.prestador, antonio.muniz.prestador, jose.andrade.prestador';
+
+            document.getElementById('titulo-painel').innerText = tituloOficial;
+            if(document.getElementById('login-titulo')) document.getElementById('login-titulo').innerText = tituloOficial;
+            
+            document.getElementById('header-default-icon').className = `fa-solid ${iconeCabecalho} text-2xl`;
+            document.getElementById('input-icone').value = iconeCabecalho;
+            
+            document.getElementById('input-titulo').value = tituloOficial;
+            document.getElementById('input-cor').value = corPrincipal; 
+            document.getElementById('hex-view').innerText = corPrincipal;
+            document.getElementById('input-equipe').value = equipeFocoStr;
+            document.getElementById('header-bg').style.backgroundColor = isDark ? '#111827' : corPrincipal;
+            document.getElementById('card-filtros').style.borderTopColor = corPrincipal;
+
+            const savedLogo = localStorage.getItem('dashLogo');
+            if (savedLogo) {
+                document.getElementById('header-logo-container').innerHTML = `<img src="${savedLogo}" alt="Logo" class="h-9 w-9 object-contain mr-2">`;
+                if(document.getElementById('login-logo')) document.getElementById('login-logo').src = savedLogo;
+            } else {
+                document.getElementById('header-logo-container').innerHTML = `<img src="https://raw.githubusercontent.com/AlbertBarros/dashbord-chamados-suporte-setic/main/bras%C3%A3o.png" alt="Logo" class="h-9 w-9 object-contain mr-2" crossorigin="anonymous">`;
+                if(document.getElementById('login-logo')) document.getElementById('login-logo').src = "https://raw.githubusercontent.com/AlbertBarros/dashbord-chamados-suporte-setic/main/bras%C3%A3o.png";
+            }
+        }
+        aplicarPersonalizacao();
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                telaLogin.classList.add('hidden');
+                telaLogin.classList.remove('flex'); 
+                telaDashboard.classList.remove('hidden');
+                telaDashboard.classList.add('flex'); 
+                carregarDadosNuvem();
+            } else {
+                telaDashboard.classList.add('hidden');
+                telaDashboard.classList.remove('flex'); 
+                telaLogin.classList.remove('hidden');
+                telaLogin.classList.add('flex'); 
+            }
+        });
+
+        document.getElementById('btn-logout').addEventListener('click', () => {
+            signOut(auth).then(() => {
+                dadosGlobais = [];
+                document.getElementById('login-senha').value = '';
+            });
+        });
+
+        const modal = document.getElementById('modal-config');
+        document.getElementById('btn-config').addEventListener('click', () => { modal.classList.remove('hidden'); switchTab('aba-dados', 'conteudo-dados'); });
+        ['btn-fechar-config', 'btn-fechar-config-icon'].forEach(id => document.getElementById(id).addEventListener('click', () => modal.classList.add('hidden')));
+
+        function switchTab(activeId, contentId) {
+            ['aba-dados', 'aba-aparencia', 'aba-relatorios', 'aba-fiscal', 'aba-admin'].forEach(id => {
+                const el = document.getElementById(id); 
+                if (id === 'aba-admin') {
+                    el.className = 'px-3 py-2 tab-inactive focus:outline-none font-semibold text-sm text-red-600 hover:text-red-500 ml-auto flex items-center gap-2 whitespace-nowrap';
+                } else if (id === 'aba-fiscal') {
+                    el.className = 'px-3 py-2 tab-inactive focus:outline-none font-semibold text-sm text-green-700 dark:text-green-500 hover:text-green-600 flex items-center gap-2 whitespace-nowrap';
+                } else {
+                    el.className = 'px-3 py-2 tab-inactive focus:outline-none font-semibold text-sm whitespace-nowrap'; 
+                }
+                el.style.color = ''; el.style.borderColor = '';
+            });
+            
+            const activeTab = document.getElementById(activeId);
+            
+            if (activeId === 'aba-admin') {
+                activeTab.className = `px-3 py-2 tab-active text-red-700 border-red-700 focus:outline-none font-semibold text-sm ml-auto flex items-center gap-2 whitespace-nowrap`;
+            } else if (activeId === 'aba-fiscal') {
+                activeTab.className = `px-3 py-2 tab-active text-green-700 border-green-700 dark:text-green-500 dark:border-green-500 focus:outline-none font-semibold text-sm flex items-center gap-2 whitespace-nowrap`;
+            } else {
+                activeTab.className = `px-3 py-2 tab-active text-[${corPrincipal}] border-[${corPrincipal}] focus:outline-none font-semibold text-sm whitespace-nowrap`;
+                if (!isDark) { activeTab.style.color = corPrincipal; activeTab.style.borderColor = corPrincipal; }
+                if (isDark) { activeTab.style.color = '#818cf8'; activeTab.style.borderColor = '#818cf8'; }
+            }
+            
+            ['conteudo-dados', 'conteudo-aparencia', 'conteudo-relatorios', 'conteudo-fiscal', 'conteudo-admin'].forEach(id => document.getElementById(id).classList.add('hidden'));
+            document.getElementById(contentId).classList.remove('hidden');
+            document.getElementById('btn-guardar-config').style.display = contentId === 'conteudo-aparencia' ? 'block' : 'none';
+        }
+
+        ['aba-dados', 'aba-aparencia', 'aba-relatorios', 'aba-fiscal', 'aba-admin'].forEach(id => document.getElementById(id).addEventListener('click', () => switchTab(id, 'conteudo-' + id.split('-')[1])));
+        document.getElementById('input-cor').addEventListener('input', (e) => document.getElementById('hex-view').innerText = e.target.value);
+
+        document.getElementById('input-logo-file').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                localStorage.setItem('dashLogo', ev.target.result);
+                aplicarPersonalizacao();
+            };
+            reader.readAsDataURL(file);
+        });
+
+        document.getElementById('btn-guardar-config').addEventListener('click', () => {
+            localStorage.setItem('dashTitulo', document.getElementById('input-titulo').value);
+            localStorage.setItem('dashCor', document.getElementById('input-cor').value);
+            localStorage.setItem('dashIcon', document.getElementById('input-icone').value);
+            localStorage.setItem('equipeFoco', document.getElementById('input-equipe').value);
+            
+            aplicarPersonalizacao(); 
+            preencherFiltros(); 
+            atualizarDashboard(); 
+            modal.classList.add('hidden');
+        });
+
+        function definirStatus(bHtml, cClasse) { const b = document.getElementById('badge-status'); b.className = `text-xs font-bold px-2 py-1 ${cClasse} rounded text-white shadow ml-2`; b.innerHTML = bHtml; b.classList.remove('hidden'); }
+
+        async function carregarDadosNuvem(forcarCompleto = false) {
+            if(!db) { definirStatus('<i class="fa-solid fa-xmark"></i> Erro DB', 'bg-red-600'); return; }
+            try {
+                const q = await getDocs(collection(db, "chamados")); dadosGlobais = [];
+                q.forEach((doc) => { 
+                    const d = doc.data(); 
+                    const dS = String(d['Data Abertura'] || d['Ticket'] || ""); 
+                    if (forcarCompleto || dS.includes('2026') || dS.includes('/26')) {
+                        dadosGlobais.push(d); 
+                    }
+                });
+                
+                try {
+                    const qs = await getDocs(collection(db, "satisfacao")); dadosSatisfacao = [];
+                    qs.forEach(doc => dadosSatisfacao.push(doc.data()));
+                } catch(e) {}
+                try {
+                    const qr = await getDocs(collection(db, "reabertos")); dadosReabertos = [];
+                    qr.forEach(doc => dadosReabertos.push(doc.data()));
+                } catch(e) {}
+
+                if(dadosGlobais.length > 0) {
+                    definirStatus('<i class="fa-solid fa-check-circle"></i> Sincronizado', 'bg-green-500');
+                    document.getElementById('tag-ano-atual').innerText = forcarCompleto ? "Visualizando: Histórico Completo" : "Visualizando: 2026";
+                    preencherFiltros(); atualizarDashboard();
+                } else { definirStatus('<i class="fa-solid fa-triangle-exclamation"></i> Vazio', 'bg-red-500'); } 
+                historicoCompletoCarregado = forcarCompleto;
+            } catch (e) { 
+                console.error(e);
+                if (e.code === 'resource-exhausted' || (e.message && (e.message.includes('quota') || e.message.includes('Quota')))) {
+                    document.getElementById('modal-limite').classList.remove('hidden');
+                    definirStatus('<i class="fa-solid fa-ban"></i> Limite Excedido', 'bg-red-700');
+                } else {
+                    definirStatus('<i class="fa-solid fa-xmark"></i> Erro', 'bg-red-600'); 
+                }
+            }
+        }
+
+        document.getElementById('btn-carregar-historico').addEventListener('click', () => { 
+            document.getElementById('btn-carregar-historico').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Carregando...'; 
+            carregarDadosNuvem(true).then(() => { 
+                document.getElementById('btn-carregar-historico').innerHTML = '<i class="fa-solid fa-check"></i> Concluído'; 
+                setTimeout(() => modal.classList.add('hidden'), 1000); 
+            }); 
+        });
+
+        document.getElementById('file-upload').addEventListener('change', async (e) => {
+            const files = e.target.files; 
+            if (files.length === 0) return; 
+            
+            const loader = document.getElementById('loader-upload');
+            loader.classList.remove('hidden');
+            loader.innerHTML = '<div class="loader !border-t-current !border-4 !w-5 !h-5 inline-block"></div> Processando arquivo(s)...';
+            
+            let allRows = [];
+            let errorFiles = [];
+
+            const readFiles = Array.from(files).map(file => {
+                return new Promise((resolve) => {
+                    const reader = new FileReader(); 
+                    reader.onload = function(ev) {
+                        try {
+                            const wb = XLSX.read(new Uint8Array(ev.target.result), { type: 'array' }); 
+                            const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: "" });
+                            if (rows.length > 0 && !('Ticket' in rows[0] || 'ticket' in rows[0] || 'TICKET' in rows[0] || 'Nº Chamado' in rows[0] || 'chamado' in rows[0])) {
+                                errorFiles.push(file.name);
+                            } else {
+                                allRows = allRows.concat(rows);
+                            }
+                        } catch(err) { errorFiles.push(file.name); }
+                        resolve();
+                    }; 
+                    reader.readAsArrayBuffer(file);
+                });
+            });
+
+            await Promise.all(readFiles);
+
+            if (errorFiles.length > 0) {
+                alert(`ATENÇÃO: Os seguintes arquivos foram ignorados por não possuírem a estrutura correta:\n\n${errorFiles.join('\n')}`);
+                if (allRows.length === 0) { loader.classList.add('hidden'); e.target.value = ""; return; }
+            }
+
+            loader.innerHTML = '<div class="loader !border-t-current !border-4 !w-5 !h-5 inline-block"></div> Gravando na nuvem...';
+
+            try {
+                const ba = [writeBatch(db)]; let c = 0, b = 0;
+                allRows.forEach(r => { 
+                    const ticketStr = String(r.Ticket || r.ticket || r.TICKET || r['Nº Chamado'] || r['chamado'] || "");
+                    if(ticketStr) { ba[b].set(doc(db, "chamados", ticketStr), r); c++; if (c === 490) { ba.push(writeBatch(db)); b++; c = 0; } } 
+                });
+                const pr = ba.map(batch => batch.commit());
+                await Promise.all(pr);
+                
+                loader.innerHTML = '<i class="fa-solid fa-check text-green-500 text-lg"></i> <span class="text-green-600 dark:text-green-400 font-bold">Upload Concluído com Sucesso!</span>';
+                setTimeout(async () => {
+                    loader.classList.add('hidden'); 
+                    loader.innerHTML = '<div class="loader !border-t-current !border-4 !w-5 !h-5 inline-block"></div> Gravando base primária no Firebase...';
+                    e.target.value = ""; await carregarDadosNuvem(historicoCompletoCarregado); 
+                }, 2500);
+
+            } catch (err) { 
+                loader.innerHTML = '<i class="fa-solid fa-xmark text-red-500 text-lg"></i> <span class="text-red-600 font-bold">Erro na gravação.</span>';
+                setTimeout(() => { loader.classList.add('hidden'); e.target.value = ""; }, 3000);
+            }
+        });
+
+        function handleUploadAux(inputId, colName) {
+            const el = document.getElementById(inputId);
+            if(!el) return;
+            el.addEventListener('change', async (e) => {
+                const files = e.target.files; 
+                if (files.length === 0) return;
+                
+                const loader = document.getElementById('loader-fiscal-upload');
+                loader.classList.remove('hidden');
+                loader.innerHTML = '<div class="loader !border-t-current !border-4 !w-5 !h-5 inline-block"></div> Processando arquivo(s) auxiliar(es)...';
+                
+                let allRows = [];
+                let errorFiles = [];
+
+                const readFiles = Array.from(files).map(file => {
+                    return new Promise((resolve) => {
+                        const reader = new FileReader(); 
+                        reader.onload = function(ev) {
+                            try {
+                                const wb = XLSX.read(new Uint8Array(ev.target.result), { type: 'array' }); 
+                                const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: "" });
+                                if (rows.length > 0 && !('Ticket' in rows[0] || 'ticket' in rows[0] || 'TICKET' in rows[0] || 'Nº Chamado' in rows[0] || 'chamado' in rows[0])) {
+                                    errorFiles.push(file.name);
+                                } else { allRows = allRows.concat(rows); }
+                            } catch(err) { errorFiles.push(file.name); }
+                            resolve();
+                        }; 
+                        reader.readAsArrayBuffer(file);
+                    });
+                });
+
+                await Promise.all(readFiles);
+
+                if (errorFiles.length > 0) {
+                    alert(`ATENÇÃO: Os seguintes arquivos auxiliares foram ignorados por não possuírem a coluna Ticket:\n\n${errorFiles.join('\n')}`);
+                    if (allRows.length === 0) { loader.classList.add('hidden'); e.target.value = ""; return; }
+                }
+
+                loader.innerHTML = '<div class="loader !border-t-current !border-4 !w-5 !h-5 inline-block"></div> Gravando base auxiliar na nuvem...';
+
+                try {
+                    const ba = [writeBatch(db)]; let c = 0, b = 0;
+                    allRows.forEach(r => { 
+                        const ticketId = String(r.Ticket || r.ticket || r.TICKET || r['Nº Chamado'] || r['chamado'] || "");
+                        if(ticketId) { ba[b].set(doc(db, colName, ticketId), r); c++; if (c === 490) { ba.push(writeBatch(db)); b++; c = 0; } } 
+                    });
+                    const pr = ba.map(batch => batch.commit());
+                    await Promise.all(pr);
+                    
+                    loader.innerHTML = '<i class="fa-solid fa-check text-green-500 text-lg"></i> <span class="text-green-600 dark:text-green-400 font-bold">Upload Auxiliar Concluído!</span>';
+                    setTimeout(async () => {
+                        loader.classList.add('hidden'); 
+                        loader.innerHTML = '<div class="loader !border-t-current !border-4 !w-5 !h-5 inline-block"></div> Gravando dados auxiliares no Firebase...';
+                        e.target.value = ""; await carregarDadosNuvem(historicoCompletoCarregado); 
+                    }, 2500);
+
+                } catch (err) { 
+                    loader.innerHTML = '<i class="fa-solid fa-xmark text-red-500 text-lg"></i> <span class="text-red-600 font-bold">Erro na gravação.</span>';
+                    setTimeout(() => { loader.classList.add('hidden'); e.target.value = ""; }, 3000);
+                }
+            });
+        }
+        handleUploadAux('upload-satisfacao', 'satisfacao');
+        handleUploadAux('upload-reabertos', 'reabertos');
+
         // ==========================================
-        // AUDITORIA E FISCALIZAÇÃO IMR COM SISTEMA DE INTERCEÇÃO
+        // ÁREA DE ADMINISTRAÇÃO
+        // ==========================================
+        const inSenha = document.getElementById('input-senha-admin'); 
+        const areaGestaoBanco = document.getElementById('area-gestao-banco');
+        const areaGestaoUsuarios = document.getElementById('area-gestao-usuarios');
+        const btnReset = document.getElementById('btn-zerar-banco');
+        const selectExclusao = document.getElementById('select-exclusao');
+        const btnCriarUsuario = document.getElementById('btn-criar-usuario');
+
+        function popularDropdownExclusao() {
+            selectExclusao.innerHTML = '<option value="TUDO">Base Completa (Apagar TUDO)</option>';
+            const mesesDisponiveis = new Set();
+            dadosGlobais.forEach(d => {
+                const dataAlvo = d['Data Encerramento'] || d['Data Solução'] || d['Data Abertura'];
+                const m = obterMesAno(dataAlvo);
+                if (m !== "Desc") mesesDisponiveis.add(m);
+            });
+            const mArr = Array.from(mesesDisponiveis).sort((x,y) => cvDtOrd(x) - cvDtOrd(y));
+            mArr.forEach(m => { selectExclusao.innerHTML += `<option value="${m}">Apenas Dados do Mês ${m}</option>`; });
+            selectExclusao.innerHTML += `<option value="SATISFACAO">Apagar Base de Satisfação (INS1)</option>`;
+            selectExclusao.innerHTML += `<option value="REABERTOS">Apagar Base de Reabertos (INS6)</option>`;
+        }
+
+        inSenha.addEventListener('input', (e) => { 
+            if (e.target.value === 'setic2026') {
+                areaGestaoBanco.classList.remove('hidden'); areaGestaoUsuarios.classList.remove('hidden'); popularDropdownExclusao();
+            } else {
+                areaGestaoBanco.classList.add('hidden'); areaGestaoUsuarios.classList.add('hidden');
+            }
+        });
+
+        btnCriarUsuario.addEventListener('click', async () => {
+            const emailNovo = document.getElementById('novo-email').value;
+            const senhaNova = document.getElementById('novo-senha').value;
+            if (!emailNovo || senhaNova.length < 6) return alert("Atenção: Introduza um e-mail válido e uma senha com pelo menos 6 caracteres.");
+            btnCriarUsuario.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; btnCriarUsuario.disabled = true;
+            try {
+                await createUserWithEmailAndPassword(secondaryAuth, emailNovo, senhaNova);
+                await signOut(secondaryAuth);
+                alert(`✅ Sucesso!\nO acesso para ${emailNovo} foi criado.\nJá pode partilhar essas credenciais com o analista.`);
+                document.getElementById('novo-email').value = ''; document.getElementById('novo-senha').value = '';
+            } catch (error) {
+                if(error.code === 'auth/email-already-in-use') alert("Este e-mail já tem um acesso criado no sistema.");
+                else alert("Erro ao criar utilizador. Verifique a sua conexão.");
+            } finally { btnCriarUsuario.innerHTML = '<i class="fa-solid fa-check"></i> Criar'; btnCriarUsuario.disabled = false; }
+        });
+
+        btnReset.addEventListener('click', async () => {
+            const valorSelecionado = selectExclusao.value;
+            let textoConfirmacao = "";
+            if (valorSelecionado === 'SATISFACAO') textoConfirmacao = "A BASE DE SATISFAÇÃO (INS1)";
+            else if (valorSelecionado === 'REABERTOS') textoConfirmacao = "A BASE DE REABERTOS (INS6)";
+            else if (valorSelecionado === 'TUDO') textoConfirmacao = "TODA A BASE PRINCIPAL DE DADOS";
+            else textoConfirmacao = `OS DADOS DO MÊS ${valorSelecionado}`;
+            
+            if(!confirm(`⚠️ ALERTA DE SEGURANÇA ⚠️\n\nTEM A CERTEZA ABSOLUTA QUE DESEJA APAGAR ${textoConfirmacao}? Esta ação não pode ser desfeita.`)) return;
+            btnReset.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> A apagar...'; btnReset.disabled = true;
+
+            try { 
+                let colName = "chamados";
+                if (valorSelecionado === 'SATISFACAO') colName = "satisfacao";
+                if (valorSelecionado === 'REABERTOS') colName = "reabertos";
+
+                const q = await getDocs(collection(db, colName)); 
+                let b = writeBatch(db); let c = 0; const pr = []; 
+                
+                q.docs.forEach((d) => { 
+                    let del = false;
+                    if (colName === "chamados") {
+                        const data = d.data();
+                        const dataAlvo = data['Data Encerramento'] || data['Data Solução'] || data['Data Abertura'];
+                        const mesDoc = obterMesAno(dataAlvo);
+                        if (valorSelecionado === 'TUDO' || mesDoc === valorSelecionado) del = true;
+                    } else { del = true; }
+
+                    if (del) { b.delete(d.ref); c++; if(c === 490) { pr.push(b.commit()); b = writeBatch(db); c = 0; } }
+                }); 
+                if(c > 0) pr.push(b.commit()); 
+                await Promise.all(pr); 
+                
+                alert(`Exclusão de ${textoConfirmacao} concluída com sucesso!`); 
+                inSenha.value = ''; areaGestaoBanco.classList.add('hidden'); areaGestaoUsuarios.classList.add('hidden');
+                btnReset.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Apagar'; btnReset.disabled = false;
+                
+                if (colName === "chamados") dadosGlobais = []; 
+                await carregarDadosNuvem(historicoCompletoCarregado); 
+            } catch(e) { alert("Erro ao tentar apagar os dados."); btnReset.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Apagar'; btnReset.disabled = false; }
+        });
+
+        // ==========================================
+        // AUDITORIA E FISCALIZAÇÃO IMR COM INTERCEÇÃO SOBERANA
         // ==========================================
         document.getElementById('btn-gerar-fiscal-pdf').addEventListener('click', () => {
             const mesSelecionado = document.getElementById('fiscal-mes').value;
@@ -560,6 +968,7 @@
             dadosAuditoria.forEach(d => {
                 const tId = String(d['Ticket'] || d['ticket'] || "");
 
+                // Lógica de Notas do INS1
                 let nota = 5.0; 
                 if (mapSat.has(tId)) {
                     const satRec = mapSat.get(tId);
@@ -681,6 +1090,7 @@
                     periodoAfericao = `04/${m1}/${yy} a 03/${m2}/${yyNext}`;
                 }
 
+                // SALVAR OBJETO TEMPORÁRIO PARA O PDF
                 objAuditoriaTemp = {
                     totalChamados: total,
                     mesTexto: mesTexto,
@@ -696,12 +1106,9 @@
                     const nomesIndicadores = descumprimentos.join(', ');
                     
                     document.getElementById('revisao-indicadores').innerText = nomesIndicadores;
-                    // Sugestão de texto (fica oculta se o usuário usar o modo Automático)
                     document.getElementById('revisao-texto').value = `O indicador ${nomesIndicadores} registrou um percentual temporariamente abaixo da meta contratual. Contudo, a análise do histórico comprovou que... [INSERIR JUSTIFICATIVA AQUI]. Após a devida análise, a equipe técnica considerou justificada a extrapolação do prazo.`;
-                    
                     document.getElementById('revisao-pontos').value = totalPontosGlosa;
                     
-                    // Garante que o rádio volte ao automático por padrão
                     document.querySelector('input[value="automatica"]').checked = true;
                     document.getElementById('area-texto-personalizado').classList.add('hidden');
                     document.getElementById('area-texto-automatico').classList.remove('hidden');
@@ -728,13 +1135,13 @@
             gerarPDFFiscalFinal(ptsFinais, tipoSelecionado, txtPersonalizado, objAuditoriaTemp);
         });
 
-        // MOTOR DE GERAÇÃO DO PDF 
+        // MOTOR DE GERAÇÃO DO PDF (COM PAGINAÇÃO INFINITA)
         function gerarPDFFiscalFinal(ptsAplicados, tipoConclusao, textoPersonalizado, dados) {
             try {
                 const { jsPDF } = window.jspdf; 
                 const doc = new jsPDF('p', 'pt', 'a4'); 
                 const w = doc.internal.pageSize.width;
-                const marginY = doc.internal.pageSize.height - 40; // Limite da margem inferior
+                const marginY = doc.internal.pageSize.height - 40; 
                 
                 doc.setFillColor(26, 25, 65); doc.rect(0, 0, w, 85, 'F'); doc.setTextColor(255, 255, 255); 
                 doc.setFontSize(14); doc.setFont("helvetica", "bold"); doc.text("MINISTÉRIO DA JUSTIÇA E SEGURANÇA PÚBLICA", 40, 32);
@@ -754,12 +1161,10 @@
 
                 doc.setTextColor(26, 25, 65); doc.setFontSize(10); 
                 
-                // Coluna Esquerda
                 doc.setFont("helvetica", "bold"); doc.text("Empresa:", 40, 105); doc.setFont("helvetica", "normal"); doc.text("IOS Informática", 115, 105);
                 doc.setFont("helvetica", "bold"); doc.text("Contrato:", 40, 120); doc.setFont("helvetica", "normal"); doc.text("14/2025", 115, 120);
                 doc.setFont("helvetica", "bold"); doc.text("Fiscal Técnico:", 40, 135); doc.setFont("helvetica", "normal"); doc.text("Albert Einstein da Silva Barros", 115, 135);
 
-                // Coluna Direita
                 doc.setFont("helvetica", "bold"); doc.text("Mês Referente:", 330, 105); doc.setFont("helvetica", "normal"); doc.text(dados.mesTexto, 435, 105);
                 doc.setFont("helvetica", "bold"); doc.text("Período de Aferição:", 330, 120); doc.setFont("helvetica", "normal"); doc.text(dados.periodoAfericao, 435, 120);
                 doc.setFont("helvetica", "bold"); doc.text("Valor Mensal:", 330, 135); doc.setFont("helvetica", "normal"); doc.text("R$ 26.971,30", 435, 135);
@@ -796,9 +1201,8 @@
                     margin: { left: 40, right: 40 }
                 });
 
-                // TABELA DE REGRAS DE GLOSA 
                 let rulesY = doc.lastAutoTable.finalY + 15;
-                if (rulesY > marginY - 60) { doc.addPage(); rulesY = 40; } // Paginação se não houver espaço
+                if (rulesY > marginY - 60) { doc.addPage(); rulesY = 40; } 
                 
                 doc.setTextColor(26, 25, 65); doc.setFontSize(10); doc.setFont("helvetica", "bold"); 
                 doc.text("Regras de Pontuação e Glosa", 40, rulesY);
@@ -832,7 +1236,6 @@
                     margin: { left: 40, right: 40 }
                 });
 
-                // CONCLUSÃO DE GLOSA COM PAGINAÇÃO INTELIGENTE INFINITA
                 let finalY = doc.lastAutoTable.finalY + 20;
                 if (finalY > marginY - 40) { doc.addPage(); finalY = 40; }
                 
@@ -841,7 +1244,6 @@
                 
                 let cursorX = 40;
                 let cursorY = finalY + 16;
-                const maxWidth = w - 80;
                 doc.setFontSize(10); doc.setTextColor(60, 60, 60);
 
                 function printWrapped(text, isBold) {
@@ -854,13 +1256,13 @@
                         } else if (token === "\n") {
                             cursorX = 40; 
                             cursorY += 14;
-                            if (cursorY > marginY) { doc.addPage(); cursorY = 40; } // PAGINAÇÃO INFINITA
+                            if (cursorY > marginY) { doc.addPage(); cursorY = 40; } 
                         } else {
                             let wordW = doc.getTextWidth(token);
                             if (cursorX + wordW > 40 + maxWidth) {
                                 cursorX = 40; 
                                 cursorY += 14;
-                                if (cursorY > marginY) { doc.addPage(); cursorY = 40; } // PAGINAÇÃO INFINITA
+                                if (cursorY > marginY) { doc.addPage(); cursorY = 40; } 
                             }
                             doc.text(token, cursorX, cursorY);
                             cursorX += wordW;
@@ -869,7 +1271,6 @@
                 }
 
                 if (tipoConclusao === 'personalizada') {
-                    // LÓGICA DO TEXTO PERSONALIZADO (Pode ser de 1 ou 10 páginas)
                     const paragrafos = textoPersonalizado.split('\n');
                     paragrafos.forEach(pg => {
                         if(pg.trim() !== '') printWrapped(pg + " ", false);
@@ -878,7 +1279,6 @@
                         if (cursorY > marginY) { doc.addPage(); cursorY = 40; }
                     });
                 } else {
-                    // LÓGICA AUTOMÁTICA FINANCEIRA
                     if (ptsAplicados === 0 && dados.descumprimentos && dados.descumprimentos.length === 0) {
                         printWrapped("Após análise rigorosa dos índices apresentados no período aferido, atesta-se que a empresa cumpriu com todos os Níveis Mínimos de Serviços (NMS) previstos contratualmente. Portanto, ", false);
                         printWrapped("NÃO SERÁ APLICADA GLOSA", true);
