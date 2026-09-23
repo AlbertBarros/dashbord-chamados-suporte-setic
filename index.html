@@ -31,8 +31,8 @@
         .table-container { max-height: 400px; overflow-y: auto; }
         .data-table th { position: sticky; top: 0; z-index: 10; }
         
-        /* Ajuste para rolagem suave na tabela do histórico */
-        .table-historico-container { max-height: 220px; overflow-y: auto; }
+        /* Ajuste Tabela do Histórico */
+        .table-historico-container { max-height: 250px; overflow-y: auto; }
         .table-historico-container th { position: sticky; top: 0; z-index: 10; }
     </style>
 </head>
@@ -187,27 +187,42 @@
         </div>
     </div>
 
-    <!-- Modal Histórico IMR (NOVO VISUALIZADOR) -->
+    <!-- Modal Histórico IMR (AGORA COM FILTROS E EXPORTAÇÃO PDF) -->
     <div id="modal-historico-imr" class="hidden fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-[70] p-4">
-        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-2xl w-full max-w-4xl flex flex-col max-h-[90vh]">
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-2xl w-full max-w-5xl flex flex-col max-h-[90vh]">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-xl font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-2"><i class="fa-solid fa-chart-area"></i> Visão Histórica: Descumprimentos Contratuais (IMR)</h2>
                 <button id="btn-fechar-historico-imr" class="text-gray-400 hover:text-red-500 transition"><i class="fa-solid fa-xmark text-2xl"></i></button>
             </div>
-            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Análise rápida de desempenho e falhas de NMS agrupada por todos os ciclos fiscais disponíveis no banco de dados.</p>
             
-            <div class="chart-container mb-6 border dark:border-gray-700 p-2 rounded" style="height: 300px;">
+            <!-- Barra de Ferramentas do Histórico -->
+            <div class="flex flex-wrap gap-4 mb-4 items-end bg-gray-50 dark:bg-gray-700 p-4 rounded border dark:border-gray-600">
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase mb-1">Mês Inicial</label>
+                    <select id="hist-filtro-inicio" class="border dark:border-gray-600 rounded p-2 text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200"></select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase mb-1">Mês Final</label>
+                    <select id="hist-filtro-fim" class="border dark:border-gray-600 rounded p-2 text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200"></select>
+                </div>
+                <button id="btn-filtrar-hist" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded text-sm font-bold shadow transition">Aplicar Filtro</button>
+                <button id="btn-imprimir-hist" class="ml-auto bg-gray-800 dark:bg-gray-600 hover:bg-black text-white px-5 py-2 rounded text-sm font-bold shadow transition flex items-center gap-2"><i class="fa-solid fa-file-pdf"></i> Exportar Relatório PDF</button>
+            </div>
+
+            <div class="chart-container mb-6 border dark:border-gray-700 p-2 rounded bg-white dark:bg-gray-800" style="height: 250px;">
                  <canvas id="chart-historico-falhas"></canvas>
             </div>
 
-            <h3 class="font-bold text-sm uppercase text-gray-700 dark:text-gray-300 mb-2">Detalhamento dos Meses Falhos</h3>
+            <h3 class="font-bold text-sm uppercase text-gray-700 dark:text-gray-300 mb-2">Detalhamento dos Meses</h3>
             <div class="table-historico-container rounded border border-gray-200 dark:border-gray-700">
                 <table class="w-full text-left text-sm text-gray-600 dark:text-gray-300">
-                    <thead class="bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-200 uppercase text-xs border-b dark:border-gray-600">
+                    <thead class="bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-200 uppercase text-xs border-b dark:border-gray-600 shadow-sm">
                         <tr>
-                            <th class="p-3 font-semibold">Ciclo Fiscal</th>
-                            <th class="p-3 font-semibold w-1/4">Pontos Calculados</th>
-                            <th class="p-3 font-semibold">Indicadores Descumpridos</th>
+                            <th class="p-3 font-semibold bg-gray-50 dark:bg-gray-700">Ciclo Fiscal</th>
+                            <th class="p-3 font-semibold bg-gray-50 dark:bg-gray-700">Pontos</th>
+                            <th class="p-3 font-semibold bg-gray-50 dark:bg-gray-700">% Glosa</th>
+                            <th class="p-3 font-semibold bg-gray-50 dark:bg-gray-700">Desconto (R$)</th>
+                            <th class="p-3 font-semibold w-1/3 bg-gray-50 dark:bg-gray-700">Indicadores Descumpridos</th>
                         </tr>
                     </thead>
                     <tbody id="tabela-corpo-historico" class="divide-y divide-gray-100 dark:divide-gray-700 bg-white dark:bg-gray-800">
@@ -229,7 +244,6 @@
                 <p class="text-sm font-mono font-bold text-red-700 dark:text-red-300" id="revisao-indicadores"></p>
             </div>
 
-            <!-- OPÇÕES DE CONCLUSÃO -->
             <div class="mb-4 bg-gray-50 dark:bg-gray-700 p-4 rounded border dark:border-gray-600">
                 <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 uppercase mb-3">Formato da Conclusão a Imprimir</label>
                 <div class="flex flex-col gap-3">
@@ -244,7 +258,6 @@
                 </div>
             </div>
 
-            <!-- ÁREA TEXTO PERSONALIZADO -->
             <div id="area-texto-personalizado" class="mb-4 hidden flex-grow">
                 <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase mb-1 flex justify-between">
                     <span>Justificativa Livre do Fiscal</span>
@@ -253,7 +266,6 @@
                 <textarea id="revisao-texto" rows="6" class="w-full border border-gray-300 dark:border-gray-600 rounded p-3 text-sm bg-gray-50 dark:bg-gray-700 focus:outline-none focus:border-yellow-500 transition leading-relaxed"></textarea>
             </div>
 
-            <!-- ÁREA TEXTO AUTOMÁTICO -->
             <div id="area-texto-automatico" class="mb-4">
                 <div class="flex items-center justify-between mb-2">
                     <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase">Pontos da Glosa a aplicar</label>
@@ -384,7 +396,7 @@
                     </div>
                 </div>
 
-                <!-- Aba FISCALIZAÇÃO (COM NOVO BOTÃO HISTÓRICO) -->
+                <!-- Aba FISCALIZAÇÃO -->
                 <div id="conteudo-fiscal" class="hidden">
                     <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 p-6 rounded-lg mb-5 shadow-sm">
                         <div class="flex items-start gap-4">
@@ -515,7 +527,11 @@
         let dadosSatisfacao = []; let dadosReabertos = []; 
         let historicoCompletoCarregado = false;
         
-        let corPrincipal, equipeFocoStr, tituloOficial, iconeCabecalho;
+        let corPrincipal = localStorage.getItem('dashCor') || '#1a1941';
+        let equipeFocoStr = localStorage.getItem('equipeFoco') || 'fabio.palma.prestador, edison.neto.prestador, antonio.muniz.prestador, jose.andrade.prestador';
+        let tituloOficial = localStorage.getItem('dashTitulo') || 'Analytics Suporte SETIC';
+        let iconeCabecalho = localStorage.getItem('dashIcon') || 'fa-chart-line';
+        
         let objAuditoriaTemp = null; 
 
         let graficos = {}; let tabelaPaginaAtual = 1; const tabelaItensPorPagina = 50;
@@ -523,7 +539,6 @@
         const coresPrioridade = { 'Muito Alto': '#b91c1c', 'Alto': '#ef4444', 'Médio': '#f59e0b', 'Baixo': '#22c55e', 'Muito Baixo': '#94a3b8' };
         const coresTipo = { 'Requisição': '#6366f1', 'Incidente': '#f43f5e' };
 
-        // Eventos dos Rádios da Revisão de Glosa
         document.getElementsByName('tipo_conclusao').forEach(radio => {
             radio.addEventListener('change', (e) => {
                 if(e.target.value === 'personalizada') {
@@ -592,14 +607,12 @@
             }
         });
 
-        // LOGIN BLINDADO (VERSÃO ESTÁVEL)
         document.getElementById('btn-entrar').addEventListener('click', async () => {
             const email = document.getElementById('login-email').value;
             const senha = document.getElementById('login-senha').value;
             const btn = document.getElementById('btn-entrar');
 
             if (!email || !senha) return alert("Por favor, preencha o e-mail e a senha.");
-
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Autenticando...';
             btn.disabled = true;
 
@@ -731,7 +744,6 @@
             }); 
         });
 
-        // UPLOADS
         document.getElementById('file-upload').addEventListener('change', async (e) => {
             const files = e.target.files; 
             if (files.length === 0) return; 
@@ -952,10 +964,7 @@
         // MOTOR INTERNO DE AUDITORIA (USADO PELO HISTÓRICO)
         // ==========================================
         function calcularAuditoriaInterna(mes) {
-            let dadosAuditoria = dadosGlobais;
-            if(mes !== 'Todos') {
-                dadosAuditoria = dadosGlobais.filter(d => obterMesAnoFiscal(d['Data Encerramento'] || d['Data Solução'] || d['Data Abertura']) === mes);
-            }
+            let dadosAuditoria = dadosGlobais.filter(d => obterMesAnoFiscal(d['Data Encerramento'] || d['Data Solução'] || d['Data Abertura']) === mes);
             const total = dadosAuditoria.length;
             if(total === 0) return null;
 
@@ -1052,8 +1061,11 @@
         }
 
         // ==========================================
-        // HISTÓRICO IMR (DASHBOARD)
+        // HISTÓRICO IMR (DASHBOARD DINÂMICO)
         // ==========================================
+        let globalHistMonths = [];
+        let dadosHistoricoExport = []; // Variável para armazenar os dados calculados para o PDF
+
         document.getElementById('btn-fechar-historico-imr').addEventListener('click', () => {
             document.getElementById('modal-historico-imr').classList.add('hidden');
         });
@@ -1065,32 +1077,83 @@
                 const m = obterMesAnoFiscal(dataAlvo);
                 if (m !== "Desc") mesesDisponiveis.add(m);
             });
-            const mArr = Array.from(mesesDisponiveis).sort((a,b) => cvDtOrd(a) - cvDtOrd(b));
+            globalHistMonths = Array.from(mesesDisponiveis).sort((a,b) => cvDtOrd(a) - cvDtOrd(b));
             
-            if (mArr.length === 0) return alert("Nenhuma base de dados disponível para análise.");
+            if (globalHistMonths.length === 0) return alert("Nenhuma base de dados disponível para análise.");
 
+            const sInicio = document.getElementById('hist-filtro-inicio');
+            const sFim = document.getElementById('hist-filtro-fim');
+            sInicio.innerHTML = ''; sFim.innerHTML = '';
+            
+            globalHistMonths.forEach(m => {
+                sInicio.innerHTML += `<option value="${m}">${m}</option>`;
+                sFim.innerHTML += `<option value="${m}">${m}</option>`;
+            });
+            
+            sInicio.value = globalHistMonths[0];
+            sFim.value = globalHistMonths[globalHistMonths.length - 1];
+
+            renderizarHistorico(sInicio.value, sFim.value);
+            document.getElementById('modal-historico-imr').classList.remove('hidden');
+        });
+
+        document.getElementById('btn-filtrar-hist').addEventListener('click', () => {
+            const inicio = document.getElementById('hist-filtro-inicio').value;
+            const fim = document.getElementById('hist-filtro-fim').value;
+            if(cvDtOrd(inicio) > cvDtOrd(fim)) return alert("O período inicial não pode ser maior que o final.");
+            renderizarHistorico(inicio, fim);
+        });
+
+        function renderizarHistorico(inicio, fim) {
             const labels = [];
             const dataPontos = [];
             const dataCores = [];
             let htmlTabela = '';
+            dadosHistoricoExport = []; // Zera a memória de exportação
 
-            mArr.forEach(m => {
+            const mesesFiltrados = globalHistMonths.filter(m => cvDtOrd(m) >= cvDtOrd(inicio) && cvDtOrd(m) <= cvDtOrd(fim));
+
+            mesesFiltrados.forEach(m => {
                 const r = calcularAuditoriaInterna(m);
                 if(r) {
                     labels.push(m);
                     dataPontos.push(r.pts);
+                    
+                    let percentualGlosa = 0;
+                    let valorDescontoStr = "R$ 0,00";
+                    let corLinha = "";
+
+                    if (r.pts >= 10) {
+                        percentualGlosa = Math.floor(r.pts / 10) * 1.0;
+                        if (percentualGlosa > 30.0) percentualGlosa = 30.0;
+                        const valorDesconto = 26971.30 * (percentualGlosa / 100);
+                        valorDescontoStr = valorDesconto.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                    }
+
+                    dadosHistoricoExport.push([
+                        m, 
+                        `${r.pts}`, 
+                        `${percentualGlosa}%`, 
+                        valorDescontoStr, 
+                        r.pts > 0 ? r.desc.join(', ') : 'Nenhuma'
+                    ]);
+
                     if (r.pts > 0) {
-                        dataCores.push('#ef4444'); // vermelho (falha)
+                        dataCores.push('#ef4444'); // vermelho
                         htmlTabela += `<tr class="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
                             <td class="p-3 font-bold text-red-600 dark:text-red-400">${m}</td>
-                            <td class="p-3 font-bold">${r.pts} pts</td>
+                            <td class="p-3 font-bold">${r.pts}</td>
+                            <td class="p-3 font-bold text-red-600 dark:text-red-400">${percentualGlosa}%</td>
+                            <td class="p-3 font-mono text-sm">${valorDescontoStr}</td>
                             <td class="p-3 font-mono text-xs text-red-700 dark:text-red-300">${r.desc.join(', ')}</td>
                         </tr>`;
                     } else {
-                        dataCores.push('#22c55e'); // verde (sucesso)
+                        dataCores.push('#22c55e'); // verde
                         htmlTabela += `<tr class="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
                             <td class="p-3 font-bold text-green-600 dark:text-green-400">${m}</td>
-                            <td class="p-3 font-bold">0 pts</td>
+                            <td class="p-3 font-bold">0</td>
+                            <td class="p-3 text-gray-500">0%</td>
+                            <td class="p-3 font-mono text-sm text-gray-500">R$ 0,00</td>
                             <td class="p-3 text-xs text-gray-400 italic">Nenhuma falha detectada</td>
                         </tr>`;
                     }
@@ -1104,725 +1167,77 @@
             
             graficos['chart-historico-falhas'] = new Chart(ctx, {
                 type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Pontos de Glosa',
-                        data: dataPontos,
-                        backgroundColor: dataCores,
-                        borderRadius: 4
-                    }]
-                },
+                data: { labels: labels, datasets: [{ label: 'Pontos de Glosa', data: dataPontos, backgroundColor: dataCores, borderRadius: 4 }] },
                 options: {
                     responsive: true, maintainAspectRatio: false,
                     plugins: { legend: { display: false }, datalabels: { display: true, anchor: 'end', align: 'top', color: isDark ? '#fff' : '#000', font: {weight: 'bold'} } },
                     scales: { y: { beginAtZero: true, suggestedMax: 10 } }
                 }
             });
+        }
 
-            document.getElementById('modal-historico-imr').classList.remove('hidden');
-        });
-
-        // ==========================================
-        // AUDITORIA E FISCALIZAÇÃO IMR (GERAR PDF)
-        // ==========================================
-        document.getElementById('btn-gerar-fiscal-pdf').addEventListener('click', () => {
-            const mesSelecionado = document.getElementById('fiscal-mes').value;
-            
-            let dadosAuditoria = dadosGlobais;
-            if(mesSelecionado !== 'Todos') {
-                dadosAuditoria = dadosGlobais.filter(d => {
-                    const dataAlvo = d['Data Encerramento'] || d['Data Solução'] || d['Data Abertura'];
-                    return obterMesAnoFiscal(dataAlvo) === mesSelecionado;
-                });
-            }
-
-            const total = dadosAuditoria.length;
-            if(total === 0) return alert("Nenhum dado encontrado para o ciclo selecionado.");
-
-            const btn = document.getElementById('btn-gerar-fiscal-pdf'); 
-            const conteudoOriginal = btn.innerHTML; 
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xl"></i> Auditando Base...'; 
-            btn.disabled = true;
-
-            let sumNotas = 0, countNotas = 0;
-            let ins2_dentro = 0, ins3_dentro = 0, ins6_fora = 0; 
-            
-            let p_stats = {
-                'P1': {total: 0, dentro: 0},
-                'P2': {total: 0, dentro: 0},
-                'P3': {total: 0, dentro: 0},
-                'P4': {total: 0, dentro: 0},
-                'P5': {total: 0, dentro: 0},
-            };
-
-            const getPLevel = (slaStr) => {
-                if(!slaStr) return 'P4';
-                slaStr = String(slaStr).toLowerCase();
-                if(slaStr.includes('vip') || slaStr.includes('muito alta')) return 'P1';
-                if(slaStr.includes('alta')) return 'P2';
-                if(slaStr.includes('media') || slaStr.includes('média')) return 'P3';
-                if(slaStr.includes('muito baixa')) return 'P5';
-                if(slaStr.includes('baixa')) return 'P4';
-                return 'P4';
-            };
-
-            const mapSat = new Map();
-            dadosSatisfacao.forEach(s => mapSat.set(String(s.Ticket || s.ticket || s.TICKET || s['Nº Chamado'] || ""), s));
-            const mapReab = new Set();
-            dadosReabertos.forEach(r => mapReab.add(String(r.Ticket || r.ticket || r.TICKET || r['Nº Chamado'] || "")));
-
-            dadosAuditoria.forEach(d => {
-                const tId = String(d['Ticket'] || d['ticket'] || "");
-
-                let nota = 5.0; 
-                if (mapSat.has(tId)) {
-                    const satRec = mapSat.get(tId);
-                    let rawVal = satRec['Pesquisa de satisfação - Satisfação'];
-                    
-                    if (rawVal === undefined || rawVal === null || String(rawVal).trim() === "") {
-                        for(let key in satRec) {
-                            if (key.toLowerCase().includes('satisfa')) { rawVal = satRec[key]; break; }
-                        }
-                    }
-                    if (rawVal !== undefined && rawVal !== null && String(rawVal).trim() !== "") {
-                        const numMatch = String(rawVal).match(/\d+(\.\d+)?/);
-                        if (numMatch) {
-                            let parsed = parseFloat(numMatch[0]);
-                            if (!isNaN(parsed) && parsed >= 0 && parsed <= 5) nota = parsed;
-                        }
-                    }
-                }
-                sumNotas += Number(nota); 
-                countNotas++;
-
-                const tit = d['TIT Por Grupo Atendido'] || d['TIT Atendido'] || 'Sim';
-                if(String(tit).toLowerCase() === 'sim') ins2_dentro++;
-
-                const slaOk = d['SLA Atendido'] || 'Sim';
-                const isSlaOk = String(slaOk).toLowerCase() === 'sim';
-                if(isSlaOk) ins3_dentro++;
-
-                const pLevel = getPLevel(d['SLA']);
-                if(p_stats[pLevel]) {
-                    p_stats[pLevel].total++;
-                    if(isSlaOk) p_stats[pLevel].dentro++;
-                }
-
-                let foiReaberto = mapReab.has(tId);
-                if (!foiReaberto) {
-                    for(let key in d) {
-                        if(key.toLowerCase().includes('reabert') || key.toLowerCase().includes('reabr')) {
-                            const val = String(d[key]).toLowerCase();
-                            if(val === 'sim' || parseFloat(val) > 0) foiReaberto = true;
-                            break;
-                        }
-                    }
-                }
-                if(foiReaberto) ins6_fora++;
-            });
-
-            setTimeout(() => {
-                const fPct = (v) => (v * 100).toFixed(2).replace('.', ',') + '%';
-                const getRow = (ind, den, f, t, m, at_str, fm, pt, isOk, isNA = false) => {
-                    let color = isOk ? [22, 163, 74] : [220, 38, 38]; 
-                    if (isNA) color = [100, 100, 100]; 
-                    return [ind, den, f, t, m, { content: at_str, styles: { textColor: color, fontStyle: 'bold' } }, fm, pt];
-                };
-                
-                const linhasTabela = [];
-                let totalPontosGlosa = 0;
-                let descumprimentos = []; 
-
-                const ins1_media = countNotas > 0 ? (sumNotas / countNotas) : 5.0;
-                const ins1_missed = 4.0 - ins1_media;
-                const ins1_fm_str = ins1_missed > 0 ? ins1_missed.toFixed(2).replace('.', ',') : '0,00';
-                const ins1_pontos = ins1_missed > 0 ? Math.floor(ins1_missed / 0.1) * 5 : 0;
-                if(ins1_pontos > 0) { totalPontosGlosa += ins1_pontos; descumprimentos.push('INS1'); }
-                linhasTabela.push(getRow('INS1', '-', '-', total, '4,0', ins1_media.toFixed(2).replace('.', ','), ins1_fm_str, String(ins1_pontos), ins1_media >= 4.0));
-                
-                const ins2_ating = total > 0 ? (ins2_dentro / total) : 1;
-                const ins2_missed = (0.95 - ins2_ating) * 100;
-                const ins2_fm_str = ins2_missed > 0 ? ins2_missed.toFixed(2).replace('.', ',') + '%' : '0,00';
-                const ins2_pontos = ins2_missed > 0 ? Math.floor(ins2_missed) * 5 : 0; 
-                if(ins2_pontos > 0) { totalPontosGlosa += ins2_pontos; descumprimentos.push('INS2'); }
-                linhasTabela.push(getRow('INS2', ins2_dentro, (total - ins2_dentro), total, '95,00%', fPct(ins2_ating), ins2_fm_str, String(ins2_pontos), ins2_ating >= 0.95));
-
-                const ins3_ating = total > 0 ? (ins3_dentro / total) : 1;
-                const ins3_missed = (0.90 - ins3_ating) * 100;
-                const ins3_fm_str = ins3_missed > 0 ? ins3_missed.toFixed(2).replace('.', ',') + '%' : '0,00';
-                const ins3_pontos = ins3_missed > 0 ? Math.floor(ins3_missed) * 5 : 0; 
-                if(ins3_pontos > 0) { totalPontosGlosa += ins3_pontos; descumprimentos.push('INS3 (Geral)'); }
-                linhasTabela.push(getRow('INS3', ins3_dentro, (total - ins3_dentro), total, '90,00%', fPct(ins3_ating), ins3_fm_str, String(ins3_pontos), ins3_ating >= 0.90));
-                
-                ['P1', 'P2', 'P3', 'P4', 'P5'].forEach(p => {
-                    const s = p_stats[p];
-                    if (s.total === 0) {
-                        linhasTabela.push(getRow(`INS3 - ${p}`, 0, 0, 0, '90,00%', 'N/A', '0,00', '0', true, true));
-                    } else {
-                        const atg = s.dentro / s.total;
-                        const missed = (0.90 - atg) * 100;
-                        const fm_str = missed > 0 ? missed.toFixed(2).replace('.', ',') + '%' : '0,00';
-                        const pts = missed > 0 ? Math.floor(missed) * 5 : 0; 
-                        if(pts > 0) { totalPontosGlosa += pts; descumprimentos.push(`INS3 - ${p}`); }
-                        linhasTabela.push(getRow(`INS3 - ${p}`, s.dentro, (s.total - s.dentro), s.total, '90,00%', fPct(atg), fm_str, String(pts), atg >= 0.90));
-                    }
-                });
-
-                linhasTabela.push(['INS4', {content: 'Não se aplica', colSpan: 6, styles: {halign: 'center', fontStyle: 'bold', fillColor: [240, 240, 240]}}, '0']);
-                linhasTabela.push(['INS5', {content: 'Não se aplica', colSpan: 6, styles: {halign: 'center', fontStyle: 'bold', fillColor: [240, 240, 240]}}, '0']);
-
-                const ins6_dentro = total - ins6_fora;
-                const ins6_ating = total > 0 ? (ins6_fora / total) : 0;
-                const ins6_missed = (ins6_ating - 0.03) * 100;
-                const ins6_fm_str = ins6_missed > 0 ? ins6_missed.toFixed(2).replace('.', ',') + '%' : '0,00';
-                const ins6_pontos = ins6_missed > 0 ? Math.floor(ins6_missed) * 3 : 0;
-                if(ins6_pontos > 0) { totalPontosGlosa += ins6_pontos; descumprimentos.push('INS6'); }
-                linhasTabela.push(getRow('INS6', ins6_dentro, ins6_fora, total, '3,00%', fPct(ins6_ating), ins6_fm_str, String(ins6_pontos), ins6_ating <= 0.03));
-
-                linhasTabela.push(['INS7', {content: 'Não se aplica', colSpan: 6, styles: {halign: 'center', fontStyle: 'bold', fillColor: [240, 240, 240]}}, '0']);
-
-                const mesTexto = mesSelecionado === 'Todos' ? 'Base Completa' : mesSelecionado;
-                let periodoAfericao = "Base Completa";
-                if (mesSelecionado !== 'Todos') {
-                    const p = mesSelecionado.split('/');
-                    let mm = parseInt(p[0], 10); let yy = parseInt(p[1], 10);
-                    let mmNext = mm + 1; let yyNext = yy;
-                    if (mmNext > 12) { mmNext = 1; yyNext++; }
-                    const m1 = mm < 10 ? '0'+mm : mm;
-                    const m2 = mmNext < 10 ? '0'+mmNext : mmNext;
-                    periodoAfericao = `04/${m1}/${yy} a 03/${m2}/${yyNext}`;
-                }
-
-                objAuditoriaTemp = {
-                    totalChamados: total,
-                    mesTexto: mesTexto,
-                    periodoAfericao: periodoAfericao,
-                    linhasTabela: linhasTabela,
-                    descumprimentos: descumprimentos
-                };
-
-                btn.innerHTML = conteudoOriginal; btn.disabled = false;
-
-                if (totalPontosGlosa > 0) {
-                    const nomesIndicadores = descumprimentos.join(', ');
-                    
-                    document.getElementById('revisao-indicadores').innerText = nomesIndicadores;
-                    document.getElementById('revisao-texto').value = `Após análise dos índices no período aferido, constatou-se descumprimento nos seguintes indicadores: ${nomesIndicadores}.\n\n[INSERIR JUSTIFICATIVA AQUI].`;
-                    document.getElementById('revisao-pontos').value = totalPontosGlosa;
-                    
-                    document.querySelector('input[value="automatica"]').checked = true;
-                    document.getElementById('area-texto-personalizado').classList.add('hidden');
-                    document.getElementById('area-texto-automatico').classList.remove('hidden');
-
-                    document.getElementById('modal-revisao-glosa').classList.remove('hidden');
-                } else {
-                    gerarPDFFiscalFinal(0, "automatica", "", objAuditoriaTemp);
-                }
-
-            }, 800); 
-        });
-
-        document.getElementById('btn-confirmar-revisao').addEventListener('click', () => {
-            if(!objAuditoriaTemp) return;
-            
-            const tipoSelecionado = document.querySelector('input[name="tipo_conclusao"]:checked').value;
-            let ptsFinais = parseInt(document.getElementById('revisao-pontos').value, 10);
-            if(isNaN(ptsFinais)) ptsFinais = 0;
-            
-            const txtPersonalizado = document.getElementById('revisao-texto').value;
-            
-            document.getElementById('modal-revisao-glosa').classList.add('hidden');
-            gerarPDFFiscalFinal(ptsFinais, tipoSelecionado, txtPersonalizado, objAuditoriaTemp);
-        });
-
-        // MOTOR DE GERAÇÃO DE PDF (COM PAGINAÇÃO INFINITA NA CONCLUSÃO)
-        function gerarPDFFiscalFinal(ptsAplicados, tipoConclusao, textoPersonalizado, dados) {
+        // Exportação do Relatório Histórico para PDF
+        document.getElementById('btn-imprimir-hist').addEventListener('click', () => {
+            if (dadosHistoricoExport.length === 0) return alert("Nenhum dado para exportar.");
             try {
                 const { jsPDF } = window.jspdf; 
                 const doc = new jsPDF('p', 'pt', 'a4'); 
                 const w = doc.internal.pageSize.width;
-                const marginY = doc.internal.pageSize.height - 40; 
                 
                 doc.setFillColor(26, 25, 65); doc.rect(0, 0, w, 85, 'F'); doc.setTextColor(255, 255, 255); 
                 doc.setFontSize(14); doc.setFont("helvetica", "bold"); doc.text("MINISTÉRIO DA JUSTIÇA E SEGURANÇA PÚBLICA", 40, 32);
                 doc.setFontSize(9.5); doc.setFont("helvetica", "normal"); doc.text("Polícia Rodoviária Federal - Diretoria de Tecnologia da Informação e Comunicação (DTIC)", 40, 52);
-                doc.setFontSize(10.5); doc.setFont("helvetica", "bold"); doc.text("Relatório de Fiscalização de Contrato - IMR (Níveis Mínimos de Serviço)", 40, 72);
+                doc.setFontSize(10.5); doc.setFont("helvetica", "bold"); doc.text("Relatório Histórico de Auditoria - Níveis Mínimos de Serviço (IMR)", 40, 72);
                 
                 try { 
                     let imgData = localStorage.getItem('dashLogo');
-                    if (imgData) { doc.addImage(imgData, 'PNG', w - 80, 20, 40, 40); } 
-                    else {
-                        const imgEl = document.querySelector('#header-logo-container img');
-                        if(imgEl) {
-                            const canvas = document.createElement('canvas'); canvas.width = imgEl.naturalWidth || imgEl.width; canvas.height = imgEl.naturalHeight || imgEl.height; const ctx = canvas.getContext('2d'); ctx.drawImage(imgEl, 0, 0); const b64 = canvas.toDataURL('image/png'); doc.addImage(b64, 'PNG', w - 80, 20, 40, 40);
-                        }
-                    }
+                    if (imgData) doc.addImage(imgData, 'PNG', w - 80, 20, 40, 40); 
                 } catch(e) {}
 
-                doc.setTextColor(26, 25, 65); doc.setFontSize(10); 
+                doc.setTextColor(26, 25, 65); doc.setFontSize(10);
+                const inicio = document.getElementById('hist-filtro-inicio').value;
+                const fim = document.getElementById('hist-filtro-fim').value;
                 
-                doc.setFont("helvetica", "bold"); doc.text("Empresa:", 40, 105); doc.setFont("helvetica", "normal"); doc.text("IOS Informática", 115, 105);
-                doc.setFont("helvetica", "bold"); doc.text("Contrato:", 40, 120); doc.setFont("helvetica", "normal"); doc.text("14/2025", 115, 120);
-                doc.setFont("helvetica", "bold"); doc.text("Fiscal Técnico:", 40, 135); doc.setFont("helvetica", "normal"); doc.text("Albert Einstein da Silva Barros", 115, 135);
-
-                doc.setFont("helvetica", "bold"); doc.text("Mês Referente:", 330, 105); doc.setFont("helvetica", "normal"); doc.text(dados.mesTexto, 435, 105);
-                doc.setFont("helvetica", "bold"); doc.text("Período de Aferição:", 330, 120); doc.setFont("helvetica", "normal"); doc.text(dados.periodoAfericao, 435, 120);
-                doc.setFont("helvetica", "bold"); doc.text("Valor Mensal:", 330, 135); doc.setFont("helvetica", "normal"); doc.text("R$ 26.971,30", 435, 135);
+                doc.setFont("helvetica", "bold"); doc.text("Período de Análise:", 40, 110);
+                doc.setFont("helvetica", "normal"); doc.text(`${inicio} a ${fim}`, 150, 110);
+                
+                doc.setFont("helvetica", "bold"); doc.text("Valor Mensal Base:", 40, 125);
+                doc.setFont("helvetica", "normal"); doc.text(`R$ 26.971,30`, 150, 125);
 
                 const agora = new Date();
-                const dataForm = agora.toLocaleDateString('pt-BR');
-                const horaForm = agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                doc.setFont("helvetica", "bold"); doc.text("Data de Emissão:", 340, 110);
+                doc.setFont("helvetica", "normal"); doc.text(`${agora.toLocaleDateString('pt-BR')} às ${agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`, 440, 110);
 
-                doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.text("Parecer e Metodologia de Cálculo", 40, 165);
-                doc.setTextColor(60, 60, 60); doc.setFontSize(10); doc.setFont("helvetica", "normal");
+                doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.text("Evolução de Pontos de Glosa", 40, 160);
                 
-                const textoParecer = `A presente medição avaliou o universo de ${dados.totalChamados} chamados encerrados dentro do ciclo de faturamento selecionado (${dados.mesTexto}, que compreende do dia 04 ao dia 03 do mês subsequente). Os indicadores matemáticos foram processados de forma automatizada linha a linha, em estrita conformidade com as regras do Instrumento de Medição de Resultados (IMR). O indicador INS1 assumiu nota 5 automática na ausência de avaliações manuais. Os índices INS4, INS5 e INS7 não se aplicam à fila em questão.\n\nDocumento processado eletronicamente em ${dataForm} às ${horaForm}.`;
-                
-                const splitText = doc.splitTextToSize(textoParecer, w - 80);
-                doc.text(splitText, 40, 180);
-                
-                const nextY = 180 + (splitText.length * 15) + 20;
+                // Extrair Gráfico
+                const chartCanvas = document.getElementById('chart-historico-falhas');
+                const imgChart = chartCanvas.toDataURL('image/jpeg', 1.0);
+                doc.addImage(imgChart, 'JPEG', 40, 170, w - 80, 200);
 
-                doc.setTextColor(26, 25, 65); doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.text("3. Resumo de indicadores", 40, nextY);
-
+                doc.setFontSize(12); doc.text("Detalhamento Financeiro por Ciclo Fiscal", 40, 410);
+                
                 doc.autoTable({ 
-                    startY: nextY + 15, 
-                    head: [["Indicadores", "Dentro da meta", "Fora da meta", "Total", "% Meta", "Atingido", "Fora da Meta", "Pontos"]], 
-                    body: dados.linhasTabela, 
+                    startY: 425, 
+                    head: [["Ciclo Fiscal", "Pontos Calculados", "% Glosa", "Desconto (R$)", "Indicadores Descumpridos"]], 
+                    body: dadosHistoricoExport, 
                     theme: 'grid', 
                     headStyles: { fillColor: [150, 150, 150], textColor: 20, fontStyle: 'bold', halign: 'center' }, 
                     columnStyles: {
-                        0: { fontStyle: 'bold' },
-                        1: { halign: 'center' }, 2: { halign: 'center' }, 3: { halign: 'center' },
-                        4: { halign: 'center' }, 5: { halign: 'center' }, 6: { halign: 'center' }, 7: { halign: 'center' }
+                        0: { fontStyle: 'bold', halign: 'center' },
+                        1: { halign: 'center' },
+                        2: { halign: 'center', fontStyle: 'bold', textColor: [220, 38, 38] },
+                        3: { halign: 'center' }
                     },
-                    styles: { fontSize: 8, cellPadding: 3 }, 
+                    styles: { fontSize: 8, cellPadding: 4 }, 
                     alternateRowStyles: { fillColor: [247, 248, 250] }, 
                     margin: { left: 40, right: 40 }
                 });
 
-                let rulesY = doc.lastAutoTable.finalY + 15;
-                if (rulesY > marginY - 60) { doc.addPage(); rulesY = 40; } 
-                
-                doc.setTextColor(26, 25, 65); doc.setFontSize(10); doc.setFont("helvetica", "bold"); 
-                doc.text("Regras de Pontuação e Glosa", 40, rulesY);
-                
-                doc.setFontSize(8); doc.setTextColor(60, 60, 60); doc.setFont("helvetica", "normal");
-                const ruleText = "A cada 10 (dez) pontos inteiros acumulados será descontado 1% (um por cento) do montante mensal a ser pago à CONTRATADA pelos serviços prestados. O limite máximo para as glosas é de 30% (trinta por cento) do valor mensal a ser pago à CONTRATADA.";
-                const splitRule = doc.splitTextToSize(ruleText, w - 80);
-                doc.text(splitRule, 40, rulesY + 12);
-                
-                const tableRulesY = rulesY + 12 + (splitRule.length * 10) + 4;
-
-                const regrasLinhas = [
-                    [{content: "Redução de 1% (um por cento) sobre o valor do pagamento mensal devido a cada 10 (dez) pontos acumulados no período de faturamento, limitado a 30% do valor total devido.", colSpan: 2, styles: {halign: 'center', fontStyle: 'bold', fillColor: [240, 240, 240]}}],
-                    ["INS1", "5 pontos a cada 0,1 ponto fora da meta"],
-                    ["INS2", "5 pontos a cada 1% fora da meta"],
-                    ["INS3", "5 pontos a cada 1% fora da meta para cada nível de prioridade."],
-                    ["INS4", "3 pontos a cada 1% fora da meta"],
-                    ["INS5", "3 pontos a cada 1% fora da meta"],
-                    ["INS6", "3 pontos a cada 1% fora da meta"],
-                    ["INS7", "3 pontos a cada 1% fora da meta"]
-                ];
-
-                doc.autoTable({ 
-                    startY: tableRulesY, 
-                    head: [["INDICADOR DE NÍVEL DE SERVIÇO", "PONTUAÇÃO ACUMULÁVEL"]], 
-                    body: regrasLinhas, 
-                    theme: 'grid', 
-                    headStyles: { fillColor: [150, 150, 150], textColor: 20, fontStyle: 'bold', halign: 'center' }, 
-                    columnStyles: { 0: { fontStyle: 'bold', halign: 'center', cellWidth: 140 }, 1: { halign: 'center' } },
-                    styles: { fontSize: 7.5, cellPadding: 3 }, 
-                    margin: { left: 40, right: 40 }
-                });
-
-                let finalY = doc.lastAutoTable.finalY + 20;
-                if (finalY > marginY - 40) { doc.addPage(); finalY = 40; }
-                
-                doc.setTextColor(26, 25, 65); doc.setFontSize(12); doc.setFont("helvetica", "bold"); 
-                doc.text("Conclusão do Fiscal", 40, finalY);
-                
-                let cursorX = 40;
-                let cursorY = finalY + 16;
-                const maxWidth = w - 80;
-                doc.setFontSize(10); doc.setTextColor(60, 60, 60);
-
-                // ALGORITMO DE PAGINAÇÃO INFINITA NA CONCLUSÃO
-                function printWrapped(text, isBold) {
-                    doc.setFont("helvetica", isBold ? "bold" : "normal");
-                    const tokens = text.match(/\S+|\s/g) || []; 
-                    tokens.forEach(token => {
-                        if (token === " ") {
-                            let spaceW = doc.getTextWidth(" ");
-                            if (cursorX + spaceW <= 40 + maxWidth) cursorX += spaceW;
-                        } else if (token === "\n") {
-                            cursorX = 40; 
-                            cursorY += 14;
-                            if (cursorY > marginY) { doc.addPage(); cursorY = 40; } 
-                        } else {
-                            let wordW = doc.getTextWidth(token);
-                            if (cursorX + wordW > 40 + maxWidth) {
-                                cursorX = 40; 
-                                cursorY += 14;
-                                if (cursorY > marginY) { doc.addPage(); cursorY = 40; } 
-                            }
-                            doc.text(token, cursorX, cursorY);
-                            cursorX += wordW;
-                        }
-                    });
-                }
-
-                if (tipoConclusao === 'personalizada') {
-                    const paragrafos = textoPersonalizado.split('\n');
-                    paragrafos.forEach(pg => {
-                        if(pg.trim() !== '') printWrapped(pg + " ", false);
-                        cursorX = 40; 
-                        cursorY += 14;
-                        if (cursorY > marginY) { doc.addPage(); cursorY = 40; }
-                    });
-                } else {
-                    if (ptsAplicados === 0 && dados.descumprimentos && dados.descumprimentos.length === 0) {
-                        printWrapped("Após análise rigorosa dos índices apresentados no período aferido, atesta-se que a empresa cumpriu com todos os Níveis Mínimos de Serviços (NMS) previstos contratualmente. Portanto, ", false);
-                        printWrapped("NÃO SERÁ APLICADA GLOSA", true);
-                        printWrapped(" (0 pontos computados), devendo o faturamento prosseguir em sua integralidade.", false);
-                    } else {
-                        const valorContrato = 26971.30;
-                        let percentualGlosa = Math.floor(ptsAplicados / 10) * 1.0;
-                        if (percentualGlosa > 30.0) percentualGlosa = 30.0;
-                        const valorDesconto = valorContrato * (percentualGlosa / 100);
-                        const valorDescontoStr = valorDesconto.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-                        
-                        const nomesIndicadores = dados.descumprimentos ? dados.descumprimentos.join(', ') : '';
-
-                        printWrapped(`Após análise dos índices no período aferido, constatou-se descumprimento nos seguintes indicadores: `, false);
-                        printWrapped(`${nomesIndicadores}. `, true);
-                        
-                        if (percentualGlosa === 0) {
-                            printWrapped(`Embora tenham sido acumulados ${ptsAplicados} pontos, a quantidade é insuficiente para atingir a régua mínima de desconto financeiro (10 pontos). Portanto, `, false);
-                            printWrapped("NÃO SERÁ APLICADA GLOSA", true);
-                            printWrapped(" neste ciclo. O faturamento deve prosseguir em sua integralidade.", false);
-                        } else {
-                            printWrapped("SERÁ APLICADA GLOSA", true);
-                            printWrapped(` correspondente a um total de ${ptsAplicados} pontos acumulados. Com base nas regras contratuais de redução, aplica-se uma glosa de `, false);
-                            printWrapped(`${percentualGlosa}%`, true);
-                            printWrapped(` sobre o valor do pagamento mensal, o que corresponde a um desconto de `, false);
-                            printWrapped(`${valorDescontoStr}.`, true);
-                        }
-                    }
-                }
-
-                doc.save(`Auditoria_Fiscalizacao_IMR.pdf`);
-                objAuditoriaTemp = null;
-            } catch (err) { alert("Erro ao gerar PDF de Fiscalização."); }
-        }
-
-        // -----------------------------------------------------
-        // FUNÇÕES DE TEMPO E FILTROS 
-        // -----------------------------------------------------
-        
-        function parseExcelDate(serial) {
-            const dateObj = new Date(Math.round((serial - 25569) * 86400 * 1000));
-            return { ano: dateObj.getUTCFullYear(), mes: dateObj.getUTCMonth() + 1, dia: dateObj.getUTCDate() };
-        }
-
-        function parseHoras(str) { if(!str) return 0; const p = String(str).split(':'); return p.length === 3 ? parseInt(p[0]) + (parseInt(p[1])/60) + (parseInt(p[2])/3600) : 0; }
-        
-        function obterMesAno(str) { 
-            if (!str) return "Desc";
-            if (!isNaN(str) && Number(str) > 30000) {
-                const parsed = parseExcelDate(parseFloat(str));
-                const mesStr = parsed.mes < 10 ? '0' + parsed.mes : parsed.mes;
-                return `${mesStr}/${parsed.ano}`;
+                doc.save(`Historico_Auditoria_IMR_${inicio.replace('/','_')}_a_${fim.replace('/','_')}.pdf`);
+            } catch (e) {
+                alert("Erro ao gerar o PDF do histórico.");
             }
-            let raw = String(str).trim().split(' ')[0].replace(/\//g, '-');
-            if (!raw.includes('-')) return "Desc"; 
-            const p = raw.split('-');
-            if (p.length >= 2) {
-                if(p[0].length === 4) return `${p[1]}/${p[0]}`;
-                else return `${p[1]}/${p[2]}`;
-            } 
-            return "Desc"; 
-        }
-
-        function obterMesAnoFiscal(str) {
-            if (!str) return "Desc";
-            let ano, mes, dia;
-
-            if (!isNaN(str) && Number(str) > 30000) {
-                const parsed = parseExcelDate(parseFloat(str));
-                ano = parsed.ano; mes = parsed.mes; dia = parsed.dia;
-            } else {
-                let raw = String(str).trim().split(' ')[0].replace(/\//g, '-');
-                if (!raw.includes('-')) return "Desc";
-                
-                const p = raw.split('-');
-                if (p.length < 3) return "Desc";
-                
-                if (p[0].length === 4) {
-                    ano = parseInt(p[0], 10); mes = parseInt(p[1], 10); dia = parseInt(p[2], 10);
-                } else {
-                    dia = parseInt(p[0], 10); mes = parseInt(p[1], 10); ano = parseInt(p[2], 10);
-                }
-            }
-            
-            if (isNaN(ano) || isNaN(mes) || isNaN(dia)) return "Desc";
-            
-            if (dia <= 3) {
-                mes -= 1;
-                if (mes === 0) { mes = 12; ano -= 1; }
-            }
-            
-            const mesStr = mes < 10 ? '0' + mes : mes;
-            return `${mesStr}/${ano}`;
-        }
-
-        function cvDtOrd(m) { 
-            if (!m || m === "Desc") return 0; 
-            const parts = m.split('/');
-            if (parts.length === 2) {
-                return parseInt(parts[1], 10) * 100 + parseInt(parts[0], 10);
-            }
-            return 0; 
-        }
-
-        function preencherCheckboxes(id, arr) {
-            const container = document.getElementById(id);
-            if(!container) return;
-            const checkedValues = Array.from(container.querySelectorAll('input:checked')).map(cb => cb.value);
-            const selected = checkedValues.length > 0 ? checkedValues : ["Todos"];
-
-            container.innerHTML = `<label class="flex items-center gap-2 cursor-pointer text-gray-700 dark:text-gray-200"><input type="checkbox" value="Todos" ${selected.includes("Todos") ? "checked" : ""} class="accent-indigo-600 w-4 h-4"> <span>Global (Todos)</span></label>`;
-            arr.forEach(i => { 
-                container.innerHTML += `<label class="flex items-center gap-2 cursor-pointer text-gray-700 dark:text-gray-200"><input type="checkbox" value="${i}" ${selected.includes(i) ? "checked" : ""} class="accent-indigo-600 w-4 h-4"> <span>${i}</span></label>`; 
-            });
-
-            const checkboxes = container.querySelectorAll('input[type="checkbox"]');
-            checkboxes.forEach(cb => {
-                cb.addEventListener('change', function() {
-                    if(this.value === 'Todos' && this.checked) {
-                        checkboxes.forEach(c => { if(c !== this) c.checked = false; });
-                    } else if(this.checked) {
-                        checkboxes[0].checked = false; 
-                    }
-                });
-            });
-        }
-
-        function preencherFiltros() {
-            const m = new Set(), mFiscal = new Set(), a = new Set(), p = new Set(), ass = new Set(), tp = new Set();
-            
-            dadosGlobais.forEach(d => { 
-                const dataAbertura = d['Data Abertura'];
-                const dataEncerramento = d['Data Encerramento'] || d['Data Solução'] || dataAbertura;
-                
-                m.add(obterMesAno(dataEncerramento)); 
-                if(dataEncerramento) mFiscal.add(obterMesAnoFiscal(dataEncerramento));
-                if(dataAbertura) mFiscal.add(obterMesAnoFiscal(dataAbertura));
-                
-                if(d['Analista']) a.add(d['Analista']); if(d['Prioridade']) p.add(d['Prioridade']); 
-                if(d['Categoria']) ass.add(d['Categoria']); if(d['Tipo']) tp.add(d['Tipo']);
-            });
-            
-            const mArr = Array.from(m).filter(x => x!=="Desc").sort((x,y) => cvDtOrd(x) - cvDtOrd(y));
-            const mFiscalArr = Array.from(mFiscal).filter(x => x!=="Desc").sort((x,y) => cvDtOrd(x) - cvDtOrd(y));
-            
-            preencherS('filtro-mes', mArr, "Todos os Meses"); 
-            preencherS('fiscal-mes', mFiscalArr, "Todos os Ciclos"); 
-            preencherCheckboxes('relatorio-mes-container', mArr); 
-            
-            preencherS('filtro-analista', Array.from(a).filter(x => equipeFocoStr.toLowerCase().includes(x.toLowerCase())).sort(), "Todos"); 
-            preencherS('relatorio-analista', Array.from(a).filter(x => equipeFocoStr.toLowerCase().includes(x.toLowerCase())).sort(), "Todos");
-            preencherS('filtro-prioridade', Array.from(p).sort(), "Todas");
-            preencherS('filtro-assunto', Array.from(ass).sort(), "Todos");
-            preencherS('filtro-tipo', Array.from(tp).sort(), "Todos");
-        }
-        
-        function preencherS(id, arr, def) { 
-            const s = document.getElementById(id); 
-            if(!s) return;
-            const at = s.value; 
-            s.innerHTML = `<option value="Todos">${def}</option>`; 
-            arr.forEach(i => { const op = document.createElement('option'); op.value = i; op.innerText = i; s.appendChild(op); }); 
-            if (arr.includes(at)) s.value = at; 
-        }
-
-        ['filtro-mes', 'filtro-analista', 'filtro-prioridade', 'filtro-data-inicio', 'filtro-data-fim', 'filtro-assunto', 'filtro-tipo'].forEach(id => { document.getElementById(id).addEventListener('change', () => { tabelaPaginaAtual = 1; atualizarDashboard(); }); });
-        document.getElementById('btn-limpar-filtros').addEventListener('click', () => { ['filtro-mes', 'filtro-analista', 'filtro-prioridade', 'filtro-data-inicio', 'filtro-data-fim', 'filtro-assunto', 'filtro-tipo'].forEach(i => document.getElementById(i).value = i.includes('data') ? "" : "Todos"); tabelaPaginaAtual = 1; atualizarDashboard(); });
-
-        let tmaGlobalTexto = "0.0h"; let slaGlobalTexto = "0%"; let incGlobalTexto = "0%";
-
-        function atualizarDashboard() {
-            if (dadosGlobais.length === 0) return desenharTabela();
-            
-            const fM_single = document.getElementById('filtro-mes').value;
-            const fM_array = mesesRelatorioOverride || [fM_single]; 
-            
-            const fA = document.getElementById('filtro-analista').value;
-            const fP = document.getElementById('filtro-prioridade').value;
-            const fAss = document.getElementById('filtro-assunto').value;
-            const fTp = document.getElementById('filtro-tipo').value;
-            const dIn = document.getElementById('filtro-data-inicio').value;
-            const dFim = document.getElementById('filtro-data-fim').value;
-
-            const filtrados = dadosGlobais.filter(d => {
-                const dataAlvo = d['Data Encerramento'] || d['Data Solução'] || d['Data Abertura'];
-                const mesChamado = obterMesAno(dataAlvo);
-                
-                let match = (fM_array.includes("Todos") || fM_array.includes(mesChamado)) && 
-                            (fA === "Todos" || d['Analista'] === fA) && 
-                            (fP === "Todos" || d['Prioridade'] === fP) &&
-                            (fAss === "Todos" || d['Categoria'] === fAss) && 
-                            (fTp === "Todos" || d['Tipo'] === fTp);
-                            
-                if(match && (dIn || dFim) && dataAlvo) {
-                    const dataVal = dataAlvo.split(' ')[0].replace(/-/g, '');
-                    const n = parseInt(dataVal);
-                    if(dIn && n < parseInt(dIn.replace(/-/g, ''))) match = false; 
-                    if(dFim && n > parseInt(dFim.replace(/-/g, ''))) match = false;
-                } 
-                return match;
-            });
-            
-            filtrados.sort((a,b) => { 
-                const da = a['Data Encerramento'] || a['Data Abertura'] || ""; 
-                const db = b['Data Encerramento'] || b['Data Abertura'] || ""; 
-                return da > db ? -1 : (da < db ? 1 : 0); 
-            });
-            dadosFiltradosCache = filtrados;
-
-            const total = filtrados.length; document.getElementById('kpi-total').innerText = dadosGlobais.length.toLocaleString('pt-BR'); document.getElementById('kpi-filtrado').innerText = total.toLocaleString('pt-BR');
-            
-            const hT = total > 0 ? (filtrados.reduce((acc, d) => acc + parseHoras(d['Tempo Solução']), 0) / total) : 0; tmaGlobalTexto = hT.toFixed(1) + 'h'; document.getElementById('kpi-tma').innerText = tmaGlobalTexto;
-            const at = filtrados.filter(d => d['SLA Atendido'] === 'Sim').length; const inc = filtrados.filter(d => String(d['Tipo']).toLowerCase() === 'incidente').length;
-            slaGlobalTexto = total > 0 ? ((at / total) * 100).toFixed(1) + '%' : '0%'; incGlobalTexto = total > 0 ? ((inc / total) * 100).toFixed(1) + '%' : '0%';
-            document.getElementById('kpi-sla').innerText = slaGlobalTexto; document.getElementById('kpi-incidentes').innerText = incGlobalTexto;
-
-            const mapSat = new Map();
-            dadosSatisfacao.forEach(s => mapSat.set(String(s.Ticket || s.ticket || s.TICKET || s['Nº Chamado'] || ""), s));
-            const mapReab = new Set();
-            dadosReabertos.forEach(r => mapReab.add(String(r.Ticket || r.ticket || r.TICKET || r['Nº Chamado'] || "")));
-
-            let sumNotas = 0;
-            let countNotas = 0;
-            let reabertosCount = 0;
-
-            filtrados.forEach(d => {
-                const tId = String(d['Ticket'] || d['ticket'] || "");
-                let nota = 5.0; 
-                if (mapSat.has(tId)) {
-                    const satRec = mapSat.get(tId);
-                    let rawVal = satRec['Pesquisa de satisfação - Satisfação'];
-                    if (rawVal === undefined || rawVal === null || String(rawVal).trim() === "") {
-                        for(let key in satRec) {
-                            if (key.toLowerCase().includes('satisfa')) {
-                                rawVal = satRec[key]; break;
-                            }
-                        }
-                    }
-                    if (rawVal !== undefined && rawVal !== null && String(rawVal).trim() !== "") {
-                        const numMatch = String(rawVal).match(/\d+(\.\d+)?/);
-                        if (numMatch) {
-                            let parsed = parseFloat(numMatch[0]);
-                            if (!isNaN(parsed) && parsed >= 0 && parsed <= 5) nota = parsed;
-                        }
-                    }
-                }
-                sumNotas += Number(nota);
-                countNotas++;
-
-                let foiReaberto = mapReab.has(tId);
-                if (!foiReaberto) {
-                    for(let key in d) {
-                        if(key.toLowerCase().includes('reabert') || key.toLowerCase().includes('reabr')) {
-                            const val = String(d[key]).toLowerCase();
-                            if(val === 'sim' || parseFloat(val) > 0) foiReaberto = true;
-                            break;
-                        }
-                    }
-                }
-                if(foiReaberto) reabertosCount++;
-            });
-
-            const mediaSat = countNotas > 0 ? (sumNotas / countNotas).toFixed(2).replace('.', ',') : "0,00";
-            const percReabertos = total > 0 ? ((reabertosCount / total) * 100).toFixed(1) + '%' : "0%";
-
-            document.getElementById('kpi-satisfacao').innerText = mediaSat;
-            document.getElementById('kpi-reabertos').innerText = percReabertos;
-
-            let dMes = agruparPor(filtrados, d => obterMesAno(d['Data Encerramento'] || d['Data Solução'] || d['Data Abertura'])); const indOrd = dMes.labels.map((val, ind) => ({val, ind})).sort((a,b) => cvDtOrd(a.val) - cvDtOrd(b.val)); dMes.labels = indOrd.map(i => i.val); dMes.values = indOrd.map(i => dMes.values[i.ind]);
-            let dAnaBruto = agruparPor(filtrados, 'Analista'); let dAna = { labels: [], values: [] }; dAnaBruto.labels.forEach((l, i) => { if(equipeFocoStr.toLowerCase().includes(l.toLowerCase())) { dAna.labels.push(l); dAna.values.push(dAnaBruto.values[i]); } });
-
-            const dAss = agruparPor(filtrados, 'Categoria', 15); const dReq = agruparPor(filtrados, 'Requerente', 10); const dTipo = agruparPor(filtrados, 'Tipo');
-            let dPrioBruto = agruparPor(filtrados, 'Prioridade'); const mapOrdP = {'Muito Alto': 1, 'Alto': 2, 'Médio': 3, 'Baixo': 4, 'Muito Baixo': 5};
-            let arrP = dPrioBruto.labels.map((l, i) => ({l, v: dPrioBruto.values[i]})).sort((a,b) => (mapOrdP[a.l] || 99) - (mapOrdP[b.l] || 99));
-            let prioSLA_Atendido = []; let prioSLA_Estourado = [];
-            arrP.forEach(item => { const noPrazo = filtrados.filter(d => d['Prioridade'] === item.l && d['SLA Atendido'] === 'Sim').length; prioSLA_Atendido.push(noPrazo); prioSLA_Estourado.push(item.v - noPrazo); });
-
-            rend('chart-meses', 'line', dMes, corPrincipal, false, false, (l) => { document.getElementById('filtro-mes').value = l; tabelaPaginaAtual=1; atualizarDashboard(); });
-            rend('chart-analistas', 'bar', dAna, corPrincipal, false, true, (l) => { document.getElementById('filtro-analista').value = l; tabelaPaginaAtual=1; atualizarDashboard(); });
-            rendM('chart-assuntos', 'bar', dAss, paletaAssuntos, true, (l) => { document.getElementById('filtro-assunto').value = l; tabelaPaginaAtual=1; atualizarDashboard(); });
-            rend('chart-requerentes', 'bar', dReq, '#2e2b7a', true, false);
-            rendSLA('chart-prioridade', {labels: arrP.map(i=>i.l), ok: prioSLA_Atendido, no: prioSLA_Estourado}, (l) => { document.getElementById('filtro-prioridade').value = l; tabelaPaginaAtual=1; atualizarDashboard(); });
-            rendC('chart-tipo', 'pie', dTipo, coresTipo, (l) => { document.getElementById('filtro-tipo').value = l; tabelaPaginaAtual=1; atualizarDashboard(); });
-
-            desenharTabela();
-        }
-
-        function agruparPor(dados, chave, limite=null) { const c = {}; dados.forEach(d => { const k = typeof chave==='function' ? chave(d) : d[chave]; if(k) c[k] = (c[k]||0)+1; }); let arr = Object.keys(c).map(k => ({ label: k, value: c[k] })).sort((a,b) => b.value - a.value); if(limite) arr = arr.slice(0, limite); return { labels: arr.map(i=>i.label), values: arr.map(i=>i.value) }; }
-
-        function rend(id, tipo, dAgr, cor, horizontal, showLabels=false, clk=null) {
-            const ctx = document.getElementById(id).getContext('2d'); if (graficos[id]) graficos[id].destroy();
-            const options = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, datalabels: { display: showLabels, color: isDark?'#e5e7eb':'#fff', font: {weight: 'bold'}, anchor: 'end', align: 'start', offset: 4 } }, onClick: (e, a) => { if(clk && a.length>0) clk(dAgr.labels[a[0].index]); }, onHover: (e, a) => { e.native.target.style.cursor = a[0] ? 'pointer' : 'default'; } };
-            if(horizontal) options.indexAxis = 'y'; if(tipo === 'line' && showLabels) options.plugins.datalabels = {display:true, color:cor, anchor:'end', align:'top', offset:4, font:{weight:'bold'}};
-            const ds = { data: dAgr.values, backgroundColor: isDark?'#818cf8':cor, borderRadius: horizontal ? 0 : 4 };
-            if(tipo === 'line') { ds.fill=true; ds.backgroundColor=isDark?'rgba(129, 140, 248, 0.2)':cor+'20'; ds.borderColor=isDark?'#818cf8':cor; ds.tension=0.4; }
-            graficos[id] = new Chart(ctx, { type: tipo, data: { labels: dAgr.labels, datasets: [ds] }, options: options });
-        }
-
-        function rendM(id, tipo, dAgr, cores, horizontal, clk=null) { const ctx = document.getElementById(id).getContext('2d'); if (graficos[id]) graficos[id].destroy(); graficos[id] = new Chart(ctx, { type: tipo, data: { labels: dAgr.labels, datasets: [{ data: dAgr.values, backgroundColor: cores, borderRadius: 2 }] }, options: { indexAxis: horizontal ? 'y' : 'x', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, datalabels: { display: false } }, onClick: (e, a) => { if(clk && a.length>0) clk(dAgr.labels[a[0].index]); }, onHover: (e, a) => { e.native.target.style.cursor = a[0] ? 'pointer' : 'default'; } } }); }
-        function rendC(id, tipo, dAgr, mapCores, clk=null) { const ctx = document.getElementById(id).getContext('2d'); if (graficos[id]) graficos[id].destroy(); const bgC = dAgr.labels.map(l => mapCores[l] || '#9ca3af'); graficos[id] = new Chart(ctx, { type: tipo, data: { labels: dAgr.labels, datasets: [{ data: dAgr.values, backgroundColor: bgC, borderWidth: 1, borderColor: isDark?'#1f2937':'#fff' }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' }, datalabels: { display: false } }, onClick: (e, a) => { if(clk && a.length>0) clk(dAgr.labels[a[0].index]); }, onHover: (e, a) => { e.native.target.style.cursor = a[0] ? 'pointer' : 'default'; } } }); }
-        function rendSLA(id, obj, clk=null) { const ctx = document.getElementById(id).getContext('2d'); if (graficos[id]) graficos[id].destroy(); graficos[id] = new Chart(ctx, { type: 'bar', data: { labels: obj.labels, datasets: [ { label: 'SLA Cumprido', data: obj.ok, backgroundColor: '#22c55e', borderRadius: 2 }, { label: 'SLA Violado', data: obj.no, backgroundColor: '#ef4444', borderRadius: 2 } ] }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true } }, plugins: { legend: { position: 'top', labels: { boxWidth: 12, font: {size: 10} } }, datalabels: { display: false } }, onClick: (e, a) => { if(clk && a.length>0) clk(obj.labels[a[0].index]); }, onHover: (e, a) => { e.native.target.style.cursor = a[0] ? 'pointer' : 'default'; } } }); }
-
-        function desenharTabela() {
-            const tbody = document.getElementById('tabela-corpo'); const total = dadosFiltradosCache.length; document.getElementById('txt-tabela-count').innerText = `Exibindo ${total} registros.`;
-            
-            if (total === 0) { tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-gray-500 font-semibold bg-gray-50 dark:bg-gray-800">Nenhum chamado corresponde aos filtros.</td></tr>'; document.getElementById('paginacao-tabela').classList.add('hidden'); return; }
-
-            const totalP = Math.ceil(total / tabelaItensPorPagina); if(tabelaPaginaAtual > totalP) tabelaPaginaAtual = totalP;
-            const fatia = dadosFiltradosCache.slice((tabelaPaginaAtual - 1) * tabelaItensPorPagina, ((tabelaPaginaAtual - 1) * tabelaItensPorPagina) + tabelaItensPorPagina);
-
-            tbody.innerHTML = '';
-            fatia.forEach(d => {
-                const bSLA = d['SLA Atendido'] === 'Sim' ? `<span class="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-0.5 rounded text-[10px] font-bold">Sim</span>` : `<span class="bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 px-2 py-0.5 rounded text-[10px] font-bold">Não</span>`;
-                tbody.innerHTML += `
-                    <tr class="hover:bg-blue-50 dark:hover:bg-gray-700 transition">
-                        <td class="px-4 py-2 font-mono text-xs font-semibold">${d['Ticket'] || '-'}</td>
-                        <td class="px-4 py-2 text-xs">${(d['Data Abertura']||'').substring(0, 10)}</td>
-                        <td class="px-4 py-2 text-xs font-medium">${(d['Analista']||'').split('.')[0]}</td>
-                        <td class="px-4 py-2 text-xs truncate max-w-[200px]" title="${d['Assunto']||''}">${d['Assunto']||'-'}</td>
-                        <td class="px-4 py-2 text-xs">${d['Prioridade']||'-'}</td>
-                        <td class="px-4 py-2 text-xs">${bSLA}</td>
-                    </tr>
-                `;
-            });
-            document.getElementById('paginacao-tabela').classList.remove('hidden'); document.getElementById('txt-paginacao').innerText = `Página ${tabelaPaginaAtual} de ${totalP}`;
-            document.getElementById('btn-tab-prev').disabled = tabelaPaginaAtual === 1; document.getElementById('btn-tab-next').disabled = tabelaPaginaAtual === totalP;
-        }
-
-        document.getElementById('btn-gerar-excel').addEventListener('click', () => {
-            const checkboxes = document.querySelectorAll('#relatorio-mes-container input:checked');
-            const fM_array = Array.from(checkboxes).map(cb => cb.value);
-            if(fM_array.length === 0) fM_array.push("Todos");
-            
-            const fA = document.getElementById('relatorio-analista').value;
-            const dadosExp = dadosGlobais.filter(d => 
-                (fM_array.includes("Todos") || fM_array.includes(obterMesAno(d['Data Encerramento'] || d['Data Solução'] || d['Data Abertura']))) && 
-                (fA === "Todos" || d['Analista'] === fA)
-            );
-            
-            if(dadosExp.length === 0) return alert("Nenhum dado encontrado para exportar.");
-            const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(dadosExp), "Relatorio"); XLSX.writeFile(wb, `Base_Extraida.xlsx`);
         });
 
     </script>
