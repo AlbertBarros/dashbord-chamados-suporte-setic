@@ -762,7 +762,7 @@
         });
 
         // ==========================================
-        // AUDITORIA E FISCALIZAÇÃO IMR
+        // AUDITORIA E FISCALIZAÇÃO IMR (BUG DA NOTA 25.98 BLINDADO)
         // ==========================================
         document.getElementById('btn-gerar-fiscal-pdf').addEventListener('click', () => {
             const mesSelecionado = document.getElementById('fiscal-mes').value;
@@ -815,15 +815,21 @@
             dadosAuditoria.forEach(d => {
                 const tId = String(d['Ticket'] || d['ticket'] || "");
 
-                // INS1 via Base de Satisfação
+                // INS1 via Base de Satisfação COM BLINDAGEM DE LIXO MATEMÁTICO
                 let nota = 5.0; 
                 if (mapSat.has(tId)) {
                     const satRec = mapSat.get(tId);
                     for(let key in satRec) {
                         const k = key.toLowerCase();
-                        if(k.includes('nota') || k.includes('avali') || k.includes('satisfa')) {
-                            const val = parseFloat(satRec[key]);
-                            if(!isNaN(val)) { nota = val; break; }
+                        // Evita colunas de data/hora explicitamente
+                        if((k.includes('nota') || k.includes('avali') || k.includes('satisfa')) && !k.includes('data') && !k.includes('hora') && !k.includes('tempo')) {
+                            let rawVal = String(satRec[key]).replace(',', '.');
+                            const val = parseFloat(rawVal);
+                            // Blindagem de segurança: Só aceita notas válidas entre 0 e 5. Descarta datas ocultas (46200) ou IDs.
+                            if(!isNaN(val) && val >= 0 && val <= 5) { 
+                                nota = val; 
+                                break; 
+                            }
                         }
                     }
                 }
@@ -844,7 +850,6 @@
 
                 // INS6 via Base de Reabertos
                 let foiReaberto = mapReab.has(tId);
-                // Fallback para coluna nativa caso exista
                 if (!foiReaberto) {
                     for(let key in d) {
                         if(key.toLowerCase().includes('reabert') || key.toLowerCase().includes('reabr')) {
@@ -986,12 +991,11 @@
                         },
                         styles: { fontSize: 9, cellPadding: 4 }, 
                         alternateRowStyles: { fillColor: [247, 248, 250] }, 
-                        margin: { left: 40, right: 40 },
-                        didDrawPage: function(data) { }
+                        margin: { left: 40, right: 40 }
                     });
 
                     // ==========================================
-                    // CONCLUSÃO DE GLOSA (RESOLVIDO BUG DO TEXTO)
+                    // CONCLUSÃO DE GLOSA (RESOLVIDO: FLUIDO E SEM CORTES)
                     // ==========================================
                     const finalY = doc.lastAutoTable.finalY + 30;
                     doc.setTextColor(26, 25, 65); doc.setFontSize(12); doc.setFont("helvetica", "bold"); 
@@ -1001,24 +1005,27 @@
                     doc.setFontSize(10); doc.setTextColor(60, 60, 60);
 
                     if (totalPontosGlosa === 0) {
+                        // Linha 1 
+                        const linha1 = "Após análise rigorosa dos índices apresentados no período aferido, atesta-se que a empresa cumpriu com todos";
+                        // Linha 2
+                        const linha2 = "os Níveis Mínimos de Serviços (NMS) previstos contratualmente, devendo o faturamento prosseguir na íntegra.";
+                        
                         doc.setFont("helvetica", "normal");
-                        doc.text("Após análise rigorosa dos índices apresentados no período aferido, atesta-se que a empresa cumpriu com", 40, posY);
-                        doc.text("todos os Níveis Mínimos de Serviços (NMS) previstos contratualmente. Portanto,", 40, posY + 14);
+                        doc.text(linha1, 40, posY);
+                        doc.text(linha2, 40, posY + 14);
                         
-                        // Posiciona a frase em negrito e o resto da frase fluidamente na MESMA linha
-                        const parte2 = "todos os Níveis Mínimos de Serviços (NMS) previstos contratualmente. Portanto, ";
-                        const wParte2 = doc.getTextWidth(parte2);
+                        // Parecer Final com Negrito Isolado para segurança visual
+                        doc.setFont("helvetica", "normal");
+                        doc.text("Parecer Final: ", 40, posY + 34);
                         
+                        const wParecer = doc.getTextWidth("Parecer Final: ");
                         doc.setFont("helvetica", "bold");
-                        doc.text("NÃO SERÁ APLICADA GLOSA", 40 + wParte2, posY + 14);
+                        doc.text("NÃO SERÁ APLICADA GLOSA", 40 + wParecer, posY + 34);
                         
                         const wBold = doc.getTextWidth("NÃO SERÁ APLICADA GLOSA");
-                        
                         doc.setFont("helvetica", "normal");
-                        doc.text(" (0 pontos computados), devendo", 40 + wParte2 + wBold, posY + 14);
+                        doc.text(" (0 pontos computados).", 40 + wParecer + wBold, posY + 34);
                         
-                        // Última linha
-                        doc.text("o faturamento prosseguir em sua integralidade.", 40, posY + 28);
                     } else {
                         doc.text(`Após análise dos índices no período aferido, constatou-se descumprimento de NMS.`, 40, posY);
                         doc.setFont("helvetica", "bold");
@@ -1294,11 +1301,18 @@
                     
                     try { 
                         let imgData = localStorage.getItem('dashLogo');
-                        if (imgData) { doc.addImage(imgData, 'PNG', w - 80, 20, 40, 40); } 
-                        else {
+                        if (imgData) {
+                            doc.addImage(imgData, 'PNG', w - 80, 20, 40, 40);
+                        } else {
                             const imgEl = document.querySelector('#header-logo-container img');
                             if(imgEl) {
-                                const canvas = document.createElement('canvas'); canvas.width = imgEl.naturalWidth || imgEl.width; canvas.height = imgEl.naturalHeight || imgEl.height; const ctx = canvas.getContext('2d'); ctx.drawImage(imgEl, 0, 0); const b64 = canvas.toDataURL('image/png'); doc.addImage(b64, 'PNG', w - 80, 20, 40, 40);
+                                const canvas = document.createElement('canvas');
+                                canvas.width = imgEl.naturalWidth || imgEl.width;
+                                canvas.height = imgEl.naturalHeight || imgEl.height;
+                                const ctx = canvas.getContext('2d');
+                                ctx.drawImage(imgEl, 0, 0);
+                                const b64 = canvas.toDataURL('image/png');
+                                doc.addImage(b64, 'PNG', w - 80, 20, 40, 40);
                             }
                         }
                     } catch(e) {}
