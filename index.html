@@ -113,12 +113,16 @@
                 </div>
             </div>
 
-            <!-- QUADRO DE INDICADORES (KPIs) -->
-            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-6">
+            <!-- QUADRO DE INDICADORES (KPIs) COM 8 BLOCOS (Layout Adaptativo 4x2 ou 8x1) -->
+            <div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-4 mb-6">
                 <div class="card bg-white dark:bg-gray-800 flex items-center gap-4"><div class="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 dark:text-blue-400 text-xl"><i class="fa-solid fa-ticket"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">Total (Geral)</p><p id="kpi-total" class="text-2xl font-black text-gray-800 dark:text-gray-100">0</p></div></div>
                 <div class="card bg-white dark:bg-gray-800 flex items-center gap-4"><div class="w-12 h-12 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400 text-xl"><i class="fa-solid fa-filter"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">Filtrados</p><p id="kpi-filtrado" class="text-2xl font-black text-gray-800 dark:text-gray-100">0</p></div></div>
                 <div class="card bg-white dark:bg-gray-800 flex items-center gap-4"><div class="w-12 h-12 rounded-full bg-yellow-100 dark:bg-yellow-900/50 flex items-center justify-center text-yellow-600 dark:text-yellow-400 text-xl"><i class="fa-regular fa-clock"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">TMA (Horas)</p><p id="kpi-tma" class="text-2xl font-black text-gray-800 dark:text-gray-100">0.0h</p></div></div>
                 <div class="card bg-white dark:bg-gray-800 flex items-center gap-4"><div class="w-12 h-12 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center text-green-500 dark:text-green-400 text-xl"><i class="fa-solid fa-stopwatch"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">SLA Atendido</p><p id="kpi-sla" class="text-2xl font-black text-gray-800 dark:text-gray-100">0%</p></div></div>
+                
+                <!-- NOVO KPI: SLA VIOLADO (Em vermelho) -->
+                <div class="card bg-white dark:bg-gray-800 flex items-center gap-4"><div class="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center text-red-600 dark:text-red-400 text-xl"><i class="fa-solid fa-hourglass-end"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">SLA Violado</p><p id="kpi-slaviolado" class="text-2xl font-black text-red-600 dark:text-red-400">0</p></div></div>
+                
                 <div class="card bg-white dark:bg-gray-800 flex items-center gap-4"><div class="w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center text-purple-600 dark:text-purple-400 text-xl"><i class="fa-solid fa-triangle-exclamation"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">Incidentes</p><p id="kpi-incidentes" class="text-2xl font-black text-gray-800 dark:text-gray-100">0%</p></div></div>
                 <div class="card bg-white dark:bg-gray-800 flex items-center gap-4"><div class="w-12 h-12 rounded-full bg-pink-100 dark:bg-pink-900/50 flex items-center justify-center text-pink-600 dark:text-pink-400 text-xl"><i class="fa-solid fa-star"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">Satisfação</p><p id="kpi-satisfacao" class="text-2xl font-black text-gray-800 dark:text-gray-100">0,00</p></div></div>
                 <div class="card bg-white dark:bg-gray-800 flex items-center gap-4"><div class="w-12 h-12 rounded-full bg-orange-100 dark:bg-orange-900/50 flex items-center justify-center text-orange-600 dark:text-orange-400 text-xl"><i class="fa-solid fa-rotate-left"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">Reabertos</p><p id="kpi-reabertos" class="text-2xl font-black text-gray-800 dark:text-gray-100">0%</p></div></div>
@@ -622,6 +626,11 @@
             const total = filtrados.length; document.getElementById('kpi-total').innerText = dadosGlobais.length.toLocaleString('pt-BR'); document.getElementById('kpi-filtrado').innerText = total.toLocaleString('pt-BR');
             const hT = total > 0 ? (filtrados.reduce((acc, d) => acc + parseHoras(d['Tempo Solução']), 0) / total) : 0; tmaGlobalTexto = hT.toFixed(1) + 'h'; document.getElementById('kpi-tma').innerText = tmaGlobalTexto;
             const at = filtrados.filter(d => d['SLA Atendido'] === 'Sim').length; const inc = filtrados.filter(d => String(d['Tipo']).toLowerCase() === 'incidente').length;
+            
+            // NOVO KPI: SLA VIOLADO ABSOLUTO
+            const violados = filtrados.filter(d => String(d['SLA Atendido'] || 'Sim').toLowerCase() !== 'sim').length;
+            document.getElementById('kpi-slaviolado').innerText = violados.toLocaleString('pt-BR');
+
             slaGlobalTexto = total > 0 ? ((at / total) * 100).toFixed(1) + '%' : '0%'; incGlobalTexto = total > 0 ? ((inc / total) * 100).toFixed(1) + '%' : '0%';
             document.getElementById('kpi-sla').innerText = slaGlobalTexto; document.getElementById('kpi-incidentes').innerText = incGlobalTexto;
 
@@ -718,6 +727,10 @@
                     const satVal = document.getElementById('kpi-satisfacao').innerText;
                     const reabVal = document.getElementById('kpi-reabertos').innerText;
 
+                    // CÁLCULO SLA VIOLADO
+                    const ticketsSlaViolado = dadosExp.filter(d => String(d['SLA Atendido'] || '').toLowerCase() !== 'sim').length;
+                    const slaVioladoVal = String(ticketsSlaViolado);
+                    
                     // LINHA 1 DE CAIXAS (Volume, Média, TMA, SLA)
                     const blockY = nextY + 45; 
                     doc.setFillColor(245, 247, 250); 
@@ -732,20 +745,25 @@
                     doc.text(kpiTotal, 100, blockY+33, {align: 'center'}); doc.text(mediaMesVal, 231, blockY+33, {align: 'center'}); 
                     doc.text(tmaVal, 362, blockY+33, {align: 'center'}); doc.setTextColor(22, 163, 74); doc.text(slaVal, 493, blockY+33, {align: 'center'});
 
-                    // LINHA 2 DE CAIXAS (Incidentes, Satisfação, Reabertos)
+                    // LINHA 2 DE CAIXAS (Incidentes, Satisfação, Reabertos, SLA Violado)
                     const blockY2 = blockY + 50; 
                     doc.setFillColor(245, 247, 250); 
-                    doc.rect(40, blockY2, 120, 42, 'F'); doc.rect(171, blockY2, 120, 42, 'F'); doc.rect(302, blockY2, 120, 42, 'F'); 
+                    doc.rect(40, blockY2, 120, 42, 'F'); doc.rect(171, blockY2, 120, 42, 'F'); 
+                    doc.rect(302, blockY2, 120, 42, 'F'); doc.rect(433, blockY2, 120, 42, 'F'); 
 
                     doc.setFontSize(7.5); doc.setTextColor(120, 120, 120); doc.setFont("helvetica", "bold"); 
                     doc.text("TAXA DE INCIDENTES", 100, blockY2+16, {align: 'center'}); 
                     doc.text("SATISFAÇÃO (INS1)", 231, blockY2+16, {align: 'center'}); 
                     doc.text("REABERTOS (INS6)", 362, blockY2+16, {align: 'center'}); 
+                    doc.text("SLA VIOLADO (QTD)", 493, blockY2+16, {align: 'center'}); 
                     
                     doc.setFontSize(14); doc.setTextColor(26, 25, 65); 
                     doc.text(incVal, 100, blockY2+33, {align: 'center'}); 
                     doc.text(satVal, 231, blockY2+33, {align: 'center'}); 
                     doc.text(reabVal, 362, blockY2+33, {align: 'center'}); 
+                    
+                    doc.setTextColor(220, 38, 38); 
+                    doc.text(slaVioladoVal, 493, blockY2+33, {align: 'center'});
 
                     // GRAFICOS
                     const vizY = blockY2 + 58; 
