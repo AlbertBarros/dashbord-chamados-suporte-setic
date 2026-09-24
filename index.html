@@ -113,18 +113,47 @@
                 </div>
             </div>
 
-            <!-- QUADRO DE INDICADORES (KPIs) COM 8 BLOCOS (Layout Adaptativo 4x2 ou 8x1) -->
+            <!-- QUADRO DE INDICADORES (KPIs) COM 8 BLOCOS E TAGS/TOOLTIPS -->
             <div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-4 mb-6">
-                <div class="card bg-white dark:bg-gray-800 flex items-center gap-4"><div class="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 dark:text-blue-400 text-xl"><i class="fa-solid fa-ticket"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">Total (Geral)</p><p id="kpi-total" class="text-2xl font-black text-gray-800 dark:text-gray-100">0</p></div></div>
-                <div class="card bg-white dark:bg-gray-800 flex items-center gap-4"><div class="w-12 h-12 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400 text-xl"><i class="fa-solid fa-filter"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">Filtrados</p><p id="kpi-filtrado" class="text-2xl font-black text-gray-800 dark:text-gray-100">0</p></div></div>
-                <div class="card bg-white dark:bg-gray-800 flex items-center gap-4"><div class="w-12 h-12 rounded-full bg-yellow-100 dark:bg-yellow-900/50 flex items-center justify-center text-yellow-600 dark:text-yellow-400 text-xl"><i class="fa-regular fa-clock"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">TMA (Horas)</p><p id="kpi-tma" class="text-2xl font-black text-gray-800 dark:text-gray-100">0.0h</p></div></div>
-                <div class="card bg-white dark:bg-gray-800 flex items-center gap-4"><div class="w-12 h-12 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center text-green-500 dark:text-green-400 text-xl"><i class="fa-solid fa-stopwatch"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">SLA Atendido</p><p id="kpi-sla" class="text-2xl font-black text-gray-800 dark:text-gray-100">0%</p></div></div>
+                <div class="card bg-white dark:bg-gray-800 flex items-center gap-4 hover:shadow-md" title="Total absoluto de chamados registrados na base de dados">
+                    <div class="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 dark:text-blue-400 text-xl"><i class="fa-solid fa-ticket"></i></div>
+                    <div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">Total (Geral)</p><p id="kpi-total" class="text-2xl font-black text-gray-800 dark:text-gray-100">0</p></div>
+                </div>
                 
-                <div class="card bg-white dark:bg-gray-800 flex items-center gap-4"><div class="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center text-red-600 dark:text-red-400 text-xl"><i class="fa-solid fa-hourglass-end"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">SLA Violado</p><p id="kpi-slaviolado" class="text-2xl font-black text-red-600 dark:text-red-400">0</p></div></div>
+                <div class="card bg-white dark:bg-gray-800 flex items-center gap-4 hover:shadow-md" title="Volume de chamados considerando os filtros aplicados">
+                    <div class="w-12 h-12 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400 text-xl"><i class="fa-solid fa-filter"></i></div>
+                    <div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">Filtrados</p><p id="kpi-filtrado" class="text-2xl font-black text-gray-800 dark:text-gray-100">0</p></div>
+                </div>
                 
-                <div class="card bg-white dark:bg-gray-800 flex items-center gap-4"><div class="w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center text-purple-600 dark:text-purple-400 text-xl"><i class="fa-solid fa-triangle-exclamation"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">Incidentes</p><p id="kpi-incidentes" class="text-2xl font-black text-gray-800 dark:text-gray-100">0%</p></div></div>
-                <div class="card bg-white dark:bg-gray-800 flex items-center gap-4"><div class="w-12 h-12 rounded-full bg-pink-100 dark:bg-pink-900/50 flex items-center justify-center text-pink-600 dark:text-pink-400 text-xl"><i class="fa-solid fa-star"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">Satisfação</p><p id="kpi-satisfacao" class="text-2xl font-black text-gray-800 dark:text-gray-100">0,00</p></div></div>
-                <div class="card bg-white dark:bg-gray-800 flex items-center gap-4"><div class="w-12 h-12 rounded-full bg-orange-100 dark:bg-orange-900/50 flex items-center justify-center text-orange-600 dark:text-orange-400 text-xl"><i class="fa-solid fa-rotate-left"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">Reabertos</p><p id="kpi-reabertos" class="text-2xl font-black text-gray-800 dark:text-gray-100">0%</p></div></div>
+                <div class="card bg-white dark:bg-gray-800 flex items-center gap-4 hover:shadow-md" title="Tempo Médio de Atendimento geral em horas">
+                    <div class="w-12 h-12 rounded-full bg-yellow-100 dark:bg-yellow-900/50 flex items-center justify-center text-yellow-600 dark:text-yellow-400 text-xl"><i class="fa-regular fa-clock"></i></div>
+                    <div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">TMA (Horas)</p><p id="kpi-tma" class="text-2xl font-black text-gray-800 dark:text-gray-100">0.0h</p></div>
+                </div>
+                
+                <div class="card bg-white dark:bg-gray-800 flex items-center gap-4 hover:shadow-md" title="Percentual de tickets resolvidos dentro do prazo estipulado no SLA">
+                    <div class="w-12 h-12 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center text-green-500 dark:text-green-400 text-xl"><i class="fa-solid fa-stopwatch"></i></div>
+                    <div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">SLA Atendido</p><p id="kpi-sla" class="text-2xl font-black text-gray-800 dark:text-gray-100">0%</p></div>
+                </div>
+                
+                <div class="card bg-white dark:bg-gray-800 flex items-center gap-4 hover:shadow-md" title="Quantidade absoluta de tickets que estouraram o prazo (SLA)">
+                    <div class="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center text-red-600 dark:text-red-400 text-xl"><i class="fa-solid fa-hourglass-end"></i></div>
+                    <div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">SLA Violado</p><p id="kpi-slaviolado" class="text-2xl font-black text-red-600 dark:text-red-400">0</p></div>
+                </div>
+                
+                <div class="card bg-white dark:bg-gray-800 flex items-center gap-4 hover:shadow-md" title="Proporção de tickets classificados como Incidentes (interrupções ou falhas)">
+                    <div class="w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center text-purple-600 dark:text-purple-400 text-xl"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                    <div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">Incidentes</p><p id="kpi-incidentes" class="text-2xl font-black text-gray-800 dark:text-gray-100">0%</p></div>
+                </div>
+                
+                <div class="card bg-white dark:bg-gray-800 flex items-center gap-4 hover:shadow-md" title="Nota média de satisfação do usuário - Indicador INS1">
+                    <div class="w-12 h-12 rounded-full bg-pink-100 dark:bg-pink-900/50 flex items-center justify-center text-pink-600 dark:text-pink-400 text-xl"><i class="fa-solid fa-star"></i></div>
+                    <div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">Satisfação</p><p id="kpi-satisfacao" class="text-2xl font-black text-gray-800 dark:text-gray-100">0,00</p></div>
+                </div>
+                
+                <div class="card bg-white dark:bg-gray-800 flex items-center gap-4 hover:shadow-md" title="Taxa de tickets que precisaram ser reabertos - Indicador INS6">
+                    <div class="w-12 h-12 rounded-full bg-orange-100 dark:bg-orange-900/50 flex items-center justify-center text-orange-600 dark:text-orange-400 text-xl"><i class="fa-solid fa-rotate-left"></i></div>
+                    <div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">Reabertos</p><p id="kpi-reabertos" class="text-2xl font-black text-gray-800 dark:text-gray-100">0%</p></div>
+                </div>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
@@ -253,7 +282,6 @@
                 <button id="aba-relatorios" class="px-3 py-2 tab-inactive focus:outline-none font-semibold text-sm whitespace-nowrap">Emissão Relatórios</button>
                 <button id="aba-fiscal" class="px-3 py-2 tab-inactive focus:outline-none font-semibold text-sm text-green-700 dark:text-green-500 flex items-center gap-2 whitespace-nowrap"><i class="fa-solid fa-file-contract"></i> Fiscalização (IMR)</button>
                 
-                <!-- Aba Avançado/Segurança (Agora visível para todos através da validação por Hash) -->
                 <button id="aba-admin" class="px-3 py-2 tab-inactive focus:outline-none font-semibold text-sm text-red-600 hover:text-red-500 ml-auto flex items-center gap-2 whitespace-nowrap"><i class="fa-solid fa-shield-halved"></i> Avançado / Segurança</button>
             </div>
             
@@ -302,21 +330,23 @@
                     </div>
                 </div>
 
-                <!-- Aba Avançado / Segurança (Sempre visível no menu, mas bloqueada por Hash) -->
+                <!-- Aba Avançado / Segurança -->
                 <div id="conteudo-admin" class="hidden">
                     
-                    <!-- Validação Criptográfica (Input de Senha) -->
+                    <!-- Validação Criptográfica Universal (Base64) -->
                     <div class="border-2 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/20 p-5 rounded-lg mb-4">
                         <h3 class="font-bold text-lg text-gray-800 dark:text-gray-200 mb-2"><i class="fa-solid fa-lock"></i> Autenticação de Administrador</h3>
                         <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Insira a senha mestra de administração para libertar as ferramentas de base de dados.</p>
-                        <div class="flex items-end gap-3 bg-white dark:bg-gray-800 p-4 rounded border dark:border-gray-700">
+                        <div class="flex items-center gap-3 bg-white dark:bg-gray-800 p-4 rounded border dark:border-gray-700">
                             <div class="flex-grow">
                                 <input type="password" id="input-senha-admin" class="w-full border border-gray-300 dark:border-gray-600 rounded p-2 text-sm dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Senha Mestra">
                             </div>
+                            <button id="btn-validar-senha" class="bg-[#1a1941] hover:bg-blue-800 text-white font-bold py-2 px-6 rounded text-sm shadow transition h-full flex items-center gap-2"><i class="fa-solid fa-unlock-keyhole"></i> Validar</button>
                         </div>
+                        <p id="msg-senha-admin" class="hidden text-sm mt-3"></p>
                     </div>
 
-                    <!-- Bloco de Atualização da Base (Oculto até validação do Hash) -->
+                    <!-- Bloco de Atualização da Base (Oculto até validação) -->
                     <div id="area-atualizacao-base" class="hidden bg-white dark:bg-gray-800 p-5 rounded border border-indigo-200 dark:border-gray-700 border-l-4 border-l-indigo-500 shadow-sm mb-4">
                         <h4 class="font-bold text-indigo-800 dark:text-indigo-400 mb-4 flex items-center gap-2"><i class="fa-solid fa-cloud-arrow-up"></i> Atualização Oficial de Banco de Dados</h4>
                         
@@ -337,13 +367,13 @@
                         <div class="mt-4 text-center border-t dark:border-gray-700 pt-3"><button id="btn-carregar-historico" class="bg-gray-800 dark:bg-gray-600 hover:bg-black text-white px-4 py-2 rounded text-xs font-semibold transition shadow-sm"><i class="fa-solid fa-database"></i> Forçar Leitura Completa da Nuvem</button></div>
                     </div>
 
-                    <!-- Gestão de Usuários (Oculto até validação do Hash) -->
+                    <!-- Gestão de Usuários (Oculto até validação) -->
                     <div id="area-gestao-usuarios" class="hidden bg-white dark:bg-gray-800 p-5 rounded border border-blue-200 dark:border-gray-700 border-l-4 border-l-blue-500 shadow-sm mb-4">
                         <h4 class="font-bold text-blue-800 dark:text-blue-400 mb-2 flex items-center gap-2"><i class="fa-solid fa-user-plus"></i> Criar Acesso de Analista</h4>
                         <div class="flex flex-col sm:flex-row gap-3"><input type="email" id="novo-email" placeholder="E-mail" class="flex-grow border border-gray-300 dark:border-gray-600 rounded p-2 text-sm dark:bg-gray-700"><input type="password" id="novo-senha" placeholder="Senha" class="w-full sm:w-1/3 border border-gray-300 dark:border-gray-600 rounded p-2 text-sm dark:bg-gray-700"><button id="btn-criar-usuario" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-sm shadow transition flex items-center justify-center gap-2"><i class="fa-solid fa-check"></i> Criar</button></div>
                     </div>
                     
-                    <!-- Exclusão de Banco (Oculto até validação do Hash) -->
+                    <!-- Exclusão de Banco (Oculto até validação) -->
                     <div id="area-gestao-banco" class="hidden bg-white dark:bg-gray-800 p-5 rounded border border-red-200 dark:border-gray-700 border-l-4 border-l-red-500 shadow-sm">
                         <h4 class="font-bold text-red-700 dark:text-red-400 mb-2 flex items-center gap-2"><i class="fa-solid fa-trash-can"></i> Gestão de Exclusão da Base</h4>
                         <div class="flex flex-col sm:flex-row gap-3 items-center"><select id="select-exclusao" class="flex-grow w-full border border-gray-300 dark:border-gray-600 rounded p-2 text-sm dark:bg-gray-700"></select><button id="btn-zerar-banco" class="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded text-sm shadow transition flex items-center justify-center gap-2"><i class="fa-solid fa-triangle-exclamation"></i> Apagar Base</button></div>
@@ -364,7 +394,7 @@
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 
         // ==========================================
-        // 1. VARIÁVEIS GLOBAIS E SEGURANÇA (HASH)
+        // 1. VARIÁVEIS GLOBAIS
         // ==========================================
         
         let isDark = localStorage.getItem('darkMode') === 'true';
@@ -506,18 +536,12 @@
         document.getElementById('btn-carregar-historico').addEventListener('click', () => { document.getElementById('btn-carregar-historico').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Carregando...'; carregarDadosNuvem(true).then(() => { document.getElementById('btn-carregar-historico').innerHTML = '<i class="fa-solid fa-check"></i> Concluído'; setTimeout(() => modalConfig.classList.add('hidden'), 1000); }); });
 
         // ==========================================
-        // 5. UPLOADS E VALIDAÇÃO CRIPTOGRÁFICA (HASH)
+        // 5. UPLOADS E VALIDAÇÃO CRIPTOGRÁFICA (Base64)
         // ==========================================
         
-        // Função de Hash SHA-256 Nativa do Navegador
-        async function sha256(message) {
-            const msgBuffer = new TextEncoder().encode(message);
-            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-            const hashArray = Array.from(new Uint8Array(hashBuffer));
-            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-        }
-
         const inSenha = document.getElementById('input-senha-admin'); 
+        const btnValidarSenha = document.getElementById('btn-validar-senha');
+        const msgSenhaAdmin = document.getElementById('msg-senha-admin');
         const areaGestaoBanco = document.getElementById('area-gestao-banco'); 
         const areaGestaoUsuarios = document.getElementById('area-gestao-usuarios'); 
         const areaAtualizacao = document.getElementById('area-atualizacao-base');
@@ -525,22 +549,30 @@
         const btnCriarUsuario = document.getElementById('btn-criar-usuario'); 
         const btnReset = document.getElementById('btn-zerar-banco');
 
-        // Hash matemático da palavra "setic2026"
-        const hashMestra = '90b4d4b3eb0b213c9fb641a0d8c0b5c13cd4dd31dd0ed3570624d7dbce711f18';
-
-        inSenha.addEventListener('input', async (e) => { 
-            const hashGerado = await sha256(e.target.value);
-            if (hashGerado === hashMestra) { 
+        function validarSenhaAdmin() {
+            // "c2V0aWMyMDI2" é a assinatura criptográfica Base64 da palavra "setic2026"
+            const digitado = btoa(inSenha.value);
+            
+            if (digitado === 'c2V0aWMyMDI2') { 
                 areaGestaoBanco.classList.remove('hidden'); 
                 areaGestaoUsuarios.classList.remove('hidden'); 
                 areaAtualizacao.classList.remove('hidden');
                 popularDropdownExclusao(); 
+                
+                msgSenhaAdmin.innerHTML = '<i class="fa-solid fa-check-circle"></i> Acesso de Segurança Liberado!';
+                msgSenhaAdmin.className = 'text-sm font-bold mt-3 block text-green-600 dark:text-green-400';
             } else { 
                 areaGestaoBanco.classList.add('hidden'); 
                 areaGestaoUsuarios.classList.add('hidden'); 
                 areaAtualizacao.classList.add('hidden');
-            } 
-        });
+                
+                msgSenhaAdmin.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Senha Inválida! Acesso Negado.';
+                msgSenhaAdmin.className = 'text-sm font-bold mt-3 block text-red-600 dark:text-red-400';
+            }
+        }
+
+        btnValidarSenha.addEventListener('click', validarSenhaAdmin);
+        inSenha.addEventListener('keypress', (e) => { if(e.key === 'Enter') validarSenhaAdmin(); });
 
         document.getElementById('file-upload').addEventListener('change', async (e) => {
             const files = e.target.files; if (files.length === 0) return; 
