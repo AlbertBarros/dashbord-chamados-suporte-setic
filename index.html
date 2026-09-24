@@ -6,12 +6,16 @@
     <title>Analytics Suporte SETIC</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>tailwind.config = { darkMode: 'class' }</script>
+    <script>
+        tailwind.config = { darkMode: 'class' }
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
@@ -25,13 +29,18 @@
         .tab-inactive { border-color: transparent; opacity: 0.6; }
         .tab-inactive:hover { opacity: 1; }
         .table-container { max-height: 400px; overflow-y: auto; }
-        .table-container th, .table-historico-container th { position: sticky; top: 0; z-index: 10; }
+        .data-table th { position: sticky; top: 0; z-index: 10; }
+        
+        /* Ajuste Tabela do Histórico */
         .table-historico-container { max-height: 250px; overflow-y: auto; }
+        .table-historico-container th { position: sticky; top: 0; z-index: 10; }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
 
-    <!-- ======================= TELA DE LOGIN ======================= -->
+    <!-- ======================= -->
+    <!--     TELA DE LOGIN       -->
+    <!-- ======================= -->
     <div id="tela-login" class="min-h-screen bg-[#1a1941] flex flex-col justify-center items-center p-4 transition-opacity">
         <div class="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-2xl w-full max-w-sm text-center border-t-4 border-blue-500">
             <img id="login-logo" src="https://raw.githubusercontent.com/AlbertBarros/dashbord-chamados-suporte-setic/main/bras%C3%A3o.png" alt="Logo" class="h-24 mx-auto mb-4 object-contain" crossorigin="anonymous">
@@ -44,10 +53,12 @@
                 <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 uppercase mb-1">E-mail Corporativo</label>
                 <input type="email" id="login-email" placeholder="email@prf.gov.br" class="w-full border border-gray-300 dark:border-gray-600 rounded p-3 text-sm bg-gray-50 dark:bg-gray-700 focus:outline-none focus:border-blue-500 transition">
             </div>
+            
             <div class="text-left mb-6">
                 <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 uppercase mb-1">Senha de Acesso</label>
                 <input type="password" id="login-senha" placeholder="••••••••" class="w-full border border-gray-300 dark:border-gray-600 rounded p-3 text-sm bg-gray-50 dark:bg-gray-700 focus:outline-none focus:border-blue-500 transition">
             </div>
+            
             <button id="btn-entrar" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded shadow transition flex items-center justify-center gap-2">
                 <i class="fa-solid fa-right-to-bracket"></i> Entrar no Sistema
             </button>
@@ -55,7 +66,9 @@
         <p class="text-gray-400 text-xs mt-6">Ministério da Justiça e Segurança Pública - PRF</p>
     </div>
 
-    <!-- ======================= DASHBOARD PRINCIPAL ======================= -->
+    <!-- ======================= -->
+    <!--  DASHBOARD PRINCIPAL    -->
+    <!-- ======================= -->
     <div id="tela-dashboard" class="hidden flex-col min-h-screen">
         <header id="header-bg" class="bg-[#1a1941] text-white p-4 shadow-md flex justify-between items-center sticky top-0 z-40 transition-colors">
             <div class="flex items-center gap-3 ml-4">
@@ -67,33 +80,50 @@
             </div>
             <div class="flex items-center gap-4 mr-4">
                 <span id="badge-status" class="text-xs font-bold px-2 py-1 bg-yellow-500 rounded text-white shadow"><i class="fa-solid fa-spinner fa-spin"></i> A Ligar</span>
-                <button id="btn-theme" class="bg-black bg-opacity-20 hover:bg-opacity-40 p-2 rounded-full transition shadow w-10 h-10 flex items-center justify-center" title="Alternar Tema"><i class="fa-solid fa-moon text-lg" id="icon-theme"></i></button>
-                <button id="btn-config" class="bg-[#2c2a5e] hover:bg-[#3d3b73] px-4 py-2 rounded transition shadow flex items-center gap-2 text-sm font-semibold border border-white border-opacity-20"><i class="fa-solid fa-toolbox"></i> Painel de Ferramentas</button>
-                <button id="btn-logout" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded transition shadow flex items-center gap-2 text-sm font-semibold border border-white border-opacity-20"><i class="fa-solid fa-arrow-right-from-bracket"></i> Sair</button>
+                
+                <button id="btn-theme" class="bg-black bg-opacity-20 hover:bg-opacity-40 p-2 rounded-full transition shadow w-10 h-10 flex items-center justify-center" title="Alternar Tema">
+                    <i class="fa-solid fa-moon text-lg" id="icon-theme"></i>
+                </button>
+                
+                <button id="btn-config" class="bg-[#2c2a5e] hover:bg-[#3d3b73] px-4 py-2 rounded transition shadow flex items-center gap-2 text-sm font-semibold border border-white border-opacity-20">
+                    <i class="fa-solid fa-toolbox"></i> Painel de Ferramentas
+                </button>
+
+                <!-- BOTÃO DE LOGOUT -->
+                <button id="btn-logout" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded transition shadow flex items-center gap-2 text-sm font-semibold border border-white border-opacity-20">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i> Sair
+                </button>
             </div>
         </header>
 
         <main class="flex-grow max-w-[98%] mx-auto mt-6 w-full pb-10">
-            <!-- FILTROS -->
+            
             <div class="card bg-white dark:bg-gray-800 mb-6 border-t-4 border-[#1a1941]" id="card-filtros">
                 <div class="flex justify-between items-center mb-4 border-b dark:border-gray-700 pb-2">
-                    <div class="flex items-center gap-2 text-[#1a1941] dark:text-indigo-400 font-bold text-lg"><i class="fa-solid fa-filter"></i><h2>Filtros Dinâmicos</h2><span id="tag-ano-atual" class="ml-2 text-xs bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-1 rounded">Visualizando: 2026</span></div>
-                    <button id="btn-limpar-filtros" class="text-red-500 hover:text-red-700 bg-red-50 dark:bg-red-900/30 dark:hover:bg-red-900/50 px-3 py-1 rounded text-sm font-semibold transition"><i class="fa-solid fa-eraser"></i> Limpar Filtros</button>
+                    <div class="flex items-center gap-2 text-[#1a1941] dark:text-indigo-400 font-bold text-lg">
+                        <i class="fa-solid fa-filter"></i>
+                        <h2>Filtros Dinâmicos</h2>
+                        <span id="tag-ano-atual" class="ml-2 text-xs bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-1 rounded">Visualizando: 2026</span>
+                    </div>
+                    <button id="btn-limpar-filtros" class="text-red-500 hover:text-red-700 bg-red-50 dark:bg-red-900/30 dark:hover:bg-red-900/50 px-3 py-1 rounded text-sm font-semibold transition">
+                        <i class="fa-solid fa-eraser"></i> Limpar Filtros
+                    </button>
                 </div>
+                
                 <div class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-7 gap-4">
-                    <div><label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Mês Base</label><select id="filtro-mes" class="w-full bg-transparent border border-gray-300 dark:border-gray-600 rounded p-2 text-sm"><option value="Todos">Todos</option></select></div>
+                    <div><label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Mês Base</label><select id="filtro-mes" class="w-full bg-transparent border border-gray-300 dark:border-gray-600 rounded p-2 text-sm"><option value="Todos">Todos os Meses</option></select></div>
                     <div><label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Data Inicial</label><input type="date" id="filtro-data-inicio" class="w-full bg-transparent border border-gray-300 dark:border-gray-600 rounded p-2 text-sm [color-scheme:light] dark:[color-scheme:dark]"></div>
                     <div><label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Data Final</label><input type="date" id="filtro-data-fim" class="w-full bg-transparent border border-gray-300 dark:border-gray-600 rounded p-2 text-sm [color-scheme:light] dark:[color-scheme:dark]"></div>
-                    <div><label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Analista</label><select id="filtro-analista" class="w-full bg-transparent border border-gray-300 dark:border-gray-600 rounded p-2 text-sm"><option value="Todos">Todos</option></select></div>
+                    <div><label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Analista</label><select id="filtro-analista" class="w-full bg-transparent border border-gray-300 dark:border-gray-600 rounded p-2 text-sm"><option value="Todos">Geral (Todos)</option></select></div>
                     <div><label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Criticidade</label><select id="filtro-prioridade" class="w-full bg-transparent border border-gray-300 dark:border-gray-600 rounded p-2 text-sm"><option value="Todos">Todas</option></select></div>
                     <div><label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Assunto</label><select id="filtro-assunto" class="w-full bg-transparent border border-gray-300 dark:border-gray-600 rounded p-2 text-sm"><option value="Todos">Todos</option></select></div>
                     <div><label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Tipo</label><select id="filtro-tipo" class="w-full bg-transparent border border-gray-300 dark:border-gray-600 rounded p-2 text-sm"><option value="Todos">Todos</option></select></div>
                 </div>
             </div>
 
-            <!-- KPIs -->
+            <!-- QUADRO DE INDICADORES (KPIs) -->
             <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-6">
-                <div class="card bg-white dark:bg-gray-800 flex items-center gap-4"><div class="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 dark:text-blue-400 text-xl"><i class="fa-solid fa-ticket"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">Total</p><p id="kpi-total" class="text-2xl font-black text-gray-800 dark:text-gray-100">0</p></div></div>
+                <div class="card bg-white dark:bg-gray-800 flex items-center gap-4"><div class="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 dark:text-blue-400 text-xl"><i class="fa-solid fa-ticket"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">Total (Geral)</p><p id="kpi-total" class="text-2xl font-black text-gray-800 dark:text-gray-100">0</p></div></div>
                 <div class="card bg-white dark:bg-gray-800 flex items-center gap-4"><div class="w-12 h-12 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400 text-xl"><i class="fa-solid fa-filter"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">Filtrados</p><p id="kpi-filtrado" class="text-2xl font-black text-gray-800 dark:text-gray-100">0</p></div></div>
                 <div class="card bg-white dark:bg-gray-800 flex items-center gap-4"><div class="w-12 h-12 rounded-full bg-yellow-100 dark:bg-yellow-900/50 flex items-center justify-center text-yellow-600 dark:text-yellow-400 text-xl"><i class="fa-regular fa-clock"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">TMA (Horas)</p><p id="kpi-tma" class="text-2xl font-black text-gray-800 dark:text-gray-100">0.0h</p></div></div>
                 <div class="card bg-white dark:bg-gray-800 flex items-center gap-4"><div class="w-12 h-12 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center text-green-500 dark:text-green-400 text-xl"><i class="fa-solid fa-stopwatch"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">SLA Atendido</p><p id="kpi-sla" class="text-2xl font-black text-gray-800 dark:text-gray-100">0%</p></div></div>
@@ -102,21 +132,21 @@
                 <div class="card bg-white dark:bg-gray-800 flex items-center gap-4"><div class="w-12 h-12 rounded-full bg-orange-100 dark:bg-orange-900/50 flex items-center justify-center text-orange-600 dark:text-orange-400 text-xl"><i class="fa-solid fa-rotate-left"></i></div><div><p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">Reabertos</p><p id="kpi-reabertos" class="text-2xl font-black text-gray-800 dark:text-gray-100">0%</p></div></div>
             </div>
 
-            <!-- GRÁFICOS -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                 <div class="card bg-white dark:bg-gray-800 flex flex-col"><h3 class="font-bold text-gray-700 dark:text-gray-300 mb-4 border-b dark:border-gray-700 pb-2 text-sm uppercase">Evolução de Chamados</h3><div class="chart-container"><canvas id="chart-meses"></canvas></div></div>
                 <div class="card bg-white dark:bg-gray-800 flex flex-col"><h3 class="font-bold text-gray-700 dark:text-gray-300 mb-4 border-b dark:border-gray-700 pb-2 text-sm uppercase">Volume por Analista</h3><div class="chart-container"><canvas id="chart-analistas"></canvas></div></div>
             </div>
+            
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                 <div class="card bg-white dark:bg-gray-800 flex flex-col"><h3 class="font-bold text-gray-700 dark:text-gray-300 mb-4 border-b dark:border-gray-700 pb-2 text-sm uppercase">Top 15 Assuntos (Categorias)</h3><div class="chart-container"><canvas id="chart-assuntos"></canvas></div></div>
                 <div class="card bg-white dark:bg-gray-800 flex flex-col"><h3 class="font-bold text-gray-700 dark:text-gray-300 mb-2 border-b dark:border-gray-700 pb-2 text-sm uppercase">Eficiência SLA por Criticidade</h3><div class="chart-container"><canvas id="chart-prioridade"></canvas></div></div>
             </div>
+
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                 <div class="card bg-white dark:bg-gray-800 flex flex-col"><h3 class="font-bold text-gray-700 dark:text-gray-300 mb-4 border-b dark:border-gray-700 pb-2 text-sm uppercase">Top Maiores Requerentes</h3><div class="chart-container"><canvas id="chart-requerentes"></canvas></div></div>
                 <div class="card bg-white dark:bg-gray-800 flex flex-col items-center justify-center"><h3 class="font-bold text-gray-700 dark:text-gray-300 mb-4 w-full border-b dark:border-gray-700 pb-2 text-sm uppercase">Natureza do Chamado</h3><div class="chart-container-small"><canvas id="chart-tipo"></canvas></div></div>
             </div>
 
-            <!-- TABELA OPERACIONAL -->
             <div class="card bg-white dark:bg-gray-800">
                 <div class="flex justify-between items-end mb-4 border-b dark:border-gray-700 pb-2">
                     <h3 class="font-bold text-gray-700 dark:text-gray-300 text-sm uppercase"><i class="fa-solid fa-table-list mr-2 text-[#1a1941] dark:text-indigo-400"></i>Detalhamento Operacional</h3>
@@ -125,7 +155,14 @@
                 <div class="table-container rounded border border-gray-200 dark:border-gray-700">
                     <table class="data-table w-full text-left text-sm text-gray-600 dark:text-gray-300">
                         <thead class="bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-200 uppercase text-xs border-b dark:border-gray-600 shadow-sm">
-                            <tr><th class="px-4 py-3 font-semibold bg-gray-50 dark:bg-gray-700">Ticket</th><th class="px-4 py-3 font-semibold bg-gray-50 dark:bg-gray-700">Abertura</th><th class="px-4 py-3 font-semibold bg-gray-50 dark:bg-gray-700">Analista</th><th class="px-4 py-3 font-semibold w-1/3 bg-gray-50 dark:bg-gray-700">Assunto</th><th class="px-4 py-3 font-semibold bg-gray-50 dark:bg-gray-700">Prioridade</th><th class="px-4 py-3 font-semibold bg-gray-50 dark:bg-gray-700">SLA</th></tr>
+                            <tr>
+                                <th class="px-4 py-3 font-semibold bg-gray-50 dark:bg-gray-700">Ticket</th>
+                                <th class="px-4 py-3 font-semibold bg-gray-50 dark:bg-gray-700">Abertura</th>
+                                <th class="px-4 py-3 font-semibold bg-gray-50 dark:bg-gray-700">Analista</th>
+                                <th class="px-4 py-3 font-semibold w-1/3 bg-gray-50 dark:bg-gray-700">Assunto (Resumo)</th>
+                                <th class="px-4 py-3 font-semibold bg-gray-50 dark:bg-gray-700">Prioridade</th>
+                                <th class="px-4 py-3 font-semibold bg-gray-50 dark:bg-gray-700">SLA</th>
+                            </tr>
                         </thead>
                         <tbody id="tabela-corpo" class="divide-y divide-gray-100 dark:divide-gray-700 bg-white dark:bg-gray-800">
                             <tr><td colspan="6" class="px-4 py-8 text-center text-gray-400">Aguardando dados...</td></tr>
@@ -138,12 +175,13 @@
                     <button id="btn-tab-next" class="px-3 py-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-xs font-semibold transition disabled:opacity-50">Próxima <i class="fa-solid fa-chevron-right"></i></button>
                 </div>
             </div>
+
         </main>
     </div>
 
-    <!-- MODAIS E PAINEIS -->
+    <!-- MODAIS DO SISTEMA -->
     
-    <!-- Limite Firebase -->
+    <!-- Modal Limite Diário Firebase -->
     <div id="modal-limite" class="hidden fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-[70] p-4">
         <div class="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-2xl text-center max-w-md border-t-4 border-red-600">
             <i class="fa-solid fa-triangle-exclamation text-red-600 text-5xl mb-4"></i>
@@ -159,20 +197,38 @@
                 <h2 class="text-xl font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-2"><i class="fa-solid fa-chart-area"></i> Visão Histórica: Descumprimentos Contratuais (IMR)</h2>
                 <button id="btn-fechar-historico-imr" class="text-gray-400 hover:text-red-500 transition"><i class="fa-solid fa-xmark text-2xl"></i></button>
             </div>
+            
             <div class="flex flex-wrap gap-4 mb-4 items-end bg-gray-50 dark:bg-gray-700 p-4 rounded border dark:border-gray-600">
-                <div><label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase mb-1">Mês Inicial</label><select id="hist-filtro-inicio" class="border dark:border-gray-600 rounded p-2 text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200"></select></div>
-                <div><label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase mb-1">Mês Final</label><select id="hist-filtro-fim" class="border dark:border-gray-600 rounded p-2 text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200"></select></div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase mb-1">Mês Inicial</label>
+                    <select id="hist-filtro-inicio" class="border dark:border-gray-600 rounded p-2 text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200"></select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase mb-1">Mês Final</label>
+                    <select id="hist-filtro-fim" class="border dark:border-gray-600 rounded p-2 text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200"></select>
+                </div>
                 <button id="btn-filtrar-hist" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded text-sm font-bold shadow transition">Aplicar Filtro</button>
                 <button id="btn-imprimir-hist" class="ml-auto bg-gray-800 dark:bg-gray-600 hover:bg-black text-white px-5 py-2 rounded text-sm font-bold shadow transition flex items-center gap-2"><i class="fa-solid fa-file-pdf"></i> Exportar Relatório PDF</button>
             </div>
-            <div class="chart-container mb-6 border dark:border-gray-700 p-2 rounded bg-white dark:bg-gray-800" style="height: 250px;"><canvas id="chart-historico-falhas"></canvas></div>
+
+            <div class="chart-container mb-6 border dark:border-gray-700 p-2 rounded bg-white dark:bg-gray-800" style="height: 250px;">
+                 <canvas id="chart-historico-falhas"></canvas>
+            </div>
+
             <h3 class="font-bold text-sm uppercase text-gray-700 dark:text-gray-300 mb-2">Detalhamento dos Meses</h3>
             <div class="table-historico-container rounded border border-gray-200 dark:border-gray-700">
                 <table class="w-full text-left text-sm text-gray-600 dark:text-gray-300">
                     <thead class="bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-200 uppercase text-xs border-b dark:border-gray-600 shadow-sm">
-                        <tr><th class="p-3 font-semibold bg-gray-50 dark:bg-gray-700">Ciclo Fiscal</th><th class="p-3 font-semibold bg-gray-50 dark:bg-gray-700">Pontos</th><th class="p-3 font-semibold bg-gray-50 dark:bg-gray-700">% Glosa</th><th class="p-3 font-semibold bg-gray-50 dark:bg-gray-700">Desconto (R$)</th><th class="p-3 font-semibold w-1/3 bg-gray-50 dark:bg-gray-700">Indicadores Descumpridos</th></tr>
+                        <tr>
+                            <th class="p-3 font-semibold bg-gray-50 dark:bg-gray-700">Ciclo Fiscal</th>
+                            <th class="p-3 font-semibold bg-gray-50 dark:bg-gray-700">Pontos</th>
+                            <th class="p-3 font-semibold bg-gray-50 dark:bg-gray-700">% Glosa</th>
+                            <th class="p-3 font-semibold bg-gray-50 dark:bg-gray-700">Desconto (R$)</th>
+                            <th class="p-3 font-semibold w-1/3 bg-gray-50 dark:bg-gray-700">Indicadores Descumpridos</th>
+                        </tr>
                     </thead>
-                    <tbody id="tabela-corpo-historico" class="divide-y divide-gray-100 dark:divide-gray-700 bg-white dark:bg-gray-800"></tbody>
+                    <tbody id="tabela-corpo-historico" class="divide-y divide-gray-100 dark:divide-gray-700 bg-white dark:bg-gray-800">
+                    </tbody>
                 </table>
             </div>
         </div>
@@ -183,24 +239,42 @@
         <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-2xl w-full max-w-2xl border-t-4 border-yellow-500 flex flex-col max-h-[90vh]">
             <h2 class="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2 flex items-center gap-2"><i class="fa-solid fa-triangle-exclamation text-yellow-500"></i> Descumprimento de NMS Detetado</h2>
             <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">A auditoria encontrou indicadores fora da meta contratual. Escolha o formato da conclusão para o PDF.</p>
+            
             <div class="bg-red-50 dark:bg-red-900/20 p-3 rounded border border-red-200 dark:border-red-800 mb-4">
-                <p class="text-xs font-bold text-red-800 dark:text-red-400 mb-1">Indicadores Afetados:</p><p class="text-sm font-mono font-bold text-red-700 dark:text-red-300" id="revisao-indicadores"></p>
+                <p class="text-xs font-bold text-red-800 dark:text-red-400 mb-1">Indicadores Afetados:</p>
+                <p class="text-sm font-mono font-bold text-red-700 dark:text-red-300" id="revisao-indicadores"></p>
             </div>
+
             <div class="mb-4 bg-gray-50 dark:bg-gray-700 p-4 rounded border dark:border-gray-600">
                 <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 uppercase mb-3">Formato da Conclusão a Imprimir</label>
                 <div class="flex flex-col gap-3">
-                    <label class="flex items-center gap-3 cursor-pointer text-sm text-gray-700 dark:text-gray-300"><input type="radio" name="tipo_conclusao" value="automatica" checked class="w-4 h-4 cursor-pointer"><span><strong>Parecer Automático:</strong> Cita as falhas, calcula os pontos, % de glosa e desconta R$ do contrato.</span></label>
-                    <label class="flex items-center gap-3 cursor-pointer text-sm text-gray-700 dark:text-gray-300"><input type="radio" name="tipo_conclusao" value="personalizada" class="w-4 h-4 cursor-pointer"><span><strong>Parecer Personalizado:</strong> Escreva uma justificativa livre (Não imprime cálculos automáticos na folha).</span></label>
+                    <label class="flex items-center gap-3 cursor-pointer text-sm text-gray-700 dark:text-gray-300">
+                        <input type="radio" name="tipo_conclusao" value="automatica" checked class="w-4 h-4 cursor-pointer">
+                        <span><strong>Parecer Automático:</strong> Cita as falhas, calcula os pontos, % de glosa e desconta R$ do contrato.</span>
+                    </label>
+                    <label class="flex items-center gap-3 cursor-pointer text-sm text-gray-700 dark:text-gray-300">
+                        <input type="radio" name="tipo_conclusao" value="personalizada" class="w-4 h-4 cursor-pointer">
+                        <span><strong>Parecer Personalizado:</strong> Escreva uma justificativa livre (Não imprime cálculos automáticos na folha).</span>
+                    </label>
                 </div>
             </div>
+
             <div id="area-texto-personalizado" class="mb-4 hidden flex-grow">
-                <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase mb-1 flex justify-between"><span>Justificativa Livre do Fiscal</span><span class="text-[10px] text-gray-400 font-normal">Editável / Paginação Infinita</span></label>
+                <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase mb-1 flex justify-between">
+                    <span>Justificativa Livre do Fiscal</span>
+                    <span class="text-[10px] text-gray-400 font-normal">Editável / Paginação Infinita</span>
+                </label>
                 <textarea id="revisao-texto" rows="6" class="w-full border border-gray-300 dark:border-gray-600 rounded p-3 text-sm bg-gray-50 dark:bg-gray-700 focus:outline-none focus:border-yellow-500 transition leading-relaxed"></textarea>
             </div>
+
             <div id="area-texto-automatico" class="mb-4">
-                <div class="flex items-center justify-between mb-2"><label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase">Pontos da Glosa a aplicar</label><input type="number" id="revisao-pontos" min="0" class="w-24 text-center font-bold text-xl border border-gray-300 dark:border-gray-600 rounded p-1 bg-white dark:bg-gray-800 text-red-600 dark:text-red-400"></div>
+                <div class="flex items-center justify-between mb-2">
+                    <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase">Pontos da Glosa a aplicar</label>
+                    <input type="number" id="revisao-pontos" min="0" class="w-24 text-center font-bold text-xl border border-gray-300 dark:border-gray-600 rounded p-1 bg-white dark:bg-gray-800 text-red-600 dark:text-red-400">
+                </div>
                 <p class="text-[10px] text-gray-500 dark:text-gray-400">O sistema usará este valor para calcular o desconto financeiro no modo automático. Altere para 0 se for abonar 100%.</p>
             </div>
+
             <div class="flex justify-end gap-3 pt-4 border-t dark:border-gray-700">
                 <button id="btn-cancelar-revisao" class="px-5 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded font-bold text-sm hover:bg-gray-300 dark:hover:bg-gray-600 transition">Cancelar Auditoria</button>
                 <button id="btn-confirmar-revisao" class="px-5 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded font-bold text-sm shadow transition flex items-center gap-2"><i class="fa-solid fa-file-pdf"></i> Imprimir e Gerar PDF</button>
@@ -208,13 +282,14 @@
         </div>
     </div>
 
-    <!-- Modal Painel Administrativo -->
+    <!-- Modal Painel de Ferramentas -->
     <div id="modal-config" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-2xl w-full max-w-4xl flex flex-col max-h-[90vh]">
             <div class="flex justify-between items-center p-5 border-b dark:border-gray-700 bg-gray-50 dark:bg-gray-900 rounded-t-lg">
                 <h2 class="text-xl font-bold text-[#1a1941] dark:text-indigo-400 flex items-center gap-2"><i class="fa-solid fa-toolbox"></i> Painel Administrativo</h2>
                 <button id="btn-fechar-config-icon" class="text-gray-400 hover:text-red-500 transition"><i class="fa-solid fa-xmark text-2xl"></i></button>
             </div>
+            
             <div class="flex flex-wrap gap-1 px-5 pt-4 border-b dark:border-gray-700 overflow-x-auto">
                 <button id="aba-dados" class="px-3 py-2 tab-active text-[#1a1941] dark:text-indigo-400 border-[#1a1941] dark:border-indigo-400 focus:outline-none font-semibold text-sm whitespace-nowrap">Atualizar Base</button>
                 <button id="aba-aparencia" class="px-3 py-2 tab-inactive focus:outline-none font-semibold text-sm whitespace-nowrap">Preferências (Equipe)</button>
@@ -222,33 +297,79 @@
                 <button id="aba-fiscal" class="px-3 py-2 tab-inactive focus:outline-none font-semibold text-sm text-green-700 dark:text-green-500 flex items-center gap-2 whitespace-nowrap"><i class="fa-solid fa-file-contract"></i> Fiscalização (IMR)</button>
                 <button id="aba-admin" class="px-3 py-2 tab-inactive focus:outline-none font-semibold text-sm text-red-600 hover:text-red-500 ml-auto flex items-center gap-2 whitespace-nowrap"><i class="fa-solid fa-shield-halved"></i> Avançado / Segurança</button>
             </div>
+
             <div class="p-6 overflow-y-auto flex-grow">
                 <!-- Aba Atualizar Base -->
                 <div id="conteudo-dados" class="block">
                     <h3 class="font-bold text-gray-700 dark:text-gray-300 mb-2 text-sm uppercase">Base Operacional Primária</h3>
                     <label class="bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 text-[#1a1941] dark:text-indigo-300 border-2 border-dashed border-[#1a1941] dark:border-indigo-400 w-full p-6 rounded-lg font-semibold cursor-pointer transition flex flex-col items-center justify-center gap-3 mb-4">
-                        <i class="fa-solid fa-cloud-arrow-up text-3xl mb-1"></i><span>Importar Base de Chamados (.xlsx) - Permite Vários Arquivos</span>
+                        <i class="fa-solid fa-cloud-arrow-up text-3xl mb-1"></i>
+                        <span>Importar Base de Chamados (.xlsx) - Permite Vários Arquivos</span>
                         <input type="file" id="file-upload" accept=".xlsx, .xls" class="hidden" multiple>
                     </label>
+
                     <h3 class="font-bold text-gray-700 dark:text-gray-300 mb-2 mt-6 text-sm uppercase border-t dark:border-gray-700 pt-4">Bases Auxiliares de Fiscalização (IMR)</h3>
                     <div class="flex flex-col sm:flex-row gap-3 mb-2">
-                        <label class="flex-grow bg-green-50 dark:bg-green-900/20 border border-green-300 dark:border-green-700 hover:bg-green-100 dark:hover:bg-green-900/40 text-green-800 dark:text-green-400 p-3 rounded cursor-pointer transition text-sm font-bold flex items-center justify-center gap-2 shadow-sm"><i class="fa-solid fa-star"></i> Planilha de Satisfação (INS1)<input type="file" id="upload-satisfacao" accept=".xlsx, .xls" class="hidden" multiple></label>
-                        <label class="flex-grow bg-green-50 dark:bg-green-900/20 border border-green-300 dark:border-green-700 hover:bg-green-100 dark:hover:bg-green-900/40 text-green-800 dark:text-green-400 p-3 rounded cursor-pointer transition text-sm font-bold flex items-center justify-center gap-2 shadow-sm"><i class="fa-solid fa-rotate-left"></i> Planilha de Reabertos (INS6)<input type="file" id="upload-reabertos" accept=".xlsx, .xls" class="hidden" multiple></label>
+                        <label class="flex-grow bg-green-50 dark:bg-green-900/20 border border-green-300 dark:border-green-700 hover:bg-green-100 dark:hover:bg-green-900/40 text-green-800 dark:text-green-400 p-3 rounded cursor-pointer transition text-sm font-bold flex items-center justify-center gap-2 shadow-sm">
+                            <i class="fa-solid fa-star"></i> Planilha de Satisfação (INS1)
+                            <input type="file" id="upload-satisfacao" accept=".xlsx, .xls" class="hidden" multiple>
+                        </label>
+                        <label class="flex-grow bg-green-50 dark:bg-green-900/20 border border-green-300 dark:border-green-700 hover:bg-green-100 dark:hover:bg-green-900/40 text-green-800 dark:text-green-400 p-3 rounded cursor-pointer transition text-sm font-bold flex items-center justify-center gap-2 shadow-sm">
+                            <i class="fa-solid fa-rotate-left"></i> Planilha de Reabertos (INS6)
+                            <input type="file" id="upload-reabertos" accept=".xlsx, .xls" class="hidden" multiple>
+                        </label>
                     </div>
-                    <div id="loader-upload" class="mt-4 flex items-center justify-center gap-2 text-sm font-semibold text-[#1a1941] dark:text-indigo-300 hidden"><div class="loader !border-t-current !border-4 !w-5 !h-5 inline-block"></div> Processando arquivo(s)...</div>
-                    <div id="loader-fiscal-upload" class="mt-4 flex items-center justify-center gap-2 text-sm font-semibold text-green-700 dark:text-green-400 hidden"><div class="loader !border-t-current !border-4 !w-5 !h-5 inline-block"></div> Processando arquivo(s) auxiliar(es)...</div>
-                    <div class="mt-6 text-center border-t dark:border-gray-700 pt-4"><button id="btn-carregar-historico" class="bg-gray-800 dark:bg-gray-600 hover:bg-black text-white px-4 py-2 rounded text-sm font-semibold transition shadow-sm"><i class="fa-solid fa-database"></i> Carregar Histórico Completo da Nuvem</button></div>
+
+                    <div id="loader-upload" class="mt-4 flex items-center justify-center gap-2 text-sm font-semibold text-[#1a1941] dark:text-indigo-300 hidden">
+                        <div class="loader !border-t-current !border-4 !w-5 !h-5 inline-block"></div> Processando arquivo(s)...
+                    </div>
+                    <div id="loader-fiscal-upload" class="mt-4 flex items-center justify-center gap-2 text-sm font-semibold text-green-700 dark:text-green-400 hidden">
+                        <div class="loader !border-t-current !border-4 !w-5 !h-5 inline-block"></div> Processando arquivo(s) auxiliar(es)...
+                    </div>
+
+                    <div class="mt-6 text-center border-t dark:border-gray-700 pt-4">
+                        <button id="btn-carregar-historico" class="bg-gray-800 dark:bg-gray-600 hover:bg-black text-white px-4 py-2 rounded text-sm font-semibold transition shadow-sm">
+                            <i class="fa-solid fa-database"></i> Carregar Histórico Completo da Nuvem
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Aba Preferências -->
                 <div id="conteudo-aparencia" class="hidden">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                        <div><label class="block text-sm font-semibold mb-1">Título do Painel Oficial</label><input type="text" id="input-titulo" class="w-full border dark:border-gray-600 rounded p-2 text-sm bg-gray-50 dark:bg-gray-700 transition" placeholder="Analytics Suporte SETIC"></div>
-                        <div><label class="block text-sm font-semibold mb-1">Cor Primária (Claro)</label><div class="flex items-center gap-2 border dark:border-gray-600 rounded bg-gray-50 dark:bg-gray-700 pr-2"><input type="color" id="input-cor" class="w-12 border-0 h-10 cursor-pointer p-0 bg-transparent" value="#1a1941"><span class="text-xs font-mono text-gray-500 dark:text-gray-400" id="hex-view">#1a1941</span></div></div>
-                        <div><label class="block text-sm font-semibold mb-1">Ícone do Cabeçalho</label><select id="input-icone" class="w-full border dark:border-gray-600 rounded p-2 text-sm bg-gray-50 dark:bg-gray-700 transition text-gray-700 dark:text-gray-200"><option value="fa-chart-line">Gráfico de Linhas</option><option value="fa-chart-pie">Gráfico de Pizza</option><option value="fa-chart-column">Gráfico de Barras</option><option value="fa-table-columns">Painel de Gestão</option><option value="fa-users">Equipa de Suporte</option><option value="fa-headset">Headset / Atendimento</option><option value="fa-shield-halved">Segurança / Fiscal</option><option value="fa-laptop-code">Desenvolvimento / TI</option></select></div>
+                        <div>
+                            <label class="block text-sm font-semibold mb-1">Título do Painel Oficial</label>
+                            <input type="text" id="input-titulo" class="w-full border dark:border-gray-600 rounded p-2 text-sm bg-gray-50 dark:bg-gray-700 transition" placeholder="Analytics Suporte SETIC">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold mb-1">Cor Primária (Claro)</label>
+                            <div class="flex items-center gap-2 border dark:border-gray-600 rounded bg-gray-50 dark:bg-gray-700 pr-2">
+                                <input type="color" id="input-cor" class="w-12 border-0 h-10 cursor-pointer p-0 bg-transparent" value="#1a1941">
+                                <span class="text-xs font-mono text-gray-500 dark:text-gray-400" id="hex-view">#1a1941</span>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold mb-1">Ícone do Cabeçalho</label>
+                            <select id="input-icone" class="w-full border dark:border-gray-600 rounded p-2 text-sm bg-gray-50 dark:bg-gray-700 transition text-gray-700 dark:text-gray-200">
+                                <option value="fa-chart-line">Gráfico de Linhas (Padrão)</option>
+                                <option value="fa-chart-pie">Gráfico de Pizza</option>
+                                <option value="fa-chart-column">Gráfico de Barras</option>
+                                <option value="fa-table-columns">Painel de Gestão</option>
+                                <option value="fa-users">Equipa de Suporte</option>
+                                <option value="fa-headset">Headset / Atendimento</option>
+                                <option value="fa-shield-halved">Segurança / Fiscal</option>
+                                <option value="fa-laptop-code">Desenvolvimento / TI</option>
+                            </select>
+                        </div>
                     </div>
-                    <div class="mb-4"><label class="block text-sm font-semibold mb-1">Logótipo Institucional (Cabeçalho e PDF)</label><input type="file" id="input-logo-file" accept="image/*" class="w-full border dark:border-gray-600 rounded p-2 text-sm bg-gray-50 dark:bg-gray-700 cursor-pointer"></div>
-                    <div><label class="block text-sm font-semibold mb-1">Composição da Equipe Foco</label><textarea id="input-equipe" class="w-full border dark:border-gray-600 rounded p-3 text-sm bg-gray-50 dark:bg-gray-700 transition font-mono" rows="3"></textarea></div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-semibold mb-1">Logótipo Institucional (Cabeçalho e PDF)</label>
+                        <input type="file" id="input-logo-file" accept="image/*" class="w-full border dark:border-gray-600 rounded p-2 text-sm bg-gray-50 dark:bg-gray-700 cursor-pointer">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-1">Composição da Equipe Foco (Analistas Filtrados)</label>
+                        <textarea id="input-equipe" class="w-full border dark:border-gray-600 rounded p-3 text-sm bg-gray-50 dark:bg-gray-700 transition font-mono" rows="3" placeholder="fabio.palma.prestador..."></textarea>
+                    </div>
                 </div>
 
                 <!-- Aba Relatórios -->
@@ -256,8 +377,17 @@
                     <div class="bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-800 p-4 rounded mb-5">
                         <h4 class="font-bold text-indigo-800 dark:text-indigo-300 text-sm mb-2"><i class="fa-solid fa-file-signature"></i> Geração de Relatório Oficial</h4>
                         <div class="grid grid-cols-2 gap-4">
-                            <div><label class="block text-xs font-bold text-indigo-900 dark:text-indigo-200 uppercase mb-1">Mês Calendário</label><div id="relatorio-mes-container" class="w-full border dark:border-gray-600 rounded p-2 text-sm bg-white dark:bg-gray-700 h-24 overflow-y-auto flex flex-col gap-2 shadow-inner"></div></div>
-                            <div><label class="block text-xs font-bold text-indigo-900 dark:text-indigo-200 uppercase mb-1">Analista</label><select id="relatorio-analista" class="w-full border dark:border-gray-600 rounded p-2 text-sm bg-white dark:bg-gray-700"><option value="Todos">Equipe Completa</option></select></div>
+                            <div>
+                                <label class="block text-xs font-bold text-indigo-900 dark:text-indigo-200 uppercase mb-1">Mês Calendário (Múltipla Seleção)</label>
+                                <div id="relatorio-mes-container" class="w-full border dark:border-gray-600 rounded p-2 text-sm bg-white dark:bg-gray-700 h-24 overflow-y-auto flex flex-col gap-2 shadow-inner">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-indigo-900 dark:text-indigo-200 uppercase mb-1">Analista</label>
+                                <select id="relatorio-analista" class="w-full border dark:border-gray-600 rounded p-2 text-sm bg-white dark:bg-gray-700">
+                                    <option value="Todos">Equipe Completa</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
@@ -270,14 +400,28 @@
                 <div id="conteudo-fiscal" class="hidden">
                     <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 p-6 rounded-lg mb-5 shadow-sm">
                         <div class="flex items-start gap-4">
-                            <div class="text-green-600 dark:text-green-500 text-4xl mt-1 hidden sm:block"><i class="fa-solid fa-magnifying-glass-chart"></i></div>
+                            <div class="text-green-600 dark:text-green-500 text-4xl mt-1 hidden sm:block">
+                                <i class="fa-solid fa-magnifying-glass-chart"></i>
+                            </div>
                             <div class="w-full">
                                 <h3 class="font-bold text-lg text-green-800 dark:text-green-400 mb-2">Auditoria e Fiscalização de Contrato (IMR)</h3>
-                                <p class="text-sm text-green-700 dark:text-green-300 mb-4 leading-relaxed">O sistema atuará como fiscal virtual processando o NMS utilizando as planilhas secundárias em conjunto com a base primária e filtrando pela <strong>Data de Encerramento</strong> no ciclo do dia 04 ao dia 03.</p>
+                                <p class="text-sm text-green-700 dark:text-green-300 mb-4 leading-relaxed">
+                                    O sistema atuará como fiscal virtual processando o NMS utilizando as planilhas secundárias em conjunto com a base primária e filtrando pela <strong>Data de Encerramento</strong> no ciclo do dia 04 ao dia 03.
+                                </p>
+                                
                                 <div class="flex flex-col sm:flex-row gap-3 items-end mt-2 pt-4 border-t border-green-200 dark:border-green-800">
-                                    <div class="w-full sm:w-1/4"><label class="block text-xs font-bold text-green-800 dark:text-green-700 uppercase mb-1">Ciclo Fiscal</label><select id="fiscal-mes" class="w-full border border-green-300 dark:border-green-700 rounded p-3 text-sm bg-white dark:bg-gray-800 focus:outline-none focus:border-green-500 transition"><option value="Todos">Todos os Ciclos</option></select></div>
-                                    <button id="btn-gerar-fiscal-pdf" class="w-full sm:w-auto flex-grow bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded shadow transition flex items-center justify-center gap-2"><i class="fa-solid fa-file-shield text-lg"></i> Gerar Relatório PDF</button>
-                                    <button id="btn-abrir-historico-imr" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded shadow transition flex items-center justify-center gap-2"><i class="fa-solid fa-chart-column text-lg"></i> Ver Histórico</button>
+                                    <div class="w-full sm:w-1/4">
+                                        <label class="block text-xs font-bold text-green-800 dark:text-green-700 uppercase mb-1">Ciclo Fiscal</label>
+                                        <select id="fiscal-mes" class="w-full border border-green-300 dark:border-green-700 rounded p-3 text-sm bg-white dark:bg-gray-800 focus:outline-none focus:border-green-500 transition">
+                                            <option value="Todos">Todos os Ciclos</option>
+                                        </select>
+                                    </div>
+                                    <button id="btn-gerar-fiscal-pdf" class="w-full sm:w-auto flex-grow bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded shadow transition flex items-center justify-center gap-2">
+                                        <i class="fa-solid fa-file-shield text-lg"></i> Gerar Relatório PDF
+                                    </button>
+                                    <button id="btn-abrir-historico-imr" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded shadow transition flex items-center justify-center gap-2">
+                                        <i class="fa-solid fa-chart-column text-lg"></i> Ver Histórico
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -289,18 +433,41 @@
                     <div class="border-2 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/20 p-5 rounded-lg mb-4">
                         <h3 class="font-bold text-lg text-gray-800 dark:text-gray-200 mb-2"><i class="fa-solid fa-lock"></i> Autenticação de Administrador</h3>
                         <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Insira a senha mestra de administração para gerir a base de dados e criar novos acessos para a equipa.</p>
-                        <div class="flex items-end gap-3 bg-white dark:bg-gray-800 p-4 rounded border dark:border-gray-700"><div class="flex-grow"><input type="password" id="input-senha-admin" class="w-full border border-gray-300 dark:border-gray-600 rounded p-2 text-sm dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Senha Mestra"></div></div>
+                        
+                        <div class="flex items-end gap-3 bg-white dark:bg-gray-800 p-4 rounded border dark:border-gray-700">
+                            <div class="flex-grow">
+                                <input type="password" id="input-senha-admin" class="w-full border border-gray-300 dark:border-gray-600 rounded p-2 text-sm dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Senha Mestra">
+                            </div>
+                        </div>
                     </div>
+
                     <div id="area-gestao-usuarios" class="hidden bg-white dark:bg-gray-800 p-5 rounded border border-blue-200 dark:border-gray-700 border-l-4 border-l-blue-500 shadow-sm mb-4">
                         <h4 class="font-bold text-blue-800 dark:text-blue-400 mb-2 flex items-center gap-2"><i class="fa-solid fa-user-plus"></i> Criar Acesso de Analista</h4>
-                        <div class="flex flex-col sm:flex-row gap-3"><input type="email" id="novo-email" placeholder="E-mail" class="flex-grow border border-gray-300 dark:border-gray-600 rounded p-2 text-sm dark:bg-gray-700"><input type="password" id="novo-senha" placeholder="Senha" class="w-full sm:w-1/3 border border-gray-300 dark:border-gray-600 rounded p-2 text-sm dark:bg-gray-700"><button id="btn-criar-usuario" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-sm shadow transition flex items-center justify-center gap-2"><i class="fa-solid fa-check"></i> Criar</button></div>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">Registe o e-mail e a senha provisória para um colega aceder ao Analytics.</p>
+                        <div class="flex flex-col sm:flex-row gap-3">
+                            <input type="email" id="novo-email" placeholder="E-mail (ex: nome@prf.gov.br)" class="flex-grow border border-gray-300 dark:border-gray-600 rounded p-2 text-sm dark:bg-gray-700 focus:outline-none focus:border-blue-500">
+                            <input type="password" id="novo-senha" placeholder="Senha (Mín. 6 letras)" class="w-full sm:w-1/3 border border-gray-300 dark:border-gray-600 rounded p-2 text-sm dark:bg-gray-700 focus:outline-none focus:border-blue-500">
+                            <button id="btn-criar-usuario" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-sm shadow transition flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-check"></i> Criar
+                            </button>
+                        </div>
                     </div>
+
                     <div id="area-gestao-banco" class="hidden bg-white dark:bg-gray-800 p-5 rounded border border-red-200 dark:border-gray-700 border-l-4 border-l-red-500 shadow-sm">
                         <h4 class="font-bold text-red-700 dark:text-red-400 mb-2 flex items-center gap-2"><i class="fa-solid fa-trash-can"></i> Gestão da Base de Dados</h4>
-                        <div class="flex flex-col sm:flex-row gap-3 items-center"><select id="select-exclusao" class="flex-grow w-full border border-gray-300 dark:border-gray-600 rounded p-2 text-sm dark:bg-gray-700"></select><button id="btn-zerar-banco" class="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded text-sm shadow transition flex items-center justify-center gap-2"><i class="fa-solid fa-triangle-exclamation"></i> Apagar</button></div>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">Selecione o mês correspondente à planilha ou a base auxiliar que deseja apagar.</p>
+                        <div class="flex flex-col sm:flex-row gap-3 items-center">
+                            <select id="select-exclusao" class="flex-grow w-full border border-gray-300 dark:border-gray-600 rounded p-2 text-sm dark:bg-gray-700 focus:outline-none focus:border-red-500">
+                            </select>
+                            <button id="btn-zerar-banco" class="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded text-sm shadow transition flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-triangle-exclamation"></i> Apagar
+                            </button>
+                        </div>
                     </div>
+
                 </div>
             </div>
+
             <div class="flex justify-end gap-3 p-5 border-t dark:border-gray-700 bg-gray-50 dark:bg-gray-900 rounded-b-lg">
                 <button id="btn-fechar-config" class="px-5 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded font-bold text-sm hover:bg-gray-300 dark:hover:bg-gray-600 transition">Fechar</button>
                 <button id="btn-guardar-config" class="px-5 py-2 bg-[#1a1941] text-white rounded font-bold text-sm hidden shadow transition">Salvar Preferências</button>
@@ -308,16 +475,48 @@
         </div>
     </div>
 
-    <!-- Scripts da Base do Firebase e Componentes -->
+    <!-- Scripts unificados -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
         import { getFirestore, collection, getDocs, doc, writeBatch } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 
+        // ==========================================
+        // 1. VARIÁVEIS GLOBAIS
+        // ==========================================
         let isDark = localStorage.getItem('darkMode') === 'true';
+        let dadosGlobais = []; 
+        let dadosFiltradosCache = []; 
+        let mesesRelatorioOverride = null;
+        let dadosSatisfacao = []; 
+        let dadosReabertos = []; 
+        let historicoCompletoCarregado = false;
+        
+        let corPrincipal = localStorage.getItem('dashCor') || '#1a1941';
+        let equipeFocoStr = localStorage.getItem('equipeFoco') || 'fabio.palma.prestador, edison.neto.prestador, antonio.muniz.prestador, jose.andrade.prestador';
+        let tituloOficial = localStorage.getItem('dashTitulo') || 'Analytics Suporte SETIC';
+        let iconeCabecalho = localStorage.getItem('dashIcon') || 'fa-chart-line';
+        
+        let objAuditoriaTemp = null; 
+        let globalHistMonths = []; 
+        let dadosHistoricoExport = [];
+
+        let graficos = {}; 
+        let tabelaPaginaAtual = 1; 
+        const tabelaItensPorPagina = 50;
+        const paletaAssuntos = ['#4f46e5', '#3b82f6', '#0ea5e9', '#06b6d4', '#14b8a6', '#10b981', '#22c55e', '#84cc16', '#eab308', '#f59e0b', '#f97316', '#ef4444', '#f43f5e', '#d946ef', '#a855f7'];
+        const coresPrioridade = { 'Muito Alto': '#b91c1c', 'Alto': '#ef4444', 'Médio': '#f59e0b', 'Baixo': '#22c55e', 'Muito Baixo': '#94a3b8' };
+        const coresTipo = { 'Requisição': '#6366f1', 'Incidente': '#f43f5e' };
+        
+        let tmaGlobalTexto = "0.0h"; let slaGlobalTexto = "0%"; let incGlobalTexto = "0%";
+
+        // ==========================================
+        // 2. CONFIGURAÇÃO INICIAL (THEME & FIREBASE)
+        // ==========================================
         if (isDark) { document.documentElement.classList.add('dark'); document.getElementById('icon-theme').className = "fa-solid fa-sun text-yellow-400 text-lg"; }
         
-        Chart.defaults.animation = false; Chart.register(ChartDataLabels);
+        Chart.defaults.animation = false; 
+        Chart.register(ChartDataLabels);
         const setChartColors = () => { Chart.defaults.color = isDark ? '#9ca3af' : '#6b7280'; Chart.defaults.borderColor = isDark ? '#374151' : '#e5e7eb'; };
         setChartColors();
         
@@ -344,33 +543,25 @@
             appId: "1:502847512745:web:2941e763621ecc0af509b8" 
         };
         
-        let app, db, auth; 
-        try { app = initializeApp(firebaseConfig); db = getFirestore(app); auth = getAuth(app); } catch (e) {}
+        let app, db, auth, secondaryApp, secondaryAuth; 
+        try { 
+            app = initializeApp(firebaseConfig); 
+            db = getFirestore(app); 
+            auth = getAuth(app); 
+            secondaryApp = initializeApp(firebaseConfig, "SecondaryApp");
+            secondaryAuth = getAuth(secondaryApp);
+        } catch (e) { console.error(e); }
 
-        const secondaryApp = initializeApp(firebaseConfig, "SecondaryApp");
-        const secondaryAuth = getAuth(secondaryApp);
-
-        let dadosGlobais = []; let dadosFiltradosCache = []; let mesesRelatorioOverride = null;
-        let dadosSatisfacao = []; let dadosReabertos = []; 
-        let historicoCompletoCarregado = false;
-        
-        let corPrincipal = localStorage.getItem('dashCor') || '#1a1941';
-        let equipeFocoStr = localStorage.getItem('equipeFoco') || 'fabio.palma.prestador, edison.neto.prestador, antonio.muniz.prestador, jose.andrade.prestador';
-        let tituloOficial = localStorage.getItem('dashTitulo') || 'Analytics Suporte SETIC';
-        let iconeCabecalho = localStorage.getItem('dashIcon') || 'fa-chart-line';
-        let objAuditoriaTemp = null; 
-
-        let graficos = {}; let tabelaPaginaAtual = 1; const tabelaItensPorPagina = 50;
-        const paletaAssuntos = ['#4f46e5', '#3b82f6', '#0ea5e9', '#06b6d4', '#14b8a6', '#10b981', '#22c55e', '#84cc16', '#eab308', '#f59e0b', '#f97316', '#ef4444', '#f43f5e', '#d946ef', '#a855f7'];
-        const coresPrioridade = { 'Muito Alto': '#b91c1c', 'Alto': '#ef4444', 'Médio': '#f59e0b', 'Baixo': '#22c55e', 'Muito Baixo': '#94a3b8' };
-        const coresTipo = { 'Requisição': '#6366f1', 'Incidente': '#f43f5e' };
-
-        // ================= FUNÇÕES BASE DE PARSE E FORMATAÇÃO =================
+        // ==========================================
+        // 3. FUNÇÕES UTILITÁRIAS
+        // ==========================================
         function parseExcelDate(serial) {
             const dateObj = new Date(Math.round((serial - 25569) * 86400 * 1000));
             return { ano: dateObj.getUTCFullYear(), mes: dateObj.getUTCMonth() + 1, dia: dateObj.getUTCDate() };
         }
+
         function parseHoras(str) { if(!str) return 0; const p = String(str).split(':'); return p.length === 3 ? parseInt(p[0]) + (parseInt(p[1])/60) + (parseInt(p[2])/3600) : 0; }
+        
         function obterMesAno(str) { 
             if (!str) return "Desc";
             if (!isNaN(str) && Number(str) > 30000) {
@@ -384,6 +575,7 @@
             if (p.length >= 2) return p[0].length === 4 ? `${p[1]}/${p[0]}` : `${p[1]}/${p[2]}`;
             return "Desc"; 
         }
+
         function obterMesAnoFiscal(str) {
             if (!str) return "Desc"; let ano, mes, dia;
             if (!isNaN(str) && Number(str) > 30000) {
@@ -399,12 +591,22 @@
             if (dia <= 3) { mes -= 1; if (mes === 0) { mes = 12; ano -= 1; } }
             return (mes < 10 ? '0' + mes : mes) + '/' + ano;
         }
+
         function cvDtOrd(m) { 
             if (!m || m === "Desc") return 0; 
             const p = m.split('/'); return p.length === 2 ? parseInt(p[1], 10) * 100 + parseInt(p[0], 10) : 0; 
         }
 
-        // ================= APLICAR PERSONALIZAÇÃO UI =================
+        function definirStatus(bHtml, cClasse) { 
+            const b = document.getElementById('badge-status'); 
+            b.className = `text-xs font-bold px-2 py-1 ${cClasse} rounded text-white shadow ml-2`; 
+            b.innerHTML = bHtml; 
+            b.classList.remove('hidden'); 
+        }
+
+        // ==========================================
+        // 4. PERSONALIZAÇÃO UI
+        // ==========================================
         function aplicarPersonalizacao() {
             tituloOficial = localStorage.getItem('dashTitulo') || 'Analytics Suporte SETIC';
             corPrincipal = localStorage.getItem('dashCor') || '#1a1941';
@@ -436,7 +638,9 @@
         }
         aplicarPersonalizacao();
 
-        // ================= AUTENTICAÇÃO =================
+        // ==========================================
+        // 5. AUTENTICAÇÃO
+        // ==========================================
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 document.getElementById('tela-login').classList.add('hidden'); document.getElementById('tela-login').classList.remove('flex'); 
@@ -476,18 +680,54 @@
 
         document.getElementById('btn-logout').addEventListener('click', () => { signOut(auth).then(() => { dadosGlobais = []; document.getElementById('login-senha').value = ''; }); });
 
-        // ================= GESTÃO DE DADOS (DOWNLOAD) =================
-        function definirStatus(bHtml, cClasse) { const b = document.getElementById('badge-status'); b.className = `text-xs font-bold px-2 py-1 ${cClasse} rounded text-white shadow ml-2`; b.innerHTML = bHtml; b.classList.remove('hidden'); }
+        // ==========================================
+        // 6. MODAL DE CONFIGURAÇÕES
+        // ==========================================
+        const modalConfig = document.getElementById('modal-config');
+        document.getElementById('btn-config').addEventListener('click', () => { modalConfig.classList.remove('hidden'); switchTab('aba-dados', 'conteudo-dados'); });
+        ['btn-fechar-config', 'btn-fechar-config-icon'].forEach(id => document.getElementById(id).addEventListener('click', () => modalConfig.classList.add('hidden')));
 
+        function switchTab(activeId, contentId) {
+            ['aba-dados', 'aba-aparencia', 'aba-relatorios', 'aba-fiscal', 'aba-admin'].forEach(id => {
+                const el = document.getElementById(id); 
+                if (id === 'aba-admin') { el.className = 'px-3 py-2 tab-inactive focus:outline-none font-semibold text-sm text-red-600 hover:text-red-500 ml-auto flex items-center gap-2 whitespace-nowrap'; } 
+                else if (id === 'aba-fiscal') { el.className = 'px-3 py-2 tab-inactive focus:outline-none font-semibold text-sm text-green-700 dark:text-green-500 hover:text-green-600 flex items-center gap-2 whitespace-nowrap'; } 
+                else { el.className = 'px-3 py-2 tab-inactive focus:outline-none font-semibold text-sm whitespace-nowrap'; }
+                el.style.color = ''; el.style.borderColor = '';
+            });
+            const activeTab = document.getElementById(activeId);
+            if (activeId === 'aba-admin') { activeTab.className = `px-3 py-2 tab-active text-red-700 border-red-700 focus:outline-none font-semibold text-sm ml-auto flex items-center gap-2 whitespace-nowrap`; } 
+            else if (activeId === 'aba-fiscal') { activeTab.className = `px-3 py-2 tab-active text-green-700 border-green-700 dark:text-green-500 dark:border-green-500 focus:outline-none font-semibold text-sm flex items-center gap-2 whitespace-nowrap`; } 
+            else {
+                activeTab.className = `px-3 py-2 tab-active text-[${corPrincipal}] border-[${corPrincipal}] focus:outline-none font-semibold text-sm whitespace-nowrap`;
+                if (!isDark) { activeTab.style.color = corPrincipal; activeTab.style.borderColor = corPrincipal; }
+                if (isDark) { activeTab.style.color = '#818cf8'; activeTab.style.borderColor = '#818cf8'; }
+            }
+            ['conteudo-dados', 'conteudo-aparencia', 'conteudo-relatorios', 'conteudo-fiscal', 'conteudo-admin'].forEach(id => document.getElementById(id).classList.add('hidden'));
+            document.getElementById(contentId).classList.remove('hidden');
+            document.getElementById('btn-guardar-config').style.display = contentId === 'conteudo-aparencia' ? 'block' : 'none';
+        }
+
+        ['aba-dados', 'aba-aparencia', 'aba-relatorios', 'aba-fiscal', 'aba-admin'].forEach(id => document.getElementById(id).addEventListener('click', () => switchTab(id, 'conteudo-' + id.split('-')[1])));
+        document.getElementById('input-cor').addEventListener('input', (e) => document.getElementById('hex-view').innerText = e.target.value);
+        document.getElementById('input-logo-file').addEventListener('change', (e) => { const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = function(ev) { localStorage.setItem('dashLogo', ev.target.result); aplicarPersonalizacao(); }; reader.readAsDataURL(file); });
+
+        document.getElementById('btn-guardar-config').addEventListener('click', () => {
+            localStorage.setItem('dashTitulo', document.getElementById('input-titulo').value);
+            localStorage.setItem('dashCor', document.getElementById('input-cor').value);
+            localStorage.setItem('dashIcon', document.getElementById('input-icone').value);
+            localStorage.setItem('equipeFoco', document.getElementById('input-equipe').value);
+            aplicarPersonalizacao(); preencherFiltros(); atualizarDashboard(); modalConfig.classList.add('hidden');
+        });
+
+        // ==========================================
+        // 7. BANCO DE DADOS (LOAD E EXCLUSÃO)
+        // ==========================================
         async function carregarDadosNuvem(forcarCompleto = false) {
             if(!db) { definirStatus('<i class="fa-solid fa-xmark"></i> Erro DB', 'bg-red-600'); return; }
             try {
                 const q = await getDocs(collection(db, "chamados")); dadosGlobais = [];
-                q.forEach((doc) => { 
-                    const d = doc.data(); 
-                    if (forcarCompleto || String(d['Data Abertura'] || d['Ticket'] || "").includes('2026') || String(d['Data Abertura'] || d['Ticket'] || "").includes('/26')) dadosGlobais.push(d); 
-                });
-                
+                q.forEach((doc) => { const d = doc.data(); if (forcarCompleto || String(d['Data Abertura'] || d['Ticket'] || "").includes('2026') || String(d['Data Abertura'] || d['Ticket'] || "").includes('/26')) dadosGlobais.push(d); });
                 try { const qs = await getDocs(collection(db, "satisfacao")); dadosSatisfacao = []; qs.forEach(doc => dadosSatisfacao.push(doc.data())); } catch(e) {}
                 try { const qr = await getDocs(collection(db, "reabertos")); dadosReabertos = []; qr.forEach(doc => dadosReabertos.push(doc.data())); } catch(e) {}
 
@@ -499,19 +739,132 @@
                 historicoCompletoCarregado = forcarCompleto;
             } catch (e) { 
                 console.error("Detalhes do Erro:", e); let msgTela = "Erro";
-                if (e.code === 'resource-exhausted' || (e.message && e.message.toLowerCase().includes('quota'))) {
-                    document.getElementById('modal-limite').classList.remove('hidden'); msgTela = "Limite Diário";
-                } else if (e.code === 'permission-denied' || (e.message && e.message.toLowerCase().includes('permission'))) {
-                    alert("Bloqueio de Segurança: O Firebase não permitiu a leitura. Se você alterou as 'Regras' (Rules) no Firebase, volte para a regra antiga."); msgTela = "Sem Permissão";
-                } else if (e.code === 'unavailable') {
-                    alert("Falha de Conexão: O banco de dados está inacessível. Pode ser bloqueio de rede/VPN da PRF ou você está offline."); msgTela = "Offline";
-                } else { alert("Erro interno do Firebase: " + e.message); }
+                if (e.code === 'resource-exhausted' || (e.message && e.message.toLowerCase().includes('quota'))) { document.getElementById('modal-limite').classList.remove('hidden'); msgTela = "Limite Diário"; } 
+                else if (e.code === 'permission-denied' || (e.message && e.message.toLowerCase().includes('permission'))) { alert("Bloqueio de Segurança: O Firebase não permitiu a leitura."); msgTela = "Sem Permissão"; } 
+                else if (e.code === 'unavailable') { alert("Falha de Conexão: O banco de dados está inacessível."); msgTela = "Offline"; } 
+                else { alert("Erro interno do Firebase: " + e.message); }
                 definirStatus(`<i class="fa-solid fa-xmark"></i> ${msgTela}`, 'bg-red-600'); 
             }
         }
+        
         document.getElementById('btn-carregar-historico').addEventListener('click', () => { document.getElementById('btn-carregar-historico').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Carregando...'; carregarDadosNuvem(true).then(() => { document.getElementById('btn-carregar-historico').innerHTML = '<i class="fa-solid fa-check"></i> Concluído'; setTimeout(() => document.getElementById('modal-config').classList.add('hidden'), 1000); }); });
 
-        // ================= FILTROS E PREENCHIMENTOS =================
+        const inSenha = document.getElementById('input-senha-admin'); 
+        const areaGestaoBanco = document.getElementById('area-gestao-banco');
+        const areaGestaoUsuarios = document.getElementById('area-gestao-usuarios');
+        const selectExclusao = document.getElementById('select-exclusao');
+        const btnCriarUsuario = document.getElementById('btn-criar-usuario');
+        const btnReset = document.getElementById('btn-zerar-banco');
+
+        function popularDropdownExclusao() {
+            selectExclusao.innerHTML = '<option value="TUDO">Base Completa (Apagar TUDO)</option>';
+            const mesesDisponiveis = new Set();
+            dadosGlobais.forEach(d => { const dataAlvo = d['Data Encerramento'] || d['Data Solução'] || d['Data Abertura']; const m = obterMesAno(dataAlvo); if (m !== "Desc") mesesDisponiveis.add(m); });
+            Array.from(mesesDisponiveis).sort((x,y) => cvDtOrd(x) - cvDtOrd(y)).forEach(m => { selectExclusao.innerHTML += `<option value="${m}">Apenas Dados do Mês ${m}</option>`; });
+            selectExclusao.innerHTML += `<option value="SATISFACAO">Apagar Base de Satisfação (INS1)</option><option value="REABERTOS">Apagar Base de Reabertos (INS6)</option>`;
+        }
+
+        inSenha.addEventListener('input', (e) => { 
+            if (e.target.value === 'setic2026') { areaGestaoBanco.classList.remove('hidden'); areaGestaoUsuarios.classList.remove('hidden'); popularDropdownExclusao(); } 
+            else { areaGestaoBanco.classList.add('hidden'); areaGestaoUsuarios.classList.add('hidden'); }
+        });
+
+        btnCriarUsuario.addEventListener('click', async () => {
+            const emailNovo = document.getElementById('novo-email').value; const senhaNova = document.getElementById('novo-senha').value;
+            if (!emailNovo || senhaNova.length < 6) return alert("Atenção: Introduza um e-mail válido e uma senha com pelo menos 6 caracteres.");
+            btnCriarUsuario.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; btnCriarUsuario.disabled = true;
+            try {
+                await createUserWithEmailAndPassword(secondaryAuth, emailNovo, senhaNova); await signOut(secondaryAuth);
+                alert(`✅ Sucesso!\nO acesso para ${emailNovo} foi criado.`); document.getElementById('novo-email').value = ''; document.getElementById('novo-senha').value = '';
+            } catch (error) {
+                if(error.code === 'auth/email-already-in-use') alert("Este e-mail já tem um acesso criado no sistema."); else alert("Erro ao criar utilizador.");
+            } finally { btnCriarUsuario.innerHTML = '<i class="fa-solid fa-check"></i> Criar'; btnCriarUsuario.disabled = false; }
+        });
+
+        btnReset.addEventListener('click', async () => {
+            const valorSelecionado = selectExclusao.value; let textoConfirmacao = "";
+            if (valorSelecionado === 'SATISFACAO') textoConfirmacao = "A BASE DE SATISFAÇÃO (INS1)"; else if (valorSelecionado === 'REABERTOS') textoConfirmacao = "A BASE DE REABERTOS (INS6)"; else if (valorSelecionado === 'TUDO') textoConfirmacao = "TODA A BASE PRINCIPAL DE DADOS"; else textoConfirmacao = `OS DADOS DO MÊS ${valorSelecionado}`;
+            if(!confirm(`⚠️ ALERTA DE SEGURANÇA ⚠️\n\nTEM A CERTEZA ABSOLUTA QUE DESEJA APAGAR ${textoConfirmacao}? Esta ação não pode ser desfeita.`)) return;
+            btnReset.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> A apagar...'; btnReset.disabled = true;
+            try { 
+                let colName = "chamados"; if (valorSelecionado === 'SATISFACAO') colName = "satisfacao"; if (valorSelecionado === 'REABERTOS') colName = "reabertos";
+                const q = await getDocs(collection(db, colName)); let b = writeBatch(db); let c = 0; const pr = []; 
+                q.docs.forEach((d) => { 
+                    let del = false;
+                    if (colName === "chamados") { const data = d.data(); const mesDoc = obterMesAno(data['Data Encerramento'] || data['Data Solução'] || data['Data Abertura']); if (valorSelecionado === 'TUDO' || mesDoc === valorSelecionado) del = true; } else { del = true; }
+                    if (del) { b.delete(d.ref); c++; if(c === 490) { pr.push(b.commit()); b = writeBatch(db); c = 0; } }
+                }); 
+                if(c > 0) pr.push(b.commit()); await Promise.all(pr); 
+                alert(`Exclusão de ${textoConfirmacao} concluída com sucesso!`); 
+                inSenha.value = ''; areaGestaoBanco.classList.add('hidden'); areaGestaoUsuarios.classList.add('hidden'); btnReset.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Apagar'; btnReset.disabled = false;
+                if (colName === "chamados") dadosGlobais = []; await carregarDadosNuvem(historicoCompletoCarregado); 
+            } catch(e) { alert("Erro ao tentar apagar os dados."); btnReset.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Apagar'; btnReset.disabled = false; }
+        });
+
+        // ==========================================
+        // 8. UPLOADS (ARQUIVOS)
+        // ==========================================
+        document.getElementById('file-upload').addEventListener('change', async (e) => {
+            const files = e.target.files; if (files.length === 0) return; 
+            const loader = document.getElementById('loader-upload'); loader.classList.remove('hidden'); loader.innerHTML = '<div class="loader !border-t-current !border-4 !w-5 !h-5 inline-block"></div> Processando arquivo(s)...';
+            let allRows = []; let errorFiles = [];
+            const readFiles = Array.from(files).map(file => {
+                return new Promise((resolve) => {
+                    const reader = new FileReader(); 
+                    reader.onload = function(ev) {
+                        try {
+                            const wb = XLSX.read(new Uint8Array(ev.target.result), { type: 'array' }); const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: "" });
+                            if (rows.length > 0 && !('Ticket' in rows[0] || 'ticket' in rows[0] || 'TICKET' in rows[0] || 'Nº Chamado' in rows[0] || 'chamado' in rows[0])) { errorFiles.push(file.name); } else { allRows = allRows.concat(rows); }
+                        } catch(err) { errorFiles.push(file.name); } resolve();
+                    }; reader.readAsArrayBuffer(file);
+                });
+            });
+            await Promise.all(readFiles);
+            if (errorFiles.length > 0) { alert(`ATENÇÃO: Os seguintes arquivos foram ignorados por não possuírem a estrutura correta:\n\n${errorFiles.join('\n')}`); if (allRows.length === 0) { loader.classList.add('hidden'); e.target.value = ""; return; } }
+            loader.innerHTML = '<div class="loader !border-t-current !border-4 !w-5 !h-5 inline-block"></div> Gravando na nuvem...';
+            try {
+                const ba = [writeBatch(db)]; let c = 0, b = 0;
+                allRows.forEach(r => { const ticketStr = String(r.Ticket || r.ticket || r.TICKET || r['Nº Chamado'] || r['chamado'] || ""); if(ticketStr) { ba[b].set(doc(db, "chamados", ticketStr), r); c++; if (c === 490) { ba.push(writeBatch(db)); b++; c = 0; } } });
+                await Promise.all(ba.map(batch => batch.commit()));
+                loader.innerHTML = '<i class="fa-solid fa-check text-green-500 text-lg"></i> <span class="text-green-600 dark:text-green-400 font-bold">Upload Concluído com Sucesso!</span>';
+                setTimeout(async () => { loader.classList.add('hidden'); loader.innerHTML = '<div class="loader !border-t-current !border-4 !w-5 !h-5 inline-block"></div> Gravando base primária no Firebase...'; e.target.value = ""; await carregarDadosNuvem(historicoCompletoCarregado); }, 2500);
+            } catch (err) { loader.innerHTML = '<i class="fa-solid fa-xmark text-red-500 text-lg"></i> <span class="text-red-600 font-bold">Erro na gravação.</span>'; setTimeout(() => { loader.classList.add('hidden'); e.target.value = ""; }, 3000); }
+        });
+
+        function handleUploadAux(inputId, colName) {
+            const el = document.getElementById(inputId); if(!el) return;
+            el.addEventListener('change', async (e) => {
+                const files = e.target.files; if (files.length === 0) return;
+                const loader = document.getElementById('loader-fiscal-upload'); loader.classList.remove('hidden'); loader.innerHTML = '<div class="loader !border-t-current !border-4 !w-5 !h-5 inline-block"></div> Processando arquivo(s) auxiliar(es)...';
+                let allRows = []; let errorFiles = [];
+                const readFiles = Array.from(files).map(file => {
+                    return new Promise((resolve) => {
+                        const reader = new FileReader(); 
+                        reader.onload = function(ev) {
+                            try {
+                                const wb = XLSX.read(new Uint8Array(ev.target.result), { type: 'array' }); const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: "" });
+                                if (rows.length > 0 && !('Ticket' in rows[0] || 'ticket' in rows[0] || 'TICKET' in rows[0] || 'Nº Chamado' in rows[0] || 'chamado' in rows[0])) { errorFiles.push(file.name); } else { allRows = allRows.concat(rows); }
+                            } catch(err) { errorFiles.push(file.name); } resolve();
+                        }; reader.readAsArrayBuffer(file);
+                    });
+                });
+                await Promise.all(readFiles);
+                if (errorFiles.length > 0) { alert(`ATENÇÃO: Os seguintes arquivos auxiliares foram ignorados por não possuírem a coluna Ticket:\n\n${errorFiles.join('\n')}`); if (allRows.length === 0) { loader.classList.add('hidden'); e.target.value = ""; return; } }
+                loader.innerHTML = '<div class="loader !border-t-current !border-4 !w-5 !h-5 inline-block"></div> Gravando base auxiliar na nuvem...';
+                try {
+                    const ba = [writeBatch(db)]; let c = 0, b = 0;
+                    allRows.forEach(r => { const ticketId = String(r.Ticket || r.ticket || r.TICKET || r['Nº Chamado'] || r['chamado'] || ""); if(ticketId) { ba[b].set(doc(db, colName, ticketId), r); c++; if (c === 490) { ba.push(writeBatch(db)); b++; c = 0; } } });
+                    await Promise.all(ba.map(batch => batch.commit()));
+                    loader.innerHTML = '<i class="fa-solid fa-check text-green-500 text-lg"></i> <span class="text-green-600 dark:text-green-400 font-bold">Upload Auxiliar Concluído!</span>';
+                    setTimeout(async () => { loader.classList.add('hidden'); loader.innerHTML = '<div class="loader !border-t-current !border-4 !w-5 !h-5 inline-block"></div> Gravando dados auxiliares no Firebase...'; e.target.value = ""; await carregarDadosNuvem(historicoCompletoCarregado); }, 2500);
+                } catch (err) { loader.innerHTML = '<i class="fa-solid fa-xmark text-red-500 text-lg"></i> <span class="text-red-600 font-bold">Erro na gravação.</span>'; setTimeout(() => { loader.classList.add('hidden'); e.target.value = ""; }, 3000); }
+            });
+        }
+        handleUploadAux('upload-satisfacao', 'satisfacao'); handleUploadAux('upload-reabertos', 'reabertos');
+
+        // ==========================================
+        // 9. FILTROS E DASHBOARD PRINCIPAL
+        // ==========================================
         function preencherS(id, arr, def) { 
             const s = document.getElementById(id); if(!s) return;
             const at = s.value; s.innerHTML = `<option value="Todos">${def}</option>`; 
@@ -549,9 +902,6 @@
 
         ['filtro-mes', 'filtro-analista', 'filtro-prioridade', 'filtro-data-inicio', 'filtro-data-fim', 'filtro-assunto', 'filtro-tipo'].forEach(id => { document.getElementById(id).addEventListener('change', () => { tabelaPaginaAtual = 1; atualizarDashboard(); }); });
         document.getElementById('btn-limpar-filtros').addEventListener('click', () => { ['filtro-mes', 'filtro-analista', 'filtro-prioridade', 'filtro-data-inicio', 'filtro-data-fim', 'filtro-assunto', 'filtro-tipo'].forEach(i => document.getElementById(i).value = i.includes('data') ? "" : "Todos"); tabelaPaginaAtual = 1; atualizarDashboard(); });
-
-        // ================= MOTOR DO DASHBOARD (GRÁFICOS E TABELAS) =================
-        let tmaGlobalTexto = "0.0h"; let slaGlobalTexto = "0%"; let incGlobalTexto = "0%";
 
         function agruparPor(dados, chave, limite=null) { const c = {}; dados.forEach(d => { const k = typeof chave==='function' ? chave(d) : d[chave]; if(k) c[k] = (c[k]||0)+1; }); let arr = Object.keys(c).map(k => ({ label: k, value: c[k] })).sort((a,b) => b.value - a.value); if(limite) arr = arr.slice(0, limite); return { labels: arr.map(i=>i.label), values: arr.map(i=>i.value) }; }
 
@@ -648,7 +998,9 @@
             desenharTabela();
         }
 
-        // ================= RELATÓRIO GERENCIAL =================
+        // ==========================================
+        // 10. RELATÓRIO GERENCIAL & EXPORTAÇÃO EXCEL
+        // ==========================================
         document.getElementById('btn-gerar-excel').addEventListener('click', () => {
             const checkboxes = document.querySelectorAll('#relatorio-mes-container input:checked'); const fM_array = Array.from(checkboxes).map(cb => cb.value); if(fM_array.length === 0) fM_array.push("Todos");
             const fA = document.getElementById('relatorio-analista').value;
@@ -715,7 +1067,9 @@
             }, 800); 
         });
 
-        // ================= MOTOR DE AUDITORIA INTERNA =================
+        // ==========================================
+        // 11. AUDITORIA IMR & PDF FISCAL
+        // ==========================================
         function calcularAuditoriaInterna(mes) {
             let dadosAuditoria = dadosGlobais.filter(d => obterMesAnoFiscal(d['Data Encerramento'] || d['Data Solução'] || d['Data Abertura']) === mes);
             const total = dadosAuditoria.length; if(total === 0) return null;
@@ -756,86 +1110,6 @@
             return { pts: totalPontosGlosa, desc: descumprimentos };
         }
 
-        // ================= HISTÓRICO DINÂMICO DE IMR =================
-        let globalHistMonths = []; let dadosHistoricoExport = [];
-
-        document.getElementById('btn-fechar-historico-imr').addEventListener('click', () => document.getElementById('modal-historico-imr').classList.add('hidden'));
-
-        document.getElementById('btn-abrir-historico-imr').addEventListener('click', () => {
-            const mesesDisponiveis = new Set();
-            dadosGlobais.forEach(d => { const m = obterMesAnoFiscal(d['Data Encerramento'] || d['Data Solução'] || d['Data Abertura']); if (m !== "Desc") mesesDisponiveis.add(m); });
-            globalHistMonths = Array.from(mesesDisponiveis).sort((a,b) => cvDtOrd(a) - cvDtOrd(b));
-            if (globalHistMonths.length === 0) return alert("Nenhuma base de dados disponível.");
-
-            const sInicio = document.getElementById('hist-filtro-inicio'); const sFim = document.getElementById('hist-filtro-fim');
-            sInicio.innerHTML = ''; sFim.innerHTML = '';
-            globalHistMonths.forEach(m => { sInicio.innerHTML += `<option value="${m}">${m}</option>`; sFim.innerHTML += `<option value="${m}">${m}</option>`; });
-            sInicio.value = globalHistMonths[0]; sFim.value = globalHistMonths[globalHistMonths.length - 1];
-
-            renderizarHistorico(sInicio.value, sFim.value);
-            document.getElementById('modal-historico-imr').classList.remove('hidden');
-        });
-
-        document.getElementById('btn-filtrar-hist').addEventListener('click', () => {
-            const inicio = document.getElementById('hist-filtro-inicio').value; const fim = document.getElementById('hist-filtro-fim').value;
-            if(cvDtOrd(inicio) > cvDtOrd(fim)) return alert("O período inicial não pode ser maior que o final.");
-            renderizarHistorico(inicio, fim);
-        });
-
-        function renderizarHistorico(inicio, fim) {
-            const labels = []; const dataPontos = []; const dataCores = []; let htmlTabela = ''; dadosHistoricoExport = []; 
-            const mesesFiltrados = globalHistMonths.filter(m => cvDtOrd(m) >= cvDtOrd(inicio) && cvDtOrd(m) <= cvDtOrd(fim));
-
-            mesesFiltrados.forEach(m => {
-                const r = calcularAuditoriaInterna(m);
-                if(r) {
-                    labels.push(m); dataPontos.push(r.pts);
-                    let percentualGlosa = 0; let valorDescontoStr = "R$ 0,00";
-                    if (r.pts >= 10) { percentualGlosa = Math.floor(r.pts / 10) * 1.0; if (percentualGlosa > 30.0) percentualGlosa = 30.0; valorDescontoStr = (26971.30 * (percentualGlosa / 100)).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
-                    dadosHistoricoExport.push([ m, `${r.pts}`, `${percentualGlosa}%`, valorDescontoStr, r.pts > 0 ? r.desc.join(', ') : 'Nenhuma' ]);
-
-                    if (r.pts > 0) {
-                        dataCores.push('#ef4444');
-                        htmlTabela += `<tr class="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition"><td class="p-3 font-bold text-red-600 dark:text-red-400">${m}</td><td class="p-3 font-bold">${r.pts}</td><td class="p-3 font-bold text-red-600 dark:text-red-400">${percentualGlosa}%</td><td class="p-3 font-mono text-sm">${valorDescontoStr}</td><td class="p-3 font-mono text-xs text-red-700 dark:text-red-300">${r.desc.join(', ')}</td></tr>`;
-                    } else {
-                        dataCores.push('#22c55e'); 
-                        htmlTabela += `<tr class="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition"><td class="p-3 font-bold text-green-600 dark:text-green-400">${m}</td><td class="p-3 font-bold">0</td><td class="p-3 text-gray-500">0%</td><td class="p-3 font-mono text-sm text-gray-500">R$ 0,00</td><td class="p-3 text-xs text-gray-400 italic">Nenhuma falha</td></tr>`;
-                    }
-                }
-            });
-
-            document.getElementById('tabela-corpo-historico').innerHTML = htmlTabela;
-            const ctx = document.getElementById('chart-historico-falhas').getContext('2d'); if (graficos['chart-historico-falhas']) graficos['chart-historico-falhas'].destroy();
-            graficos['chart-historico-falhas'] = new Chart(ctx, { type: 'bar', data: { labels: labels, datasets: [{ label: 'Pontos de Glosa', data: dataPontos, backgroundColor: dataCores, borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, datalabels: { display: true, anchor: 'end', align: 'top', color: isDark?'#fff':'#000', font: {weight: 'bold'} } }, scales: { y: { beginAtZero: true, suggestedMax: 10 } } } });
-        }
-
-        document.getElementById('btn-imprimir-hist').addEventListener('click', () => {
-            if (dadosHistoricoExport.length === 0) return alert("Nenhum dado para exportar.");
-            try {
-                const { jsPDF } = window.jspdf; const doc = new jsPDF('p', 'pt', 'a4'); const w = doc.internal.pageSize.width;
-                doc.setFillColor(26, 25, 65); doc.rect(0, 0, w, 85, 'F'); doc.setTextColor(255, 255, 255); 
-                doc.setFontSize(14); doc.setFont("helvetica", "bold"); doc.text("MINISTÉRIO DA JUSTIÇA E SEGURANÇA PÚBLICA", 40, 32);
-                doc.setFontSize(9.5); doc.setFont("helvetica", "normal"); doc.text("Polícia Rodoviária Federal - Diretoria de Tecnologia da Informação e Comunicação (DTIC)", 40, 52);
-                doc.setFontSize(10.5); doc.setFont("helvetica", "bold"); doc.text("Relatório Histórico de Auditoria - Níveis Mínimos de Serviço (IMR)", 40, 72);
-                
-                try { let imgData = localStorage.getItem('dashLogo'); if (imgData) doc.addImage(imgData, 'PNG', w - 80, 20, 40, 40); } catch(e) {}
-
-                doc.setTextColor(26, 25, 65); doc.setFontSize(10);
-                const inicio = document.getElementById('hist-filtro-inicio').value; const fim = document.getElementById('hist-filtro-fim').value;
-                doc.setFont("helvetica", "bold"); doc.text("Período de Análise:", 40, 110); doc.setFont("helvetica", "normal"); doc.text(`${inicio} a ${fim}`, 150, 110);
-                doc.setFont("helvetica", "bold"); doc.text("Valor Mensal Base:", 40, 125); doc.setFont("helvetica", "normal"); doc.text(`R$ 26.971,30`, 150, 125);
-                const agora = new Date(); doc.setFont("helvetica", "bold"); doc.text("Data de Emissão:", 340, 110); doc.setFont("helvetica", "normal"); doc.text(`${agora.toLocaleDateString('pt-BR')} às ${agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`, 440, 110);
-                doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.text("Evolução de Pontos de Glosa", 40, 160);
-                
-                const imgChart = document.getElementById('chart-historico-falhas').toDataURL('image/jpeg', 1.0); doc.addImage(imgChart, 'JPEG', 40, 170, w - 80, 200);
-                doc.setFontSize(12); doc.text("Detalhamento Financeiro por Ciclo Fiscal", 40, 410);
-                
-                doc.autoTable({ startY: 425, head: [["Ciclo Fiscal", "Pontos Calculados", "% Glosa", "Desconto (R$)", "Indicadores Descumpridos"]], body: dadosHistoricoExport, theme: 'grid', headStyles: { fillColor: [150, 150, 150], textColor: 20, fontStyle: 'bold', halign: 'center' }, columnStyles: { 0: { fontStyle: 'bold', halign: 'center' }, 1: { halign: 'center' }, 2: { halign: 'center', fontStyle: 'bold', textColor: [220, 38, 38] }, 3: { halign: 'center' } }, styles: { fontSize: 8, cellPadding: 4 }, alternateRowStyles: { fillColor: [247, 248, 250] }, margin: { left: 40, right: 40 } });
-                doc.save(`Historico_Auditoria_IMR_${inicio.replace('/','_')}_a_${fim.replace('/','_')}.pdf`);
-            } catch (e) { alert("Erro ao gerar o PDF do histórico."); }
-        });
-
-        // ================= FISCALIZAÇÃO PDF E REVISÃO DE GLOSA =================
         document.getElementById('btn-gerar-fiscal-pdf').addEventListener('click', () => {
             const mesSelecionado = document.getElementById('fiscal-mes').value;
             let dadosAuditoria = dadosGlobais; if(mesSelecionado !== 'Todos') dadosAuditoria = dadosGlobais.filter(d => obterMesAnoFiscal(d['Data Encerramento'] || d['Data Solução'] || d['Data Abertura']) === mesSelecionado);
@@ -1021,6 +1295,86 @@
                 doc.save(`Auditoria_Fiscalizacao_IMR.pdf`);
             } catch (err) { alert("Erro ao gerar PDF de Fiscalização."); }
         }
+
+        // ==========================================
+        // 12. HISTÓRICO DINÂMICO IMR
+        // ==========================================
+        document.getElementById('btn-fechar-historico-imr').addEventListener('click', () => { document.getElementById('modal-historico-imr').classList.add('hidden'); });
+
+        document.getElementById('btn-abrir-historico-imr').addEventListener('click', () => {
+            const mesesDisponiveis = new Set();
+            dadosGlobais.forEach(d => { const m = obterMesAnoFiscal(d['Data Encerramento'] || d['Data Solução'] || d['Data Abertura']); if (m !== "Desc") mesesDisponiveis.add(m); });
+            globalHistMonths = Array.from(mesesDisponiveis).sort((a,b) => cvDtOrd(a) - cvDtOrd(b));
+            if (globalHistMonths.length === 0) return alert("Nenhuma base de dados disponível.");
+
+            const sInicio = document.getElementById('hist-filtro-inicio'); const sFim = document.getElementById('hist-filtro-fim');
+            sInicio.innerHTML = ''; sFim.innerHTML = '';
+            globalHistMonths.forEach(m => { sInicio.innerHTML += `<option value="${m}">${m}</option>`; sFim.innerHTML += `<option value="${m}">${m}</option>`; });
+            sInicio.value = globalHistMonths[0]; sFim.value = globalHistMonths[globalHistMonths.length - 1];
+
+            renderizarHistorico(sInicio.value, sFim.value);
+            document.getElementById('modal-historico-imr').classList.remove('hidden');
+        });
+
+        document.getElementById('btn-filtrar-hist').addEventListener('click', () => {
+            const inicio = document.getElementById('hist-filtro-inicio').value; const fim = document.getElementById('hist-filtro-fim').value;
+            if(cvDtOrd(inicio) > cvDtOrd(fim)) return alert("O período inicial não pode ser maior que o final.");
+            renderizarHistorico(inicio, fim);
+        });
+
+        function renderizarHistorico(inicio, fim) {
+            const labels = []; const dataPontos = []; const dataCores = []; let htmlTabela = ''; dadosHistoricoExport = []; 
+            const mesesFiltrados = globalHistMonths.filter(m => cvDtOrd(m) >= cvDtOrd(inicio) && cvDtOrd(m) <= cvDtOrd(fim));
+
+            mesesFiltrados.forEach(m => {
+                const r = calcularAuditoriaInterna(m);
+                if(r) {
+                    labels.push(m); dataPontos.push(r.pts);
+                    let percentualGlosa = 0; let valorDescontoStr = "R$ 0,00";
+                    if (r.pts >= 10) { percentualGlosa = Math.floor(r.pts / 10) * 1.0; if (percentualGlosa > 30.0) percentualGlosa = 30.0; valorDescontoStr = (26971.30 * (percentualGlosa / 100)).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+                    dadosHistoricoExport.push([ m, `${r.pts}`, `${percentualGlosa}%`, valorDescontoStr, r.pts > 0 ? r.desc.join(', ') : 'Nenhuma' ]);
+
+                    if (r.pts > 0) {
+                        dataCores.push('#ef4444');
+                        htmlTabela += `<tr class="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition"><td class="p-3 font-bold text-red-600 dark:text-red-400">${m}</td><td class="p-3 font-bold">${r.pts}</td><td class="p-3 font-bold text-red-600 dark:text-red-400">${percentualGlosa}%</td><td class="p-3 font-mono text-sm">${valorDescontoStr}</td><td class="p-3 font-mono text-xs text-red-700 dark:text-red-300">${r.desc.join(', ')}</td></tr>`;
+                    } else {
+                        dataCores.push('#22c55e'); 
+                        htmlTabela += `<tr class="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition"><td class="p-3 font-bold text-green-600 dark:text-green-400">${m}</td><td class="p-3 font-bold">0</td><td class="p-3 text-gray-500">0%</td><td class="p-3 font-mono text-sm text-gray-500">R$ 0,00</td><td class="p-3 text-xs text-gray-400 italic">Nenhuma falha</td></tr>`;
+                    }
+                }
+            });
+
+            document.getElementById('tabela-corpo-historico').innerHTML = htmlTabela;
+            const ctx = document.getElementById('chart-historico-falhas').getContext('2d'); if (graficos['chart-historico-falhas']) graficos['chart-historico-falhas'].destroy();
+            graficos['chart-historico-falhas'] = new Chart(ctx, { type: 'bar', data: { labels: labels, datasets: [{ label: 'Pontos de Glosa', data: dataPontos, backgroundColor: dataCores, borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, datalabels: { display: true, anchor: 'end', align: 'top', color: isDark?'#fff':'#000', font: {weight: 'bold'} } }, scales: { y: { beginAtZero: true, suggestedMax: 10 } } } });
+        }
+
+        document.getElementById('btn-imprimir-hist').addEventListener('click', () => {
+            if (dadosHistoricoExport.length === 0) return alert("Nenhum dado para exportar.");
+            try {
+                const { jsPDF } = window.jspdf; const doc = new jsPDF('p', 'pt', 'a4'); const w = doc.internal.pageSize.width;
+                doc.setFillColor(26, 25, 65); doc.rect(0, 0, w, 85, 'F'); doc.setTextColor(255, 255, 255); 
+                doc.setFontSize(14); doc.setFont("helvetica", "bold"); doc.text("MINISTÉRIO DA JUSTIÇA E SEGURANÇA PÚBLICA", 40, 32);
+                doc.setFontSize(9.5); doc.setFont("helvetica", "normal"); doc.text("Polícia Rodoviária Federal - Diretoria de Tecnologia da Informação e Comunicação (DTIC)", 40, 52);
+                doc.setFontSize(10.5); doc.setFont("helvetica", "bold"); doc.text("Relatório Histórico de Auditoria - Níveis Mínimos de Serviço (IMR)", 40, 72);
+                
+                try { let imgData = localStorage.getItem('dashLogo'); if (imgData) doc.addImage(imgData, 'PNG', w - 80, 20, 40, 40); } catch(e) {}
+
+                doc.setTextColor(26, 25, 65); doc.setFontSize(10);
+                const inicio = document.getElementById('hist-filtro-inicio').value; const fim = document.getElementById('hist-filtro-fim').value;
+                doc.setFont("helvetica", "bold"); doc.text("Período de Análise:", 40, 110); doc.setFont("helvetica", "normal"); doc.text(`${inicio} a ${fim}`, 150, 110);
+                doc.setFont("helvetica", "bold"); doc.text("Valor Mensal Base:", 40, 125); doc.setFont("helvetica", "normal"); doc.text(`R$ 26.971,30`, 150, 125);
+                const agora = new Date(); doc.setFont("helvetica", "bold"); doc.text("Data de Emissão:", 340, 110); doc.setFont("helvetica", "normal"); doc.text(`${agora.toLocaleDateString('pt-BR')} às ${agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`, 440, 110);
+                doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.text("Evolução de Pontos de Glosa", 40, 160);
+                
+                const imgChart = document.getElementById('chart-historico-falhas').toDataURL('image/jpeg', 1.0); doc.addImage(imgChart, 'JPEG', 40, 170, w - 80, 200);
+                doc.setFontSize(12); doc.text("Detalhamento Financeiro por Ciclo Fiscal", 40, 410);
+                
+                doc.autoTable({ startY: 425, head: [["Ciclo Fiscal", "Pontos Calculados", "% Glosa", "Desconto (R$)", "Indicadores Descumpridos"]], body: dadosHistoricoExport, theme: 'grid', headStyles: { fillColor: [150, 150, 150], textColor: 20, fontStyle: 'bold', halign: 'center' }, columnStyles: { 0: { fontStyle: 'bold', halign: 'center' }, 1: { halign: 'center' }, 2: { halign: 'center', fontStyle: 'bold', textColor: [220, 38, 38] }, 3: { halign: 'center' } }, styles: { fontSize: 8, cellPadding: 4 }, alternateRowStyles: { fillColor: [247, 248, 250] }, margin: { left: 40, right: 40 } });
+                doc.save(`Historico_Auditoria_IMR_${inicio.replace('/','_')}_a_${fim.replace('/','_')}.pdf`);
+            } catch (e) { alert("Erro ao gerar o PDF do histórico."); }
+        });
+
     </script>
 </body>
 </html>
