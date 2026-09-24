@@ -97,7 +97,7 @@
                     <div class="flex items-center gap-2 text-[#1a1941] dark:text-indigo-400 font-bold text-lg">
                         <i class="fa-solid fa-filter"></i><h2>Filtros Dinâmicos</h2><span id="tag-ano-atual" class="ml-2 text-xs bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-1 rounded">Visualizando: 2026</span>
                     </div>
-                    <button id="btn-limpar-filtros" class="text-red-500 hover:text-red-700 bg-red-50 dark:bg-red-900/30 dark:hover:bg-red-900/50 px-3 py-1 rounded text-sm font-semibold transition">
+                    <button id="btn-limpar-filtros" class="text-red-500 hover:text-red-700 bg-red-50 dark:bg-red-900/30 dark:hover:bg-red-900/50 px-3 py-1 rounded text-sm font-semibold transition flex items-center gap-2">
                         <i class="fa-solid fa-eraser"></i> Limpar Filtros
                     </button>
                 </div>
@@ -205,6 +205,46 @@
 
     <!-- MODAIS DO SISTEMA -->
     
+    <!-- Modal Comparativo de Equipe -->
+    <div id="modal-comparativo" class="hidden fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-[70] p-4">
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-2xl w-full max-w-6xl flex flex-col max-h-[90vh]">
+            <div class="flex justify-between items-center mb-4 border-b dark:border-gray-700 pb-3">
+                <h2 class="text-xl font-bold text-blue-600 dark:text-blue-400 flex items-center gap-2"><i class="fa-solid fa-users-viewfinder"></i> Relatório de Desempenho (Equipe SETIC)</h2>
+                <button id="btn-fechar-comparativo" class="text-gray-400 hover:text-red-500 transition"><i class="fa-solid fa-xmark text-2xl"></i></button>
+            </div>
+            
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Métricas de produtividade e qualidade avaliadas lado a lado para cada analista da operação.</p>
+            
+            <!-- FILTROS DE PERÍODO EXCLUSIVOS DO COMPARATIVO -->
+            <div class="flex flex-wrap gap-4 mb-4 items-end bg-gray-50 dark:bg-gray-700 p-4 rounded border dark:border-gray-600">
+                <div><label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase mb-1">Data Inicial</label><input type="date" id="comp-data-inicio" class="border dark:border-gray-600 rounded p-2 text-sm bg-white dark:bg-gray-800 [color-scheme:light] dark:[color-scheme:dark]"></div>
+                <div><label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase mb-1">Data Final</label><input type="date" id="comp-data-fim" class="border dark:border-gray-600 rounded p-2 text-sm bg-white dark:bg-gray-800 [color-scheme:light] dark:[color-scheme:dark]"></div>
+                <button id="btn-filtrar-comp" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded text-sm font-bold shadow transition">Aplicar Filtro</button>
+                <button id="btn-imprimir-comp" class="ml-auto bg-gray-800 dark:bg-gray-600 hover:bg-black text-white px-5 py-2 rounded text-sm font-bold shadow transition flex items-center gap-2"><i class="fa-solid fa-file-pdf"></i> Exportar Relatório PDF</button>
+            </div>
+
+            <div class="table-container rounded border border-gray-200 dark:border-gray-700 flex-grow">
+                <table class="w-full text-left text-sm text-gray-600 dark:text-gray-300">
+                    <thead class="bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-200 uppercase text-xs border-b dark:border-gray-600 shadow-sm">
+                        <tr>
+                            <th class="px-4 py-3 font-semibold bg-gray-50 dark:bg-gray-700">Analista</th>
+                            <th class="px-4 py-3 font-semibold bg-gray-50 dark:bg-gray-700" title="Volume total de chamados fechados no período">Volume (Qtd)</th>
+                            <th class="px-4 py-3 font-semibold bg-gray-50 dark:bg-gray-700 text-blue-600 dark:text-blue-400" title="Média de chamados atendidos por mês">Média / Mês</th>
+                            <th class="px-4 py-3 font-semibold bg-gray-50 dark:bg-gray-700" title="Taxa de cumprimento do Nível de Serviço">SLA no Prazo</th>
+                            <th class="px-4 py-3 font-semibold bg-gray-50 dark:bg-gray-700" title="Tickets que estouraram o tempo">SLA Violado</th>
+                            <th class="px-4 py-3 font-semibold bg-gray-50 dark:bg-gray-700" title="Tempo Médio de Atendimento">TMA</th>
+                            <th class="px-4 py-3 font-semibold bg-gray-50 dark:bg-gray-700" title="Média das notas de satisfação dadas pelos usuários (0 a 5)">CSAT (Nota)</th>
+                            <th class="px-4 py-3 font-semibold bg-gray-50 dark:bg-gray-700" title="Percentual de tickets que voltaram para atendimento">Reabertos</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabela-corpo-comparativo" class="divide-y divide-gray-100 dark:divide-gray-700 bg-white dark:bg-gray-800">
+                        <tr><td colspan="8" class="px-4 py-8 text-center text-gray-400">Processando ranking da equipe...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
     <!-- Limite Firebase -->
     <div id="modal-limite" class="hidden fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-[70] p-4">
         <div class="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-2xl text-center max-w-md border-t-4 border-red-600">
@@ -306,10 +346,17 @@
                             <div><label class="block text-xs font-bold text-indigo-900 dark:text-indigo-200 uppercase mb-1">Mês Calendário (Múltipla Seleção)</label><div id="relatorio-mes-container" class="w-full border dark:border-gray-600 rounded p-2 text-sm bg-white dark:bg-gray-700 h-24 overflow-y-auto flex flex-col gap-2 shadow-inner"></div></div>
                             <div><label class="block text-xs font-bold text-indigo-900 dark:text-indigo-200 uppercase mb-1">Analista</label><select id="relatorio-analista" class="w-full border dark:border-gray-600 rounded p-2 text-sm bg-white dark:bg-gray-700"><option value="Todos">Equipe Completa</option></select></div>
                         </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+                            <button id="btn-gerar-excel" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-3 rounded shadow transition flex justify-center gap-2"><i class="fa-solid fa-file-excel text-xl"></i> Excel</button>
+                            <button id="btn-gerar-pdf" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-3 rounded shadow transition flex justify-center gap-2"><i class="fa-solid fa-file-pdf text-xl"></i> PDF</button>
+                        </div>
                     </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
-                        <button id="btn-gerar-excel" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-3 rounded shadow transition flex justify-center gap-2"><i class="fa-solid fa-file-excel text-xl"></i> Excel</button>
-                        <button id="btn-gerar-pdf" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-3 rounded shadow transition flex justify-center gap-2"><i class="fa-solid fa-file-pdf text-xl"></i> PDF</button>
+                    
+                    <!-- NOVO BOTÃO PARA ABRIR O COMPARATIVO (RH) DENTRO DO PAINEL DE FERRAMENTAS -->
+                    <div class="bg-blue-50 dark:bg-blue-900/30 border border-blue-100 dark:border-blue-800 p-4 rounded mb-2">
+                        <h4 class="font-bold text-blue-800 dark:text-blue-300 text-sm mb-2"><i class="fa-solid fa-users-viewfinder"></i> Relatório de Desempenho da Equipe</h4>
+                        <p class="text-xs text-blue-700 dark:text-blue-400 mb-3">Gere um comparativo detalhado lado a lado de todos os analistas da equipa foco com cálculo de média mensal.</p>
+                        <button id="btn-comparativo" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded shadow transition flex items-center justify-center gap-2"><i class="fa-solid fa-chart-column"></i> Abrir Painel Comparativo</button>
                     </div>
                 </div>
 
@@ -395,7 +442,7 @@
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 
         // ==========================================
-        // 1. VARIÁVEIS GLOBAIS E SEGURANÇA (HASH)
+        // 1. VARIÁVEIS GLOBAIS
         // ==========================================
         
         let isDark = localStorage.getItem('darkMode') === 'true';
@@ -551,24 +598,13 @@
         const btnReset = document.getElementById('btn-zerar-banco');
 
         function validarSenhaAdmin() {
-            // "c2V0aWMyMDI2" é a assinatura criptográfica Base64 da palavra "setic2026"
             const digitado = btoa(inSenha.value);
-            
             if (digitado === 'c2V0aWMyMDI2') { 
-                areaGestaoBanco.classList.remove('hidden'); 
-                areaGestaoUsuarios.classList.remove('hidden'); 
-                areaAtualizacao.classList.remove('hidden');
-                popularDropdownExclusao(); 
-                
-                msgSenhaAdmin.innerHTML = '<i class="fa-solid fa-check-circle"></i> Acesso de Segurança Liberado!';
-                msgSenhaAdmin.className = 'text-sm font-bold mt-3 block text-green-600 dark:text-green-400';
+                areaGestaoBanco.classList.remove('hidden'); areaGestaoUsuarios.classList.remove('hidden'); areaAtualizacao.classList.remove('hidden'); popularDropdownExclusao(); 
+                msgSenhaAdmin.innerHTML = '<i class="fa-solid fa-check-circle"></i> Acesso de Segurança Liberado!'; msgSenhaAdmin.className = 'text-sm font-bold mt-3 block text-green-600 dark:text-green-400';
             } else { 
-                areaGestaoBanco.classList.add('hidden'); 
-                areaGestaoUsuarios.classList.add('hidden'); 
-                areaAtualizacao.classList.add('hidden');
-                
-                msgSenhaAdmin.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Senha Inválida! Acesso Negado.';
-                msgSenhaAdmin.className = 'text-sm font-bold mt-3 block text-red-600 dark:text-red-400';
+                areaGestaoBanco.classList.add('hidden'); areaGestaoUsuarios.classList.add('hidden'); areaAtualizacao.classList.add('hidden');
+                msgSenhaAdmin.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Senha Inválida! Acesso Negado.'; msgSenhaAdmin.className = 'text-sm font-bold mt-3 block text-red-600 dark:text-red-400';
             }
         }
 
@@ -743,7 +779,6 @@
             const hT = total > 0 ? (filtrados.reduce((acc, d) => acc + parseHoras(d['Tempo Solução']), 0) / total) : 0; tmaGlobalTexto = hT.toFixed(1) + 'h'; document.getElementById('kpi-tma').innerText = tmaGlobalTexto;
             const at = filtrados.filter(d => d['SLA Atendido'] === 'Sim').length; const inc = filtrados.filter(d => String(d['Tipo']).toLowerCase() === 'incidente').length;
             
-            // KPI: SLA VIOLADO ABSOLUTO
             const violados = filtrados.filter(d => String(d['SLA Atendido'] || 'Sim').toLowerCase() !== 'sim').length;
             document.getElementById('kpi-slaviolado').innerText = violados.toLocaleString('pt-BR');
 
@@ -786,6 +821,170 @@
 
             desenharTabela();
         }
+
+        // ==========================================
+        // LÓGICA DO BOTÃO COMPARATIVO (RH)
+        // ==========================================
+        let dadosComparativoExport = [];
+
+        document.getElementById('btn-comparativo').addEventListener('click', () => {
+            document.getElementById('modal-config').classList.add('hidden');
+            document.getElementById('comp-data-inicio').value = document.getElementById('filtro-data-inicio').value;
+            document.getElementById('comp-data-fim').value = document.getElementById('filtro-data-fim').value;
+            renderizarComparativo();
+            document.getElementById('modal-comparativo').classList.remove('hidden');
+        });
+
+        document.getElementById('btn-filtrar-comp').addEventListener('click', renderizarComparativo);
+        document.getElementById('btn-fechar-comparativo').addEventListener('click', () => { document.getElementById('modal-comparativo').classList.add('hidden'); });
+
+        function renderizarComparativo() {
+            if(dadosGlobais.length === 0) return;
+            const dIn = document.getElementById('comp-data-inicio').value; 
+            const dFim = document.getElementById('comp-data-fim').value;
+
+            const dadosParaComparar = dadosGlobais.filter(d => {
+                const dataAlvo = d['Data Encerramento'] || d['Data Solução'] || d['Data Abertura']; 
+                if(!dataAlvo) return false;
+                let match = true;
+                if(dIn || dFim) {
+                    const n = parseInt(dataAlvo.split(' ')[0].replace(/-/g, ''));
+                    if(dIn && n < parseInt(dIn.replace(/-/g, ''))) match = false; 
+                    if(dFim && n > parseInt(dFim.replace(/-/g, ''))) match = false;
+                } 
+                return match;
+            });
+
+            const mesesUnicosSet = new Set();
+            dadosParaComparar.forEach(d => {
+                const m = obterMesAno(d['Data Encerramento'] || d['Data Solução'] || d['Data Abertura']);
+                if(m !== "Desc") mesesUnicosSet.add(m);
+            });
+            const qtdMeses = mesesUnicosSet.size || 1;
+
+            const mapAnalistas = {};
+            const mapSat = new Map(); dadosSatisfacao.forEach(s => mapSat.set(String(s.Ticket || s.ticket || s.TICKET || s['Nº Chamado'] || ""), s));
+            const mapReab = new Set(); dadosReabertos.forEach(r => mapReab.add(String(r.Ticket || r.ticket || r.TICKET || r['Nº Chamado'] || "")));
+
+            dadosParaComparar.forEach(d => {
+                let ana = String(d['Analista'] || 'Não Atribuído');
+                if(!equipeFocoStr.toLowerCase().includes(ana.toLowerCase())) return; 
+                ana = ana.split('.')[0]; 
+
+                if(!mapAnalistas[ana]) mapAnalistas[ana] = { total: 0, slaOk: 0, slaViolado: 0, somaTma: 0, somaNota: 0, qtdNota: 0, reabertos: 0 };
+                mapAnalistas[ana].total++;
+                
+                if(String(d['SLA Atendido'] || 'Sim').toLowerCase() === 'sim') mapAnalistas[ana].slaOk++;
+                else mapAnalistas[ana].slaViolado++;
+                
+                mapAnalistas[ana].somaTma += parseHoras(d['Tempo Solução']);
+
+                const tId = String(d['Ticket'] || d['ticket'] || ""); let nota = 5.0; 
+                if (mapSat.has(tId)) {
+                    const satRec = mapSat.get(tId); let rawVal = satRec['Pesquisa de satisfação - Satisfação'];
+                    if (!rawVal) { for(let key in satRec) { if (key.toLowerCase().includes('satisfa')) { rawVal = satRec[key]; break; } } }
+                    if (rawVal) { const numMatch = String(rawVal).match(/\d+(\.\d+)?/); if (numMatch) { let parsed = parseFloat(numMatch[0]); if (!isNaN(parsed) && parsed >= 0 && parsed <= 5) nota = parsed; } }
+                }
+                mapAnalistas[ana].somaNota += Number(nota);
+                mapAnalistas[ana].qtdNota++;
+
+                let foiReaberto = mapReab.has(tId);
+                if (!foiReaberto) { for(let key in d) { if(key.toLowerCase().includes('reabert') || key.toLowerCase().includes('reabr')) { const val = String(d[key]).toLowerCase(); if(val === 'sim' || parseFloat(val) > 0) foiReaberto = true; break; } } }
+                if(foiReaberto) mapAnalistas[ana].reabertos++;
+            });
+
+            const arrResult = Object.keys(mapAnalistas).map(k => {
+                const obj = mapAnalistas[k];
+                return { 
+                    nome: k, 
+                    total: obj.total, 
+                    mediaMes: (obj.total / qtdMeses),
+                    slaOkPct: (obj.slaOk / obj.total) * 100, 
+                    slaViolado: obj.slaViolado, 
+                    tma: obj.total > 0 ? (obj.somaTma / obj.total) : 0, 
+                    sat: obj.qtdNota > 0 ? (obj.somaNota / obj.qtdNota) : 0, 
+                    reabPct: (obj.reabertos / obj.total) * 100 
+                };
+            }).sort((a,b) => b.total - a.total);
+
+            const tbody = document.getElementById('tabela-corpo-comparativo'); tbody.innerHTML = '';
+            dadosComparativoExport = [];
+
+            if(arrResult.length === 0) { 
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center p-4 text-gray-500">Nenhum dado encontrado para a equipe foco no período selecionado.</td></tr>'; 
+            } else {
+                arrResult.forEach((a, index) => {
+                    let badgePos = '';
+                    if(index === 0) badgePos = '<i class="fa-solid fa-medal text-yellow-500 mr-2" title="1º Lugar em Volume"></i>';
+                    else if (index === 1) badgePos = '<i class="fa-solid fa-medal text-gray-400 mr-2" title="2º Lugar em Volume"></i>';
+                    else if (index === 2) badgePos = '<i class="fa-solid fa-medal text-amber-700 mr-2" title="3º Lugar em Volume"></i>';
+
+                    const corSla = a.slaOkPct >= 95 ? 'text-green-600' : (a.slaOkPct >= 90 ? 'text-yellow-600' : 'text-red-600');
+                    const corSat = a.sat >= 4.5 ? 'text-green-600' : (a.sat >= 4.0 ? 'text-yellow-600' : 'text-red-600');
+                    
+                    const mediaFormatada = a.mediaMes.toFixed(1).replace('.', ',');
+                    
+                    tbody.innerHTML += `<tr class="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                            <td class="p-3 font-bold text-gray-800 dark:text-gray-200 capitalize flex items-center">${badgePos} ${a.nome}</td>
+                            <td class="p-3 font-bold">${a.total}</td>
+                            <td class="p-3 font-bold text-blue-600 dark:text-blue-400">${mediaFormatada}</td>
+                            <td class="p-3 font-bold ${corSla}">${a.slaOkPct.toFixed(1)}%</td>
+                            <td class="p-3 font-bold ${a.slaViolado > 0 ? 'text-red-600' : 'text-green-600'}">${a.slaViolado}</td>
+                            <td class="p-3 text-gray-600 dark:text-gray-400">${a.tma.toFixed(1)}h</td>
+                            <td class="p-3 font-bold ${corSat}">${a.sat.toFixed(2).replace('.', ',')}</td>
+                            <td class="p-3 text-gray-600 dark:text-gray-400">${a.reabPct.toFixed(1)}%</td>
+                        </tr>`;
+                        
+                    dadosComparativoExport.push([
+                        a.nome.toUpperCase(),
+                        `${a.total}`,
+                        `${mediaFormatada}`,
+                        `${a.slaOkPct.toFixed(1)}%`,
+                        `${a.slaViolado}`,
+                        `${a.tma.toFixed(1)}h`,
+                        `${a.sat.toFixed(2).replace('.', ',')}`,
+                        `${a.reabPct.toFixed(1)}%`
+                    ]);
+                });
+            }
+        }
+
+        document.getElementById('btn-imprimir-comp').addEventListener('click', () => {
+            if (dadosComparativoExport.length === 0) return alert("Nenhum dado para exportar.");
+            try {
+                const { jsPDF } = window.jspdf; const doc = new jsPDF('l', 'pt', 'a4'); const w = doc.internal.pageSize.width;
+                
+                doc.setFillColor(26, 25, 65); doc.rect(0, 0, w, 85, 'F'); doc.setTextColor(255, 255, 255); 
+                doc.setFontSize(14); doc.setFont("helvetica", "bold"); doc.text("MINISTÉRIO DA JUSTIÇA E SEGURANÇA PÚBLICA", 40, 32);
+                doc.setFontSize(9.5); doc.setFont("helvetica", "normal"); doc.text("Polícia Rodoviária Federal - Diretoria de Tecnologia da Informação e Comunicação (DTIC)", 40, 52);
+                doc.setFontSize(10.5); doc.setFont("helvetica", "bold"); doc.text("Relatório de Desempenho e Produtividade (Equipe SETIC)", 40, 72);
+                
+                try { let imgData = localStorage.getItem('dashLogo'); if (!imgData) { const imgEl = document.querySelector('#header-logo-container img'); if (imgEl) { const cvs = document.createElement('canvas'); cvs.width = imgEl.naturalWidth || 100; cvs.height = imgEl.naturalHeight || 100; cvs.getContext('2d').drawImage(imgEl, 0, 0); imgData = cvs.toDataURL('image/png'); } } if (imgData) doc.addImage(imgData, 'PNG', w - 80, 20, 40, 40); } catch(e) {}
+
+                doc.setTextColor(26, 25, 65); doc.setFontSize(10);
+                const dIn = document.getElementById('comp-data-inicio').value; 
+                const dFim = document.getElementById('comp-data-fim').value;
+                const periodoTexto = (!dIn && !dFim) ? "Histórico Completo" : `${dIn ? dIn.split('-').reverse().join('/') : 'Início'} a ${dFim ? dFim.split('-').reverse().join('/') : 'Atual'}`;
+                
+                doc.setFont("helvetica", "bold"); doc.text("Período Analisado:", 40, 110); doc.setFont("helvetica", "normal"); doc.text(periodoTexto, 150, 110);
+                
+                const agora = new Date(); doc.setFont("helvetica", "bold"); doc.text("Data de Emissão:", w - 240, 110); doc.setFont("helvetica", "normal"); doc.text(`${agora.toLocaleDateString('pt-BR')} às ${agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`, w - 140, 110);
+                
+                doc.autoTable({ 
+                    startY: 140, 
+                    head: [["Analista", "Volume Total", "Média / Mês", "SLA Atendido", "SLA Violado", "TMA", "Satisfação (CSAT)", "Taxa Reabertura"]], 
+                    body: dadosComparativoExport, 
+                    theme: 'grid', 
+                    headStyles: { fillColor: [26, 25, 65], textColor: 255, fontStyle: 'bold', halign: 'center' }, 
+                    columnStyles: { 0: { fontStyle: 'bold' }, 1: { halign: 'center' }, 2: { halign: 'center', textColor: [37, 99, 235], fontStyle: 'bold' }, 3: { halign: 'center' }, 4: { halign: 'center' }, 5: { halign: 'center' }, 6: { halign: 'center' }, 7: { halign: 'center' } }, 
+                    styles: { fontSize: 9, cellPadding: 5 }, 
+                    alternateRowStyles: { fillColor: [247, 248, 250] }, 
+                    margin: { left: 40, right: 40 } 
+                });
+
+                doc.save(`Relatorio_Desempenho_Equipe.pdf`);
+            } catch (e) { alert("Erro ao gerar o PDF da equipe."); }
+        });
 
         // ==========================================
         // 10. RELATÓRIO GERENCIAL & EXPORTAÇÃO EXCEL
