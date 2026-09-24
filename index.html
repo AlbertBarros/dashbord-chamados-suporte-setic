@@ -282,6 +282,7 @@
                 <button id="aba-relatorios" class="px-3 py-2 tab-inactive focus:outline-none font-semibold text-sm whitespace-nowrap">Emissão Relatórios</button>
                 <button id="aba-fiscal" class="px-3 py-2 tab-inactive focus:outline-none font-semibold text-sm text-green-700 dark:text-green-500 flex items-center gap-2 whitespace-nowrap"><i class="fa-solid fa-file-contract"></i> Fiscalização (IMR)</button>
                 
+                <!-- Aba Avançado/Segurança -->
                 <button id="aba-admin" class="px-3 py-2 tab-inactive focus:outline-none font-semibold text-sm text-red-600 hover:text-red-500 ml-auto flex items-center gap-2 whitespace-nowrap"><i class="fa-solid fa-shield-halved"></i> Avançado / Segurança</button>
             </div>
             
@@ -394,7 +395,7 @@
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 
         // ==========================================
-        // 1. VARIÁVEIS GLOBAIS
+        // 1. VARIÁVEIS GLOBAIS E SEGURANÇA (HASH)
         // ==========================================
         
         let isDark = localStorage.getItem('darkMode') === 'true';
@@ -816,7 +817,7 @@
                     doc.setFontSize(9.5); doc.setFont("helvetica", "normal"); doc.text("Polícia Rodoviária Federal - Diretoria de Tecnologia da Informação e Comunicação (DTIC)", 40, 52);
                     doc.setFontSize(10.5); doc.setFont("helvetica", "bold"); doc.text("Relatório Gerencial Analítico - Suporte N2 - Serviço de Pronto Atendimento (SETIC)", 40, 72);
                     
-                    try { let imgData = localStorage.getItem('dashLogo'); if (imgData) doc.addImage(imgData, 'PNG', w - 80, 20, 40, 40); } catch(e) {}
+                    try { let imgData = localStorage.getItem('dashLogo'); if (!imgData) { const imgEl = document.querySelector('#header-logo-container img'); if (imgEl) { const cvs = document.createElement('canvas'); cvs.width = imgEl.naturalWidth || 100; cvs.height = imgEl.naturalHeight || 100; cvs.getContext('2d').drawImage(imgEl, 0, 0); imgData = cvs.toDataURL('image/png'); } } if (imgData) doc.addImage(imgData, 'PNG', w - 80, 20, 40, 40); } catch(e) {}
                     
                     const fM_text = fM_array.includes("Todos") ? "Todos" : fM_array.join(', ');
                     const agora = new Date(); const dataForm = agora.toLocaleDateString('pt-BR'); const horaForm = agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
@@ -1049,7 +1050,7 @@
                 doc.setFontSize(9.5); doc.setFont("helvetica", "normal"); doc.text("Polícia Rodoviária Federal - Diretoria de Tecnologia da Informação e Comunicação (DTIC)", 40, 52);
                 doc.setFontSize(10.5); doc.setFont("helvetica", "bold"); doc.text("Relatório de Fiscalização de Contrato - IMR (Níveis Mínimos de Serviço)", 40, 72);
                 
-                try { let imgData = localStorage.getItem('dashLogo'); if (imgData) doc.addImage(imgData, 'PNG', w - 80, 20, 40, 40); } catch(e) {}
+                try { let imgData = localStorage.getItem('dashLogo'); if (!imgData) { const imgEl = document.querySelector('#header-logo-container img'); if (imgEl) { const cvs = document.createElement('canvas'); cvs.width = imgEl.naturalWidth || 100; cvs.height = imgEl.naturalHeight || 100; cvs.getContext('2d').drawImage(imgEl, 0, 0); imgData = cvs.toDataURL('image/png'); } } if (imgData) doc.addImage(imgData, 'PNG', w - 80, 20, 40, 40); } catch(e) {}
 
                 doc.setTextColor(26, 25, 65); doc.setFontSize(10); 
                 doc.setFont("helvetica", "bold"); doc.text("Empresa:", 40, 105); doc.setFont("helvetica", "normal"); doc.text("IOS Informática", 115, 105);
@@ -1208,7 +1209,7 @@
                 doc.setFontSize(9.5); doc.setFont("helvetica", "normal"); doc.text("Polícia Rodoviária Federal - Diretoria de Tecnologia da Informação e Comunicação (DTIC)", 40, 52);
                 doc.setFontSize(10.5); doc.setFont("helvetica", "bold"); doc.text("Relatório Histórico de Auditoria - Níveis Mínimos de Serviço (IMR)", 40, 72);
                 
-                try { let imgData = localStorage.getItem('dashLogo'); if (imgData) doc.addImage(imgData, 'PNG', w - 80, 20, 40, 40); } catch(e) {}
+                try { let imgData = localStorage.getItem('dashLogo'); if (!imgData) { const imgEl = document.querySelector('#header-logo-container img'); if (imgEl) { const cvs = document.createElement('canvas'); cvs.width = imgEl.naturalWidth || 100; cvs.height = imgEl.naturalHeight || 100; cvs.getContext('2d').drawImage(imgEl, 0, 0); imgData = cvs.toDataURL('image/png'); } } if (imgData) doc.addImage(imgData, 'PNG', w - 80, 20, 40, 40); } catch(e) {}
 
                 doc.setTextColor(26, 25, 65); doc.setFontSize(10);
                 const inicio = document.getElementById('hist-filtro-inicio').value; const fim = document.getElementById('hist-filtro-fim').value;
