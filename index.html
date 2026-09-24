@@ -527,7 +527,7 @@
             if (!emailNovo || senhaNova.length < 6) return alert("Atenção: Introduza um e-mail válido e uma senha com pelo menos 6 caracteres.");
             btnCriarUsuario.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; btnCriarUsuario.disabled = true;
             try { await createUserWithEmailAndPassword(secondaryAuth, emailNovo, senhaNova); await signOut(secondaryAuth); alert(`✅ Sucesso!\nAcesso criado.`); document.getElementById('novo-email').value = ''; document.getElementById('novo-senha').value = ''; } 
-            catch (error) { if(error.code === 'auth/email-already-in-use') alert("Este e-mail já tem um acesso criado."); else alert("Erro ao criar utilizador."); } 
+            catch (error) { if(error.code === 'auth/email-already-in-use') alert("Este e-mail já tem um acesso criado no sistema."); else alert("Erro ao criar utilizador."); } 
             finally { btnCriarUsuario.innerHTML = '<i class="fa-solid fa-check"></i> Criar'; btnCriarUsuario.disabled = false; }
         });
         btnReset.addEventListener('click', async () => {
@@ -662,6 +662,9 @@
             desenharTabela();
         }
 
+        // ==========================================
+        // 10. RELATÓRIO GERENCIAL & EXPORTAÇÃO EXCEL
+        // ==========================================
         document.getElementById('btn-gerar-excel').addEventListener('click', () => {
             const checkboxes = document.querySelectorAll('#relatorio-mes-container input:checked'); const fM_array = Array.from(checkboxes).map(cb => cb.value); if(fM_array.length === 0) fM_array.push("Todos");
             const fA = document.getElementById('relatorio-analista').value;
@@ -683,10 +686,12 @@
                 try {
                     const dadosExp = dadosFiltradosCache; if(dadosExp.length === 0) { alert("Nenhum dado."); btn.innerHTML = conteudoOriginal; btn.disabled = false; mesesRelatorioOverride = null; atualizarDashboard(); return; }
                     const { jsPDF } = window.jspdf; const doc = new jsPDF('p', 'pt', 'a4'); const w = doc.internal.pageSize.width;
+                    
                     doc.setFillColor(26, 25, 65); doc.rect(0, 0, w, 85, 'F'); doc.setTextColor(255, 255, 255); 
                     doc.setFontSize(14); doc.setFont("helvetica", "bold"); doc.text("MINISTÉRIO DA JUSTIÇA E SEGURANÇA PÚBLICA", 40, 32);
                     doc.setFontSize(9.5); doc.setFont("helvetica", "normal"); doc.text("Polícia Rodoviária Federal - Diretoria de Tecnologia da Informação e Comunicação (DTIC)", 40, 52);
                     doc.setFontSize(10.5); doc.setFont("helvetica", "bold"); doc.text("Relatório Gerencial Analítico - Suporte N2 - Serviço de Pronto Atendimento (SETIC)", 40, 72);
+                    
                     try { let imgData = localStorage.getItem('dashLogo'); if (imgData) doc.addImage(imgData, 'PNG', w - 80, 20, 40, 40); } catch(e) {}
                     
                     const fM_text = fM_array.includes("Todos") ? "Todos" : fM_array.join(', ');
@@ -704,11 +709,47 @@
                     
                     const mesesUnicos = new Set(dadosExp.map(d => obterMesAno(d['Data Encerramento'] || d['Data Abertura']))).size || 1; const mediaMes = Math.round(dadosExp.length / mesesUnicos);
                     
-                    const blockY = nextY + 45; doc.setFillColor(245, 247, 250); doc.rect(40, blockY, 120, 42, 'F'); doc.rect(171, blockY, 120, 42, 'F'); doc.rect(302, blockY, 120, 42, 'F'); doc.rect(433, blockY, 120, 42, 'F');
-                    doc.setFontSize(7.5); doc.setTextColor(120, 120, 120); doc.setFont("helvetica", "bold"); doc.text("VOLUME TOTAL", 100, blockY+16, {align: 'center'}); doc.text("MÉDIA / MÊS", 231, blockY+16, {align: 'center'}); doc.text("TMA (HORAS)", 362, blockY+16, {align: 'center'}); doc.text("SLA ATENDIDO", 493, blockY+16, {align: 'center'});
-                    doc.setFontSize(14); doc.setTextColor(26, 25, 65); doc.text(String(dadosExp.length), 100, blockY+33, {align: 'center'}); doc.text(String(mediaMes), 231, blockY+33, {align: 'center'}); doc.text(String(tmaGlobalTexto), 362, blockY+33, {align: 'center'}); doc.setTextColor(22, 163, 74); doc.text(String(slaGlobalTexto), 493, blockY+33, {align: 'center'});
+                    // CAPTURA DOS VALORES DA TELA
+                    const kpiTotal = String(dadosExp.length);
+                    const mediaMesVal = String(mediaMes);
+                    const tmaVal = String(tmaGlobalTexto);
+                    const slaVal = String(slaGlobalTexto);
+                    const incVal = document.getElementById('kpi-incidentes').innerText;
+                    const satVal = document.getElementById('kpi-satisfacao').innerText;
+                    const reabVal = document.getElementById('kpi-reabertos').innerText;
 
-                    const vizY = blockY + 58; doc.setTextColor(26, 25, 65); doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.text("Análise Visual", 40, vizY);
+                    // LINHA 1 DE CAIXAS (Volume, Média, TMA, SLA)
+                    const blockY = nextY + 45; 
+                    doc.setFillColor(245, 247, 250); 
+                    doc.rect(40, blockY, 120, 42, 'F'); doc.rect(171, blockY, 120, 42, 'F'); 
+                    doc.rect(302, blockY, 120, 42, 'F'); doc.rect(433, blockY, 120, 42, 'F');
+
+                    doc.setFontSize(7.5); doc.setTextColor(120, 120, 120); doc.setFont("helvetica", "bold"); 
+                    doc.text("VOLUME TOTAL", 100, blockY+16, {align: 'center'}); doc.text("MÉDIA / MÊS", 231, blockY+16, {align: 'center'}); 
+                    doc.text("TMA (HORAS)", 362, blockY+16, {align: 'center'}); doc.text("SLA ATENDIDO", 493, blockY+16, {align: 'center'});
+                    
+                    doc.setFontSize(14); doc.setTextColor(26, 25, 65); 
+                    doc.text(kpiTotal, 100, blockY+33, {align: 'center'}); doc.text(mediaMesVal, 231, blockY+33, {align: 'center'}); 
+                    doc.text(tmaVal, 362, blockY+33, {align: 'center'}); doc.setTextColor(22, 163, 74); doc.text(slaVal, 493, blockY+33, {align: 'center'});
+
+                    // LINHA 2 DE CAIXAS (Incidentes, Satisfação, Reabertos)
+                    const blockY2 = blockY + 50; 
+                    doc.setFillColor(245, 247, 250); 
+                    doc.rect(40, blockY2, 120, 42, 'F'); doc.rect(171, blockY2, 120, 42, 'F'); doc.rect(302, blockY2, 120, 42, 'F'); 
+
+                    doc.setFontSize(7.5); doc.setTextColor(120, 120, 120); doc.setFont("helvetica", "bold"); 
+                    doc.text("TAXA DE INCIDENTES", 100, blockY2+16, {align: 'center'}); 
+                    doc.text("SATISFAÇÃO (INS1)", 231, blockY2+16, {align: 'center'}); 
+                    doc.text("REABERTOS (INS6)", 362, blockY2+16, {align: 'center'}); 
+                    
+                    doc.setFontSize(14); doc.setTextColor(26, 25, 65); 
+                    doc.text(incVal, 100, blockY2+33, {align: 'center'}); 
+                    doc.text(satVal, 231, blockY2+33, {align: 'center'}); 
+                    doc.text(reabVal, 362, blockY2+33, {align: 'center'}); 
+
+                    // GRAFICOS
+                    const vizY = blockY2 + 58; 
+                    doc.setTextColor(26, 25, 65); doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.text("Análise Visual", 40, vizY);
                     doc.setFontSize(8.5); doc.setTextColor(100, 100, 100); doc.setFont("helvetica", "normal");
                     
                     const getImg = (id) => { try { const c = document.getElementById(id); return c ? c.toDataURL('image/jpeg', 1.0) : null; } catch(e) { return null; } };
@@ -727,7 +768,7 @@
         });
 
         // ==========================================
-        // 11. AUDITORIA IMR E PDF FISCAL
+        // 11. AUDITORIA IMR & PDF FISCAL 
         // ==========================================
         function calcularAuditoriaInterna(mes) {
             let dadosAuditoria = dadosGlobais.filter(d => obterMesAnoFiscal(d['Data Encerramento'] || d['Data Solução'] || d['Data Abertura']) === mes);
@@ -992,16 +1033,8 @@
                     let percentualGlosa = 0; let valorDescontoStr = "R$ 0,00";
                     if (r.pts >= 10) { percentualGlosa = Math.floor(r.pts / 10) * 1.0; if (percentualGlosa > 30.0) percentualGlosa = 30.0; valorDescontoStr = (26971.30 * (percentualGlosa / 100)).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
                     
-                    // LÓGICA DE COR PARA A COLUNA % GLOSA DO PDF
                     let corPorcentagem = percentualGlosa > 0 ? [220, 38, 38] : [22, 163, 74]; 
-                    
-                    dadosHistoricoExport.push([ 
-                        m, 
-                        `${r.pts}`, 
-                        { content: `${percentualGlosa}%`, styles: { textColor: corPorcentagem, fontStyle: 'bold' } }, 
-                        valorDescontoStr, 
-                        r.pts > 0 ? r.desc.join(', ') : 'Nenhuma' 
-                    ]);
+                    dadosHistoricoExport.push([ m, `${r.pts}`, { content: `${percentualGlosa}%`, styles: { textColor: corPorcentagem, fontStyle: 'bold' } }, valorDescontoStr, r.pts > 0 ? r.desc.join(', ') : 'Nenhuma' ]);
 
                     if (r.pts > 0) {
                         dataCores.push('#ef4444');
@@ -1016,7 +1049,6 @@
             document.getElementById('tabela-corpo-historico').innerHTML = htmlTabela;
             const ctx = document.getElementById('chart-historico-falhas').getContext('2d'); if (graficos['chart-historico-falhas']) graficos['chart-historico-falhas'].destroy();
             
-            // LÓGICA DO GRÁFICO HISTÓRICO COM TETO DINÂMICO E OCULTAÇÃO DE ZEROS
             graficos['chart-historico-falhas'] = new Chart(ctx, { 
                 type: 'bar', 
                 data: { labels: labels, datasets: [{ label: 'Pontos de Glosa', data: dataPontos, backgroundColor: dataCores, borderRadius: 4, barPercentage: 0.6 }] }, 
@@ -1024,12 +1056,7 @@
                     responsive: true, maintainAspectRatio: false, 
                     plugins: { 
                         legend: { display: false }, 
-                        datalabels: { 
-                            display: true, anchor: 'end', align: 'top', 
-                            color: isDark ? '#f3f4f6' : '#111827', 
-                            font: {weight: 'bold', size: 12},
-                            formatter: (value) => value > 0 ? value : "" // Oculta o zero flutuante
-                        } 
+                        datalabels: { display: true, anchor: 'end', align: 'top', color: isDark ? '#f3f4f6' : '#111827', font: {weight: 'bold', size: 12}, formatter: (value) => value > 0 ? value : "" } 
                     }, 
                     scales: { 
                         x: { ticks: { color: isDark ? '#d1d5db' : '#374151' }, grid: { display: true, color: isDark ? '#374151' : '#e5e7eb' } },
