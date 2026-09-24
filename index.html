@@ -182,7 +182,7 @@
         </div>
     </div>
 
-    <!-- Histórico IMR (Visual Melhorado) -->
+    <!-- Histórico IMR -->
     <div id="modal-historico-imr" class="hidden fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-[70] p-4">
         <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-2xl w-full max-w-5xl flex flex-col max-h-[90vh]">
             <div class="flex justify-between items-center mb-4">
@@ -336,9 +336,6 @@
         import { getFirestore, collection, getDocs, doc, writeBatch } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 
-        // ==========================================
-        // 1. VARIÁVEIS GLOBAIS E CONFIGURAÇÃO
-        // ==========================================
         let isDark = localStorage.getItem('darkMode') === 'true';
         let dadosGlobais = []; let dadosFiltradosCache = []; let mesesRelatorioOverride = null;
         let dadosSatisfacao = []; let dadosReabertos = []; let historicoCompletoCarregado = false;
@@ -369,9 +366,6 @@
         let app, db, auth, secondaryApp, secondaryAuth; 
         try { app = initializeApp(firebaseConfig); db = getFirestore(app); auth = getAuth(app); secondaryApp = initializeApp(firebaseConfig, "SecondaryApp"); secondaryAuth = getAuth(secondaryApp); } catch (e) {}
 
-        // ==========================================
-        // 2. FUNÇÕES UTILITÁRIAS E PARSERS
-        // ==========================================
         function parseExcelDate(serial) { const dateObj = new Date(Math.round((serial - 25569) * 86400 * 1000)); return { ano: dateObj.getUTCFullYear(), mes: dateObj.getUTCMonth() + 1, dia: dateObj.getUTCDate() }; }
         function parseHoras(str) { if(!str) return 0; const p = String(str).split(':'); return p.length === 3 ? parseInt(p[0]) + (parseInt(p[1])/60) + (parseInt(p[2])/3600) : 0; }
         function obterMesAno(str) { 
@@ -388,9 +382,6 @@
         function cvDtOrd(m) { if (!m || m === "Desc") return 0; const p = m.split('/'); return p.length === 2 ? parseInt(p[1], 10) * 100 + parseInt(p[0], 10) : 0; }
         function definirStatus(bHtml, cClasse) { const b = document.getElementById('badge-status'); b.className = `text-xs font-bold px-2 py-1 ${cClasse} rounded text-white shadow ml-2`; b.innerHTML = bHtml; b.classList.remove('hidden'); }
 
-        // ==========================================
-        // 3. UI E INTERFACES
-        // ==========================================
         function aplicarPersonalizacao() {
             tituloOficial = localStorage.getItem('dashTitulo') || 'Analytics Suporte SETIC'; corPrincipal = localStorage.getItem('dashCor') || '#1a1941'; iconeCabecalho = localStorage.getItem('dashIcon') || 'fa-chart-line'; equipeFocoStr = localStorage.getItem('equipeFoco') || 'fabio.palma.prestador, edison.neto.prestador, antonio.muniz.prestador, jose.andrade.prestador';
             document.getElementById('titulo-painel').innerText = tituloOficial; if(document.getElementById('login-titulo')) document.getElementById('login-titulo').innerText = tituloOficial;
@@ -424,7 +415,6 @@
         document.getElementById('input-logo-file').addEventListener('change', (e) => { const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = function(ev) { localStorage.setItem('dashLogo', ev.target.result); aplicarPersonalizacao(); }; reader.readAsDataURL(file); });
         document.getElementById('btn-guardar-config').addEventListener('click', () => { localStorage.setItem('dashTitulo', document.getElementById('input-titulo').value); localStorage.setItem('dashCor', document.getElementById('input-cor').value); localStorage.setItem('dashIcon', document.getElementById('input-icone').value); localStorage.setItem('equipeFoco', document.getElementById('input-equipe').value); aplicarPersonalizacao(); preencherFiltros(); atualizarDashboard(); modalConfig.classList.add('hidden'); });
 
-        // Eventos Revisão de Glosa
         document.getElementsByName('tipo_conclusao').forEach(radio => {
             radio.addEventListener('change', (e) => {
                 if(e.target.value === 'personalizada') { document.getElementById('area-texto-personalizado').classList.remove('hidden'); document.getElementById('area-texto-automatico').classList.add('hidden'); } 
@@ -433,9 +423,6 @@
         });
         document.getElementById('btn-cancelar-revisao').addEventListener('click', () => { document.getElementById('modal-revisao-glosa').classList.add('hidden'); objAuditoriaTemp = null; });
 
-        // ==========================================
-        // 4. AUTENTICAÇÃO E DADOS
-        // ==========================================
         onAuthStateChanged(auth, (user) => {
             if (user) { document.getElementById('tela-login').classList.add('hidden'); document.getElementById('tela-login').classList.remove('flex'); document.getElementById('tela-dashboard').classList.remove('hidden'); document.getElementById('tela-dashboard').classList.add('flex'); carregarDadosNuvem(); } 
             else { document.getElementById('tela-dashboard').classList.add('hidden'); document.getElementById('tela-dashboard').classList.remove('flex'); document.getElementById('tela-login').classList.remove('hidden'); document.getElementById('tela-login').classList.add('flex'); }
@@ -446,7 +433,7 @@
             if (!email || !senha) return alert("Preencha o e-mail e a senha.");
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Autenticando...'; btn.disabled = true; caixaErro.classList.add('hidden'); 
             try { await signInWithEmailAndPassword(auth, email.trim(), senha); } 
-            catch (error) { let msg = "Acesso negado."; if (error.code === 'auth/invalid-email') msg = "E-mail inválido."; else if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') msg = "Usuário não encontrado."; else if (error.code === 'auth/wrong-password') msg = "Senha incorreta."; else if (error.message.includes('auth/configuration-not-found') || error.message.includes('auth/unauthorized-domain')) msg = "ACESSO BLOQUEADO (Domínio não autorizado no Firebase)."; else msg = `Erro no Firebase: ${error.message}`; caixaErro.innerHTML = `<strong>Falha na Autenticação</strong><br>${msg}`; caixaErro.classList.remove('hidden'); } 
+            catch (error) { let msg = "Acesso negado."; if (error.code === 'auth/invalid-email') msg = "E-mail inválido."; else if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') msg = "Usuário não encontrado."; else if (error.code === 'auth/wrong-password') msg = "Senha incorreta."; else if (error.message.includes('auth/configuration-not-found') || error.message.includes('auth/unauthorized-domain')) msg = "ACESSO BLOQUEADO (Domínio não autorizado)."; else msg = `Erro no Firebase: ${error.message}`; caixaErro.innerHTML = `<strong>Falha na Autenticação</strong><br>${msg}`; caixaErro.classList.remove('hidden'); } 
             finally { btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Entrar no Sistema'; btn.disabled = false; }
         });
 
@@ -471,9 +458,6 @@
         }
         document.getElementById('btn-carregar-historico').addEventListener('click', () => { document.getElementById('btn-carregar-historico').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Carregando...'; carregarDadosNuvem(true).then(() => { document.getElementById('btn-carregar-historico').innerHTML = '<i class="fa-solid fa-check"></i> Concluído'; setTimeout(() => modalConfig.classList.add('hidden'), 1000); }); });
 
-        // ==========================================
-        // 5. UPLOADS (ARQUIVOS) E EXCLUSÃO
-        // ==========================================
         document.getElementById('file-upload').addEventListener('change', async (e) => {
             const files = e.target.files; if (files.length === 0) return; 
             const loader = document.getElementById('loader-upload'); loader.classList.remove('hidden'); loader.innerHTML = '<div class="loader !border-t-current !border-4 !w-5 !h-5 inline-block"></div> Processando arquivo(s)...';
@@ -518,12 +502,12 @@
                     });
                 });
                 await Promise.all(readFiles);
-                if (errorFiles.length > 0) { alert(`ATENÇÃO: Arquivos ignorados (sem coluna Ticket):\n\n${errorFiles.join('\n')}`); if (allRows.length === 0) { loader.classList.add('hidden'); e.target.value = ""; return; } }
+                if (errorFiles.length > 0) { alert(`ATENÇÃO: Arquivos auxiliares ignorados (sem coluna Ticket):\n\n${errorFiles.join('\n')}`); if (allRows.length === 0) { loader.classList.add('hidden'); e.target.value = ""; return; } }
                 loader.innerHTML = '<div class="loader !border-t-current !border-4 !w-5 !h-5 inline-block"></div> Gravando na nuvem...';
                 try {
                     const ba = [writeBatch(db)]; let c = 0, b = 0;
                     allRows.forEach(r => { const ticketId = String(r.Ticket || r.ticket || r.TICKET || r['Nº Chamado'] || r['chamado'] || ""); if(ticketId) { ba[b].set(doc(db, colName, ticketId), r); c++; if (c === 490) { ba.push(writeBatch(db)); b++; c = 0; } } });
-                    await Promise.all(ba.map(batch => batch.commit())); loader.innerHTML = '<i class="fa-solid fa-check text-green-500 text-lg"></i> <span class="text-green-600 dark:text-green-400 font-bold">Upload Concluído!</span>';
+                    await Promise.all(ba.map(batch => batch.commit())); loader.innerHTML = '<i class="fa-solid fa-check text-green-500 text-lg"></i> <span class="text-green-600 dark:text-green-400 font-bold">Upload Auxiliar Concluído!</span>';
                     setTimeout(async () => { loader.classList.add('hidden'); loader.innerHTML = '<div class="loader !border-t-current !border-4 !w-5 !h-5 inline-block"></div> Gravando...'; e.target.value = ""; await carregarDadosNuvem(historicoCompletoCarregado); }, 2500);
                 } catch (err) { loader.innerHTML = '<i class="fa-solid fa-xmark text-red-500 text-lg"></i> <span class="text-red-600 font-bold">Erro na gravação.</span>'; setTimeout(() => { loader.classList.add('hidden'); e.target.value = ""; }, 3000); }
             });
@@ -543,7 +527,7 @@
             if (!emailNovo || senhaNova.length < 6) return alert("Atenção: Introduza um e-mail válido e uma senha com pelo menos 6 caracteres.");
             btnCriarUsuario.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; btnCriarUsuario.disabled = true;
             try { await createUserWithEmailAndPassword(secondaryAuth, emailNovo, senhaNova); await signOut(secondaryAuth); alert(`✅ Sucesso!\nAcesso criado.`); document.getElementById('novo-email').value = ''; document.getElementById('novo-senha').value = ''; } 
-            catch (error) { if(error.code === 'auth/email-already-in-use') alert("Este e-mail já tem um acesso criado no sistema."); else alert("Erro ao criar utilizador."); } 
+            catch (error) { if(error.code === 'auth/email-already-in-use') alert("Este e-mail já tem um acesso criado."); else alert("Erro ao criar utilizador."); } 
             finally { btnCriarUsuario.innerHTML = '<i class="fa-solid fa-check"></i> Criar'; btnCriarUsuario.disabled = false; }
         });
         btnReset.addEventListener('click', async () => {
@@ -564,9 +548,6 @@
             } catch(e) { alert("Erro ao apagar os dados."); btnReset.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Apagar'; btnReset.disabled = false; }
         });
 
-        // ==========================================
-        // 6. DASHBOARD DINÂMICO E PREENCHIMENTO DE FILTROS
-        // ==========================================
         function preencherS(id, arr, def) { const s = document.getElementById(id); if(!s) return; const at = s.value; s.innerHTML = `<option value="Todos">${def}</option>`; arr.forEach(i => { const op = document.createElement('option'); op.value = i; op.innerText = i; s.appendChild(op); }); if (arr.includes(at)) s.value = at; }
         function preencherCheckboxes(id, arr) {
             const container = document.getElementById(id); if(!container) return; const checkedValues = Array.from(container.querySelectorAll('input:checked')).map(cb => cb.value); const selected = checkedValues.length > 0 ? checkedValues : ["Todos"];
@@ -591,7 +572,6 @@
         document.getElementById('btn-limpar-filtros').addEventListener('click', () => { ['filtro-mes', 'filtro-analista', 'filtro-prioridade', 'filtro-data-inicio', 'filtro-data-fim', 'filtro-assunto', 'filtro-tipo'].forEach(i => document.getElementById(i).value = i.includes('data') ? "" : "Todos"); tabelaPaginaAtual = 1; atualizarDashboard(); });
 
         function agruparPor(dados, chave, limite=null) { const c = {}; dados.forEach(d => { const k = typeof chave==='function' ? chave(d) : d[chave]; if(k) c[k] = (c[k]||0)+1; }); let arr = Object.keys(c).map(k => ({ label: k, value: c[k] })).sort((a,b) => b.value - a.value); if(limite) arr = arr.slice(0, limite); return { labels: arr.map(i=>i.label), values: arr.map(i=>i.value) }; }
-        
         function rend(id, tipo, dAgr, cor, horizontal, showLabels=false, clk=null) {
             const ctx = document.getElementById(id).getContext('2d'); if (graficos[id]) graficos[id].destroy();
             const options = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, datalabels: { display: showLabels, color: isDark?'#e5e7eb':'#fff', font: {weight: 'bold'}, anchor: 'end', align: 'start', offset: 4 } }, onClick: (e, a) => { if(clk && a.length>0) clk(dAgr.labels[a[0].index]); }, onHover: (e, a) => { e.native.target.style.cursor = a[0] ? 'pointer' : 'default'; } };
@@ -682,9 +662,6 @@
             desenharTabela();
         }
 
-        // ==========================================
-        // 7. RELATÓRIO GERENCIAL & EXPORTAÇÃO EXCEL
-        // ==========================================
         document.getElementById('btn-gerar-excel').addEventListener('click', () => {
             const checkboxes = document.querySelectorAll('#relatorio-mes-container input:checked'); const fM_array = Array.from(checkboxes).map(cb => cb.value); if(fM_array.length === 0) fM_array.push("Todos");
             const fA = document.getElementById('relatorio-analista').value;
@@ -750,7 +727,7 @@
         });
 
         // ==========================================
-        // 8. AUDITORIA IMR & PDF FISCAL
+        // 11. AUDITORIA IMR E PDF FISCAL
         // ==========================================
         function calcularAuditoriaInterna(mes) {
             let dadosAuditoria = dadosGlobais.filter(d => obterMesAnoFiscal(d['Data Encerramento'] || d['Data Solução'] || d['Data Abertura']) === mes);
@@ -979,7 +956,7 @@
         }
 
         // ==========================================
-        // 9. HISTÓRICO DINÂMICO IMR
+        // 12. HISTÓRICO DINÂMICO IMR
         // ==========================================
         document.getElementById('btn-fechar-historico-imr').addEventListener('click', () => { document.getElementById('modal-historico-imr').classList.add('hidden'); });
 
@@ -1014,7 +991,17 @@
                     labels.push(m); dataPontos.push(r.pts);
                     let percentualGlosa = 0; let valorDescontoStr = "R$ 0,00";
                     if (r.pts >= 10) { percentualGlosa = Math.floor(r.pts / 10) * 1.0; if (percentualGlosa > 30.0) percentualGlosa = 30.0; valorDescontoStr = (26971.30 * (percentualGlosa / 100)).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
-                    dadosHistoricoExport.push([ m, `${r.pts}`, `${percentualGlosa}%`, valorDescontoStr, r.pts > 0 ? r.desc.join(', ') : 'Nenhuma' ]);
+                    
+                    // LÓGICA DE COR PARA A COLUNA % GLOSA DO PDF
+                    let corPorcentagem = percentualGlosa > 0 ? [220, 38, 38] : [22, 163, 74]; 
+                    
+                    dadosHistoricoExport.push([ 
+                        m, 
+                        `${r.pts}`, 
+                        { content: `${percentualGlosa}%`, styles: { textColor: corPorcentagem, fontStyle: 'bold' } }, 
+                        valorDescontoStr, 
+                        r.pts > 0 ? r.desc.join(', ') : 'Nenhuma' 
+                    ]);
 
                     if (r.pts > 0) {
                         dataCores.push('#ef4444');
@@ -1029,7 +1016,7 @@
             document.getElementById('tabela-corpo-historico').innerHTML = htmlTabela;
             const ctx = document.getElementById('chart-historico-falhas').getContext('2d'); if (graficos['chart-historico-falhas']) graficos['chart-historico-falhas'].destroy();
             
-            // CONFIGURAÇÃO DO GRÁFICO ISOLADA E BLINDADA
+            // LÓGICA DO GRÁFICO HISTÓRICO COM TETO DINÂMICO E OCULTAÇÃO DE ZEROS
             graficos['chart-historico-falhas'] = new Chart(ctx, { 
                 type: 'bar', 
                 data: { labels: labels, datasets: [{ label: 'Pontos de Glosa', data: dataPontos, backgroundColor: dataCores, borderRadius: 4, barPercentage: 0.6 }] }, 
@@ -1041,12 +1028,12 @@
                             display: true, anchor: 'end', align: 'top', 
                             color: isDark ? '#f3f4f6' : '#111827', 
                             font: {weight: 'bold', size: 12},
-                            formatter: (value) => value > 0 ? value : ""
+                            formatter: (value) => value > 0 ? value : "" // Oculta o zero flutuante
                         } 
                     }, 
                     scales: { 
-                        x: { ticks: { color: isDark ? '#d1d5db' : '#374151', font: { weight: 'bold', size: 11 } }, grid: { display: false } },
-                        y: { beginAtZero: true, grace: '20%', ticks: { color: isDark ? '#d1d5db' : '#374151', font: { weight: 'bold', size: 11 }, stepSize: 10 }, border: { display: false } } 
+                        x: { ticks: { color: isDark ? '#d1d5db' : '#374151' }, grid: { display: true, color: isDark ? '#374151' : '#e5e7eb' } },
+                        y: { beginAtZero: true, grace: '20%', ticks: { color: isDark ? '#d1d5db' : '#374151', stepSize: 10 }, border: { display: false }, grid: { color: isDark ? '#374151' : '#e5e7eb' } } 
                     } 
                 } 
             });
@@ -1073,7 +1060,18 @@
                 const imgChart = document.getElementById('chart-historico-falhas').toDataURL('image/jpeg', 1.0); doc.addImage(imgChart, 'JPEG', 40, 170, w - 80, 200);
                 doc.setFontSize(12); doc.text("Detalhamento Financeiro por Ciclo Fiscal", 40, 410);
                 
-                doc.autoTable({ startY: 425, head: [["Ciclo Fiscal", "Pontos Calculados", "% Glosa", "Desconto (R$)", "Indicadores Descumpridos"]], body: dadosHistoricoExport, theme: 'grid', headStyles: { fillColor: [150, 150, 150], textColor: 20, fontStyle: 'bold', halign: 'center' }, columnStyles: { 0: { fontStyle: 'bold', halign: 'center' }, 1: { halign: 'center' }, 2: { halign: 'center', fontStyle: 'bold', textColor: [220, 38, 38] }, 3: { halign: 'center' } }, styles: { fontSize: 8, cellPadding: 4 }, alternateRowStyles: { fillColor: [247, 248, 250] }, margin: { left: 40, right: 40 } });
+                doc.autoTable({ 
+                    startY: 425, 
+                    head: [["Ciclo Fiscal", "Pontos Calculados", "% Glosa", "Desconto (R$)", "Indicadores Descumpridos"]], 
+                    body: dadosHistoricoExport, 
+                    theme: 'grid', 
+                    headStyles: { fillColor: [150, 150, 150], textColor: 20, fontStyle: 'bold', halign: 'center' }, 
+                    columnStyles: { 0: { fontStyle: 'bold', halign: 'center' }, 1: { halign: 'center' }, 2: { halign: 'center' }, 3: { halign: 'center' } }, 
+                    styles: { fontSize: 8, cellPadding: 4 }, 
+                    alternateRowStyles: { fillColor: [247, 248, 250] }, 
+                    margin: { left: 40, right: 40 } 
+                });
+
                 doc.save(`Historico_Auditoria_IMR_${inicio.replace('/','_')}_a_${fim.replace('/','_')}.pdf`);
             } catch (e) { alert("Erro ao gerar o PDF do histórico."); }
         });
