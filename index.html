@@ -39,8 +39,13 @@
     <!-- ======================= -->
     <!--     TELA DE LOGIN       -->
     <!-- ======================= -->
-    <div id="tela-login" class="min-h-screen bg-[#1a1941] flex flex-col justify-center items-center p-4 transition-opacity">
-        <div class="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-2xl w-full max-w-sm text-center border-t-4 border-blue-500">
+    <div id="tela-login" class="min-h-screen flex flex-col justify-center items-center p-4 transition-opacity relative bg-[#1a1941]" style="background-image: url('https://raw.githubusercontent.com/AlbertBarros/dashbord-chamados-suporte-setic/main/fundo%20login'); background-size: cover; background-position: center;">
+        
+        <!-- Película Escura para garantir foco na caixa branca -->
+        <div class="absolute inset-0 bg-[#1a1941] bg-opacity-75"></div>
+        
+        <!-- Caixa Branca de Login (Protegida por z-index) -->
+        <div class="relative z-10 bg-white dark:bg-gray-800 p-8 rounded-lg shadow-2xl w-full max-w-sm text-center border-t-[5px] border-yellow-500">
             <img id="login-logo" src="https://raw.githubusercontent.com/AlbertBarros/dashbord-chamados-suporte-setic/main/bras%C3%A3o.png" alt="Logo" class="h-24 mx-auto mb-4 object-contain" crossorigin="anonymous">
             <h2 id="login-titulo" class="text-2xl font-black text-[#1a1941] dark:text-indigo-400 mb-1">Analytics SETIC</h2>
             <p class="text-gray-500 dark:text-gray-400 text-sm mb-6 font-semibold">Acesso Restrito</p>
@@ -57,18 +62,20 @@
                 <input type="password" id="login-senha" placeholder="••••••••" class="w-full border border-gray-300 dark:border-gray-600 rounded p-3 text-sm bg-gray-50 dark:bg-gray-700 focus:outline-none focus:border-blue-500 transition">
             </div>
             
-            <button id="btn-entrar" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded shadow transition flex items-center justify-center gap-2">
+            <button id="btn-entrar" class="w-full bg-[#1a1941] hover:bg-blue-800 text-white font-bold py-3 rounded shadow transition flex items-center justify-center gap-2">
                 <i class="fa-solid fa-right-to-bracket"></i> Entrar no Sistema
             </button>
         </div>
-        <p class="text-gray-400 text-xs mt-6">Ministério da Justiça e Segurança Pública - PRF</p>
+        <p class="relative z-10 text-gray-300 text-xs mt-6 font-semibold tracking-wider">Ministério da Justiça e Segurança Pública - PRF</p>
     </div>
 
     <!-- ======================= -->
     <!--  DASHBOARD PRINCIPAL    -->
     <!-- ======================= -->
     <div id="tela-dashboard" class="hidden flex-col min-h-screen">
-        <header id="header-bg" class="bg-[#1a1941] text-white p-4 shadow-md flex justify-between items-center sticky top-0 z-40 transition-colors">
+        
+        <!-- CABEÇALHO COM A LINHA AMARELA (BORDER-B) -->
+        <header id="header-bg" class="bg-[#1a1941] text-white p-4 shadow-md flex justify-between items-center sticky top-0 z-40 transition-colors border-b-[4px] border-yellow-500">
             <div class="flex items-center gap-3 ml-4">
                 <div id="header-logo-container" class="flex items-center">
                     <img src="https://raw.githubusercontent.com/AlbertBarros/dashbord-chamados-suporte-setic/main/bras%C3%A3o.png" alt="Logo" class="h-9 w-9 object-contain mr-2" crossorigin="anonymous">
@@ -97,9 +104,15 @@
                     <div class="flex items-center gap-2 text-[#1a1941] dark:text-indigo-400 font-bold text-lg">
                         <i class="fa-solid fa-filter"></i><h2>Filtros Dinâmicos</h2><span id="tag-ano-atual" class="ml-2 text-xs bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-1 rounded">Visualizando: 2026</span>
                     </div>
-                    <button id="btn-limpar-filtros" class="text-red-500 hover:text-red-700 bg-red-50 dark:bg-red-900/30 dark:hover:bg-red-900/50 px-3 py-1 rounded text-sm font-semibold transition flex items-center gap-2">
-                        <i class="fa-solid fa-eraser"></i> Limpar Filtros
-                    </button>
+                    
+                    <div class="flex items-center gap-2">
+                        <button id="btn-comparativo" class="text-blue-600 hover:text-blue-800 bg-blue-50 dark:bg-blue-900/30 dark:hover:bg-blue-900/50 px-3 py-1 rounded text-sm font-semibold transition flex items-center gap-2" title="Visualizar a performance de todos os analistas lado a lado">
+                            <i class="fa-solid fa-users-viewfinder"></i> Desempenho da Equipe
+                        </button>
+                        <button id="btn-limpar-filtros" class="text-red-500 hover:text-red-700 bg-red-50 dark:bg-red-900/30 dark:hover:bg-red-900/50 px-3 py-1 rounded text-sm font-semibold transition flex items-center gap-2">
+                            <i class="fa-solid fa-eraser"></i> Limpar Filtros
+                        </button>
+                    </div>
                 </div>
                 
                 <div class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-7 gap-4">
@@ -352,7 +365,6 @@
                         </div>
                     </div>
                     
-                    <!-- NOVO BOTÃO PARA ABRIR O COMPARATIVO (RH) DENTRO DO PAINEL DE FERRAMENTAS -->
                     <div class="bg-blue-50 dark:bg-blue-900/30 border border-blue-100 dark:border-blue-800 p-4 rounded mb-2">
                         <h4 class="font-bold text-blue-800 dark:text-blue-300 text-sm mb-2"><i class="fa-solid fa-users-viewfinder"></i> Relatório de Desempenho da Equipe</h4>
                         <p class="text-xs text-blue-700 dark:text-blue-400 mb-3">Gere um comparativo detalhado lado a lado de todos os analistas da equipa foco com cálculo de média mensal.</p>
