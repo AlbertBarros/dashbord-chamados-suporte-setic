@@ -58,7 +58,10 @@
             </div>
             
             <div class="text-left mb-6">
-                <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 uppercase mb-1">Senha de Acesso</label>
+                <div class="flex justify-between items-end mb-1">
+                    <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 uppercase">Senha de Acesso</label>
+                    <button id="btn-esqueci-senha" type="button" class="text-xs font-bold text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition">Esqueci a senha?</button>
+                </div>
                 <input type="password" id="login-senha" placeholder="••••••••" class="w-full border border-gray-300 dark:border-gray-600 rounded p-3 text-sm bg-gray-50 dark:bg-gray-700 focus:outline-none focus:border-blue-500 transition">
             </div>
             
@@ -347,7 +350,13 @@
                         <div><label class="block text-sm font-semibold mb-1">Cor Primária (Claro)</label><div class="flex items-center gap-2 border dark:border-gray-600 rounded bg-gray-50 dark:bg-gray-700 pr-2"><input type="color" id="input-cor" class="w-12 border-0 h-10 cursor-pointer p-0 bg-transparent" value="#1a1941"><span class="text-xs font-mono text-gray-500 dark:text-gray-400" id="hex-view">#1a1941</span></div></div>
                         <div><label class="block text-sm font-semibold mb-1">Ícone do Cabeçalho</label><select id="input-icone" class="w-full border dark:border-gray-600 rounded p-2 text-sm bg-gray-50 dark:bg-gray-700 transition text-gray-700 dark:text-gray-200"><option value="fa-chart-line">Gráfico de Linhas</option><option value="fa-chart-pie">Gráfico de Pizza</option><option value="fa-chart-column">Gráfico de Barras</option><option value="fa-table-columns">Painel de Gestão</option><option value="fa-users">Equipa de Suporte</option><option value="fa-headset">Headset / Atendimento</option><option value="fa-shield-halved">Segurança / Fiscal</option><option value="fa-laptop-code">Desenvolvimento / TI</option></select></div>
                     </div>
-                    <div class="mb-4"><label class="block text-sm font-semibold mb-1">Logótipo Institucional (Cabeçalho e PDF)</label><input type="file" id="input-logo-file" accept="image/*" class="w-full border dark:border-gray-600 rounded p-2 text-sm bg-gray-50 dark:bg-gray-700 cursor-pointer"></div>
+                    
+                    <!-- CAMPOS DE IMAGEM LADO A LADO -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div><label class="block text-sm font-semibold mb-1">Logótipo Institucional (Cabeçalho e PDF)</label><input type="file" id="input-logo-file" accept="image/*" class="w-full border dark:border-gray-600 rounded p-2 text-sm bg-gray-50 dark:bg-gray-700 cursor-pointer"></div>
+                        <div><label class="block text-sm font-semibold mb-1">Fundo da Tela de Login (Imagem)</label><input type="file" id="input-bg-file" accept="image/*" class="w-full border dark:border-gray-600 rounded p-2 text-sm bg-gray-50 dark:bg-gray-700 cursor-pointer"></div>
+                    </div>
+                    
                     <div><label class="block text-sm font-semibold mb-1">Composição da Equipe Foco</label><textarea id="input-equipe" class="w-full border dark:border-gray-600 rounded p-3 text-sm bg-gray-50 dark:bg-gray-700 transition font-mono" rows="3"></textarea></div>
                 </div>
 
@@ -431,6 +440,12 @@
                     <div id="area-gestao-usuarios" class="hidden bg-white dark:bg-gray-800 p-5 rounded border border-blue-200 dark:border-gray-700 border-l-4 border-l-blue-500 shadow-sm mb-4">
                         <h4 class="font-bold text-blue-800 dark:text-blue-400 mb-2 flex items-center gap-2"><i class="fa-solid fa-user-plus"></i> Criar Acesso de Analista</h4>
                         <div class="flex flex-col sm:flex-row gap-3"><input type="email" id="novo-email" placeholder="E-mail" class="flex-grow border border-gray-300 dark:border-gray-600 rounded p-2 text-sm dark:bg-gray-700"><input type="password" id="novo-senha" placeholder="Senha" class="w-full sm:w-1/3 border border-gray-300 dark:border-gray-600 rounded p-2 text-sm dark:bg-gray-700"><button id="btn-criar-usuario" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-sm shadow transition flex items-center justify-center gap-2"><i class="fa-solid fa-check"></i> Criar</button></div>
+                        
+                        <!-- NOVA ÁREA: EXCLUIR / REVOGAR ACESSO -->
+                        <hr class="my-4 border-blue-200 dark:border-gray-700">
+                        <h4 class="font-bold text-red-700 dark:text-red-400 mb-2 flex items-center gap-2"><i class="fa-solid fa-user-xmark"></i> Excluir / Revogar Acesso</h4>
+                        <p class="text-xs text-gray-600 dark:text-gray-400 mb-3 leading-relaxed">Por diretrizes de segurança da arquitetura sem servidor (Client-Side), a exclusão definitiva de uma credencial não deve trafegar via código frontal. O administrador deve aceder diretamente ao cofre de autenticação do Firebase para apagar o utilizador.</p>
+                        <a href="https://console.firebase.google.com/project/dashboard-chamado-setic/authentication/users" target="_blank" class="inline-flex bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded text-sm shadow transition items-center justify-center gap-2 w-full sm:w-auto"><i class="fa-solid fa-arrow-up-right-from-square"></i> Abrir Cofre de Usuários (Firebase)</a>
                     </div>
                     
                     <!-- Exclusão de Banco (Oculto até validação) -->
@@ -451,7 +466,9 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
         import { getFirestore, collection, getDocs, doc, writeBatch } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+        
+        // IMPORTAÇÃO NOVA: sendPasswordResetEmail
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 
         // ==========================================
         // 1. VARIÁVEIS GLOBAIS
@@ -510,6 +527,12 @@
             const savedLogo = localStorage.getItem('dashLogo'); const logoC = document.getElementById('header-logo-container'); const logoL = document.getElementById('login-logo');
             if (savedLogo) { logoC.innerHTML = `<img src="${savedLogo}" alt="Logo" class="h-9 w-9 object-contain mr-2">`; if(logoL) logoL.src = savedLogo; } 
             else { logoC.innerHTML = `<img src="https://raw.githubusercontent.com/AlbertBarros/dashbord-chamados-suporte-setic/main/bras%C3%A3o.png" alt="Logo" class="h-9 w-9 object-contain mr-2" crossorigin="anonymous">`; if(logoL) logoL.src = "https://raw.githubusercontent.com/AlbertBarros/dashbord-chamados-suporte-setic/main/bras%C3%A3o.png"; }
+            
+            const savedBg = localStorage.getItem('dashBg'); const loginEl = document.getElementById('tela-login');
+            if(loginEl) {
+                if(savedBg) { loginEl.style.backgroundImage = `url('${savedBg}')`; }
+                else { loginEl.style.backgroundImage = `url('https://raw.githubusercontent.com/AlbertBarros/dashbord-chamados-suporte-setic/main/fundo%20login')`; }
+            }
         }
         aplicarPersonalizacao();
 
@@ -540,7 +563,10 @@
         
         ['aba-aparencia', 'aba-relatorios', 'aba-fiscal', 'aba-admin'].forEach(id => { const el = document.getElementById(id); if(el) el.addEventListener('click', () => switchTab(id, 'conteudo-' + id.split('-')[1])); });
         document.getElementById('input-cor').addEventListener('input', (e) => document.getElementById('hex-view').innerText = e.target.value);
+        
         document.getElementById('input-logo-file').addEventListener('change', (e) => { const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = function(ev) { localStorage.setItem('dashLogo', ev.target.result); aplicarPersonalizacao(); }; reader.readAsDataURL(file); });
+        document.getElementById('input-bg-file').addEventListener('change', (e) => { const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = function(ev) { localStorage.setItem('dashBg', ev.target.result); aplicarPersonalizacao(); }; reader.readAsDataURL(file); });
+        
         document.getElementById('btn-guardar-config').addEventListener('click', () => { localStorage.setItem('dashTitulo', document.getElementById('input-titulo').value); localStorage.setItem('dashCor', document.getElementById('input-cor').value); localStorage.setItem('dashIcon', document.getElementById('input-icone').value); localStorage.setItem('equipeFoco', document.getElementById('input-equipe').value); aplicarPersonalizacao(); preencherFiltros(); atualizarDashboard(); modalConfig.classList.add('hidden'); });
 
         document.getElementsByName('tipo_conclusao').forEach(radio => {
@@ -554,6 +580,30 @@
         // ==========================================
         // 4. AUTENTICAÇÃO E DADOS
         // ==========================================
+        
+        // NOVA FUNÇÃO: ESQUECI A SENHA
+        document.getElementById('btn-esqueci-senha').addEventListener('click', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value.trim();
+            if (!email) return alert("⚠️ ATENÇÃO: Digite o seu E-mail Corporativo no campo acima e clique novamente em 'Esqueci a senha?'.");
+            
+            const btn = document.getElementById('btn-esqueci-senha');
+            const textoOriginal = btn.innerText;
+            btn.innerText = "A enviar..."; btn.disabled = true;
+            
+            try {
+                await sendPasswordResetEmail(auth, email);
+                alert(`✅ Link de redefinição enviado com sucesso para:\n${email}\n\nVerifique a sua caixa de entrada e o spam.`);
+            } catch (error) {
+                let msg = "Erro ao enviar e-mail de redefinição.";
+                if (error.code === 'auth/user-not-found') msg = "Usuário não encontrado no sistema.";
+                else if (error.code === 'auth/invalid-email') msg = "Formato de e-mail inválido.";
+                alert(`❌ Falha: ${msg}`);
+            } finally {
+                btn.innerText = textoOriginal; btn.disabled = false;
+            }
+        });
+
         onAuthStateChanged(auth, (user) => {
             if (user) { 
                 document.getElementById('tela-login').classList.add('hidden'); document.getElementById('tela-login').classList.remove('flex'); 
@@ -839,7 +889,6 @@
         // ==========================================
         let dadosComparativoExport = [];
 
-        // FUNÇÃO UNIFICADA PARA ABRIR O MODAL
         const abrirPainelRH = () => {
             document.getElementById('modal-config').classList.add('hidden');
             document.getElementById('comp-data-inicio').value = document.getElementById('filtro-data-inicio').value;
@@ -848,11 +897,8 @@
             document.getElementById('modal-comparativo').classList.remove('hidden');
         };
 
-        // ASSOCIA A MESMA FUNÇÃO AOS DOIS BOTÕES
         document.getElementById('btn-comparativo').addEventListener('click', abrirPainelRH);
-        if(document.getElementById('btn-comparativo-modal')) {
-            document.getElementById('btn-comparativo-modal').addEventListener('click', abrirPainelRH);
-        }
+        if(document.getElementById('btn-comparativo-modal')) { document.getElementById('btn-comparativo-modal').addEventListener('click', abrirPainelRH); }
 
         document.getElementById('btn-filtrar-comp').addEventListener('click', renderizarComparativo);
         document.getElementById('btn-fechar-comparativo').addEventListener('click', () => { document.getElementById('modal-comparativo').classList.add('hidden'); });
