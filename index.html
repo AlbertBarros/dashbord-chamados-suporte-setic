@@ -368,7 +368,7 @@
                     <div class="bg-blue-50 dark:bg-blue-900/30 border border-blue-100 dark:border-blue-800 p-4 rounded mb-2">
                         <h4 class="font-bold text-blue-800 dark:text-blue-300 text-sm mb-2"><i class="fa-solid fa-users-viewfinder"></i> Relatório de Desempenho da Equipe</h4>
                         <p class="text-xs text-blue-700 dark:text-blue-400 mb-3">Gere um comparativo detalhado lado a lado de todos os analistas da equipa foco com cálculo de média mensal.</p>
-                        <button id="btn-comparativo" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded shadow transition flex items-center justify-center gap-2"><i class="fa-solid fa-chart-column"></i> Abrir Painel Comparativo</button>
+                        <button id="btn-comparativo-modal" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded shadow transition flex items-center justify-center gap-2"><i class="fa-solid fa-chart-column"></i> Abrir Painel Comparativo</button>
                     </div>
                 </div>
 
@@ -839,13 +839,20 @@
         // ==========================================
         let dadosComparativoExport = [];
 
-        document.getElementById('btn-comparativo').addEventListener('click', () => {
+        // FUNÇÃO UNIFICADA PARA ABRIR O MODAL
+        const abrirPainelRH = () => {
             document.getElementById('modal-config').classList.add('hidden');
             document.getElementById('comp-data-inicio').value = document.getElementById('filtro-data-inicio').value;
             document.getElementById('comp-data-fim').value = document.getElementById('filtro-data-fim').value;
             renderizarComparativo();
             document.getElementById('modal-comparativo').classList.remove('hidden');
-        });
+        };
+
+        // ASSOCIA A MESMA FUNÇÃO AOS DOIS BOTÕES
+        document.getElementById('btn-comparativo').addEventListener('click', abrirPainelRH);
+        if(document.getElementById('btn-comparativo-modal')) {
+            document.getElementById('btn-comparativo-modal').addEventListener('click', abrirPainelRH);
+        }
 
         document.getElementById('btn-filtrar-comp').addEventListener('click', renderizarComparativo);
         document.getElementById('btn-fechar-comparativo').addEventListener('click', () => { document.getElementById('modal-comparativo').classList.add('hidden'); });
